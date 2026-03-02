@@ -649,7 +649,7 @@
               <span>Mancano: <b id="remaining-amount">€250,00</b></span>
             </div>
             
-            <!-- 🆕 BREAKDOWN RISPARMI -->
+            <!-- BREAKDOWN RISPARMI -->
             <div class="savings-breakdown">
               <div class="savings-breakdown-title">💡 BREAKDOWN RISPARMI</div>
               <div class="savings-breakdown-grid">
@@ -660,7 +660,7 @@
           </section>
         </div>
 
-        <!-- ✅ SPESE ALIMENTARI (4 settimane) -->
+        <!-- SPESE ALIMENTARI (4 settimane) -->
         <section class="card">
           <h2>🛒 Spese Alimentari 
             <span class="muted">
@@ -722,7 +722,7 @@
           </div>
         </section>
 
-        <!-- 🐾 SPESE ANIMALI (4 settimane) -->
+        <!-- SPESE ANIMALI (4 settimane) -->
         <section class="card">
           <h2>🐾 Spese Animali 
             <span class="muted">
@@ -874,18 +874,52 @@
       const mesi = ["Gennaio","Febbraio","Marzo","Aprile","Maggio","Giugno","Luglio","Agosto","Settembre","Ottobre","Novembre","Dicembre"];
       return `${mesi[m-1]} ${y}`;
     }
+
+    // =====================================================================
+    // buildMonthOptions — logica mesi passati con periodo di grazia 10 giorni
+    // =====================================================================
+    // Regola:
+    //   • Mesi futuri (fino a +11): sempre visibili
+    //   • Mese corrente: sempre visibile
+    //   • Mesi passati: visibili SOLO se siamo ancora entro
+    //     (ultimo giorno del mese + 10 giorni)
+    //     Esempio: Febbraio 2026 finisce il 28/02 → visibile fino al 10/03/2026
+    //     L'emoji 🔓 segnala che è in periodo di grazia (modificabile ancora)
+    // =====================================================================
     function buildMonthOptions(selectEl){
       const now = new Date();
-      const start = new Date(now.getFullYear(), now.getMonth(), 1);
-      const count = 12;
+      const GRACE_DAYS = 10;
+      const mesi = ["Gennaio","Febbraio","Marzo","Aprile","Maggio","Giugno","Luglio","Agosto","Settembre","Ottobre","Novembre","Dicembre"];
+
       const opts = [];
-      for(let i=0;i<count;i++){
-        const d = new Date(start.getFullYear(), start.getMonth()+i, 1);
+
+      // Controlla fino a 24 mesi nel passato per trovare quelli in grazia
+      for(let i = -24; i < 0; i++){
+        const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
         const y = d.getFullYear();
-        const m = d.getMonth()+1;
+        const m = d.getMonth() + 1;
+
+        // Ultimo giorno del mese
+        const lastDay = new Date(y, m, 0).getDate();
+        // Fine del periodo di grazia = ultimo giorno + GRACE_DAYS
+        const graceEnd = new Date(y, m - 1, lastDay + GRACE_DAYS);
+
+        if(now <= graceEnd){
+          const val = `${y}-${pad2(m)}`;
+          // 🔓 indica che è in finestra di grazia (modificabile ancora per poco)
+          opts.push({ val, text: `${mesi[m-1]} ${y} 🔓` });
+        }
+      }
+
+      // Mese corrente + prossimi 11 mesi: sempre visibili
+      for(let i = 0; i < 12; i++){
+        const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
+        const y = d.getFullYear();
+        const m = d.getMonth() + 1;
         const val = `${y}-${pad2(m)}`;
         opts.push({ val, text: monthLabel(y,m) });
       }
+
       selectEl.innerHTML = opts.map(o=>`<option value="${o.val}">${o.text}</option>`).join("");
     }
 
@@ -898,7 +932,7 @@
     let unsubscribe = null;
     let isSaving = false;
 
-    // 🔥 DEBOUNCING: Salva dopo 800ms dall'ultima modifica
+    // DEBOUNCING: Salva dopo 800ms dall'ultima modifica
     let saveTimeout = null;
 
     const loginScreen = document.getElementById("login-screen");
@@ -930,12 +964,24 @@
     function showApp(){ loginScreen.style.display = "none"; appEl.style.display = "block"; }
 
     buildMonthOptions(monthSelector);
+
+    // Ripristina il mese salvato, ma verifica che esista ancora nel selettore
+    // (potrebbe essere scomparso perché fuori dalla finestra di grazia)
     if (!currentMonth){
       currentMonth = monthSelector.value;
       localStorage.setItem("budgetMonth", currentMonth);
     } else {
-      monthSelector.value = currentMonth;
+      // Controlla se il valore salvato è ancora disponibile nel selettore
+      const exists = [...monthSelector.options].some(o => o.value === currentMonth);
+      if(exists){
+        monthSelector.value = currentMonth;
+      } else {
+        // Il mese salvato non è più accessibile: torna al corrente
+        currentMonth = monthSelector.value;
+        localStorage.setItem("budgetMonth", currentMonth);
+      }
     }
+
     monthSelector.addEventListener("change", ()=>{
       currentMonth = monthSelector.value;
       localStorage.setItem("budgetMonth", currentMonth);
@@ -1000,13 +1046,11 @@
         remEl.classList.toggle('neg', remaining < 0);
       }
 
-      // 🔥 AGGIORNA AUTOMATICAMENTE LA VOCE "Spesa alimentare" in Spese
       const foodAmountInput = ensureAutoExpenseItem('Spesa alimentare', 'food-auto-amount');
       if (foodAmountInput) {
         foodAmountInput.value = monthlyTotal.toFixed(2);
       }
 
-      // Aggiorna totali generali
       updateBudgetTotals();
     }
 
@@ -1037,13 +1081,11 @@
         remEl.classList.toggle('neg', remaining < 0);
       }
 
-      // 🔥 AGGIORNA AUTOMATICAMENTE LA VOCE "Spese animali" in Spese
       const petAmountInput = ensureAutoExpenseItem('Spese animali', 'pet-auto-amount');
       if (petAmountInput) {
         petAmountInput.value = monthlyTotal.toFixed(2);
       }
 
-      // Aggiorna totali generali
       updateBudgetTotals();
     }
 
@@ -1111,25 +1153,20 @@
       updateSavingsGoal();
     }
 
-    // 🔥🔥🔥 NUOVA FUNZIONE CON CALCOLO CORRETTO DEL RISPARMIO
     function updateSavingsGoal(){
       const goalAmount = parseAmount(savingsGoalInput.value) || 250;
       
-      // ENTRATE
       const totalIncome = parseFloat((document.getElementById('summary-entrate')?.textContent || "€ 0,00")
         .replace('€','').replace(/\./g, '').replace(',', '.').trim()) || 0;
       
-      // SPESE MANUALI (escludendo food e pet auto-generati)
       let manualExpenses = 0;
       document.querySelectorAll('#spese-items .item-amount-input').forEach(input => {
-        // Escludi le voci auto-generate
         if (!input.classList.contains('food-auto-amount') && 
             !input.classList.contains('pet-auto-amount')) {
           manualExpenses += parseAmount(input.value);
         }
       });
 
-      // CALCOLA QUANTO HAI SPESO DAVVERO per cibo e animali
       const foodBudget = parseAmount(foodBudgetInput.value) || 500;
       const petBudget = parseAmount(petBudgetInput.value) || 200;
       
@@ -1147,16 +1184,12 @@
         );
       }
 
-      // 🎯 CALCOLO CORRETTO DEL RISPARMIO
-      // Risparmio = Entrate - (Spese Manuali + Spesa Food Reale + Spesa Pet Reale)
       const totalExpenses = manualExpenses + actualFoodSpent + actualPetSpent;
       const savedAmount = totalIncome - totalExpenses;
       
-      // 💰 CALCOLA I RISPARMI SPECIFICI
       const foodSavings = foodBudget - actualFoodSpent;
       const petSavings = petBudget - actualPetSpent;
       
-      // Aggiorna UI principale
       let percentage = (savedAmount / goalAmount) * 100;
       percentage = Math.max(0, Math.min(100, percentage));
 
@@ -1165,7 +1198,6 @@
       document.getElementById('saved-amount').textContent = "€" + savedAmount.toFixed(2).replace('.', ',');
       document.getElementById('remaining-amount').textContent = "€" + Math.max(0, goalAmount - savedAmount).toFixed(2).replace('.', ',');
       
-      // 🆕 AGGIORNA IL BREAKDOWN DEI RISPARMI
       const foodSavingsEl = document.getElementById('food-savings-detail');
       const petSavingsEl = document.getElementById('pet-savings-detail');
       
@@ -1180,11 +1212,6 @@
         petSavingsEl.classList.toggle('pos', petSavings >= 0);
         petSavingsEl.classList.toggle('neg', petSavings < 0);
       }
-      
-      // 🆕 OPZIONALE: Log per debug
-      console.log(`💚 Risparmiato su cibo: €${foodSavings.toFixed(2)}`);
-      console.log(`🐾 Risparmiato su animali: €${petSavings.toFixed(2)}`);
-      console.log(`💰 Risparmio totale: €${savedAmount.toFixed(2)}`);
     }
 
     // ===== Data (include food + pets + settings) =====
@@ -1229,7 +1256,7 @@
       return data;
     }
 
-    // 🔥🔥🔥 DEBOUNCED SAVE - Salva solo dopo 800ms dall'ultima modifica
+    // DEBOUNCED SAVE - Salva solo dopo 800ms dall'ultima modifica
     async function saveMonthData(){
       const fb = window.firebaseAuth;
       if (!fb || !currentUser) return;
@@ -1251,13 +1278,12 @@
       }
     }
 
-    // 🔥 WRAPPER CON DEBOUNCING
     function debouncedSave() {
       clearTimeout(saveTimeout);
       setSyncStatus("In attesa…", "rgba(156,163,175,1)");
       saveTimeout = setTimeout(() => {
         saveMonthData();
-      }, 800); // Aspetta 800ms dall'ultima modifica
+      }, 800);
     }
 
     function resetUIEmpty(){
@@ -1268,7 +1294,6 @@
         document.querySelectorAll(`.pet-week${week}-shopping`).forEach(input => input.value = '');
       }
       
-      // Reset settings to defaults
       savingsGoalInput.value = 250;
       foodBudgetInput.value = 500;
       foodWeeklyInput.value = 125;
@@ -1326,7 +1351,6 @@
         petInputs.forEach((input, idx)=> input.value = petData[idx] || '');
       }
 
-      // Load settings
       if (data.settings) {
         savingsGoalInput.value = data.settings.savingsGoal || 250;
         foodBudgetInput.value = data.settings.foodBudget || 500;
@@ -1377,12 +1401,11 @@
       `;
       container.appendChild(div);
       updateBudgetTotals();
-      debouncedSave(); // 🔥 USA IL DEBOUNCED SAVE
+      debouncedSave();
     }
     function removeEntry(btn){
       const row = btn.closest(".entry-item");
       if (row){
-        // Check if it's an auto-generated expense
         const labelInput = row.querySelector('.item-label-input');
         if (labelInput) {
           const labelLower = labelInput.value.trim().toLowerCase();
@@ -1397,67 +1420,60 @@
         updateBudgetTotals();
         updateFoodTotals();
         updatePetTotals();
-        debouncedSave(); // 🔥 USA IL DEBOUNCED SAVE
+        debouncedSave();
       }
     }
     window.addEntryItem = addEntryItem;
     window.removeEntry = removeEntry;
 
-    // 🔥 AUTOSAVE CON DEBOUNCING - evita troppi salvataggi
+    // AUTOSAVE CON DEBOUNCING
     document.addEventListener("input", (e)=>{
       const t = e.target;
       if (!t) return;
 
-      // Food
       if (t.classList.contains("week1-shopping") || t.classList.contains("week2-shopping") ||
           t.classList.contains("week3-shopping") || t.classList.contains("week4-shopping")){
         updateFoodTotals();
-        debouncedSave(); // 🔥 DEBOUNCED
+        debouncedSave();
         return;
       }
 
-      // Pets
       if (t.classList.contains("pet-week1-shopping") || t.classList.contains("pet-week2-shopping") ||
           t.classList.contains("pet-week3-shopping") || t.classList.contains("pet-week4-shopping")){
         updatePetTotals();
-        debouncedSave(); // 🔥 DEBOUNCED
+        debouncedSave();
         return;
       }
 
-      // Savings goal
       if (t.id === 'savings-goal-input') {
         updateSavingsGoal();
-        debouncedSave(); // 🔥 DEBOUNCED
+        debouncedSave();
         return;
       }
 
-      // Food settings
       if (t.id === 'food-budget-input' || t.id === 'food-weekly-input') {
         updateFoodTotals();
-        debouncedSave(); // 🔥 DEBOUNCED
+        debouncedSave();
         return;
       }
 
-      // Pet settings
       if (t.id === 'pet-budget-input' || t.id === 'pet-weekly-input') {
         updatePetTotals();
-        debouncedSave(); // 🔥 DEBOUNCED
+        debouncedSave();
         return;
       }
 
-      // Regular entries
       if (t.classList.contains("item-label-input") || t.classList.contains("item-amount-input")){
-        // Previeni modifica manuale delle voci auto
         if (t.classList.contains("food-auto-amount") || t.classList.contains("pet-auto-amount")) {
           e.preventDefault();
           return;
         }
         updateBudgetTotals();
-        debouncedSave(); // 🔥 DEBOUNCED
+        debouncedSave();
       }
     });
 
-    // ===== Login/Logout (popup + redirect fallback) =====
+    // ===== Login/Logout =====
     async function doLogin(){
       const fb = window.firebaseAuth;
       if (!fb){
