@@ -584,6 +584,9 @@
           <button class="navbtn" type="button" onclick="location.href='risparmi.html'">
             <span>📊 Grafico Risparmi</span><span class="hint">Stats</span>
           </button>
+          <button class="navbtn" type="button" onclick="location.href='vacanze.html'">
+            <span>🏖️ Vacanze</span><span class="hint">Salvadanaio</span>
+          </button>
           <button class="navbtn" type="button" onclick="location.href='comparatori.html'">
             <span>🛒 Comparatori</span><span class="hint">Offerte</span>
           </button>
@@ -943,6 +946,38 @@
     });
 
     // ===== Auto-expense items =====
+    // ===== Auto income: Vacanza =====
+    function getAutoIncomeItem(labelName) {
+      const items = document.querySelectorAll('#entrate-items .entry-item');
+      for (let item of items) {
+        const labelInput = item.querySelector('.item-label-input');
+        if (labelInput && labelInput.value.trim().toLowerCase() === labelName.toLowerCase()) {
+          return item.querySelector('.item-amount-input');
+        }
+      }
+      return null;
+    }
+
+    function ensureAutoIncomeItem(labelName, cssClass, amountValue) {
+      let amountInput = getAutoIncomeItem(labelName);
+
+      if (!amountInput) {
+        const container = document.getElementById('entrate-items');
+        const div = document.createElement('div');
+        div.className = 'entry-item';
+        div.innerHTML = `
+          <input type="text" class="item-label-input" placeholder="Nome" value="${labelName}" readonly style="cursor:not-allowed;">
+          <input type="number" class="item-amount-input ${cssClass}" placeholder="€" value="${Number(amountValue || 0).toFixed(2)}" step="0.01" min="0" readonly style="cursor:not-allowed;">
+          <button class="btn-remove" type="button" onclick="removeEntry(this)">✕</button>
+        `;
+        container.insertBefore(div, container.firstChild);
+        amountInput = div.querySelector('.item-amount-input');
+      }
+
+      amountInput.value = Number(amountValue || 0).toFixed(2);
+      return amountInput;
+    }
+
     function getAutoExpenseItem(labelName) {
       const items = document.querySelectorAll('#spese-items .entry-item');
       for (let item of items) {
@@ -1047,6 +1082,11 @@
       updateBudgetTotals();
     }
 
+    function updateVacationIncome() {
+      // Il salvadanaio Vacanze prevede 30 € a settimana = 120 € al mese.
+      ensureAutoIncomeItem('Vacanza', 'vacation-auto-amount', 120);
+    }
+
     // ===== Pie =====
     let pieChart = null;
     function updatePieChart(){
@@ -1090,6 +1130,7 @@
     }
 
     function updateBudgetTotals(){
+      updateVacationIncome();
       let totalEntrate = 0;
       document.querySelectorAll('#entrate-items .item-amount-input').forEach(i => totalEntrate += parseAmount(i.value));
       let totalSpese = 0;
@@ -1305,8 +1346,9 @@
         const labelLower = item.label.toLowerCase();
         const isFood = labelLower === 'spesa alimentare';
         const isPet = labelLower === 'spese animali';
-        const isAuto = isFood || isPet;
-        const autoClass = isFood ? 'food-auto-amount' : (isPet ? 'pet-auto-amount' : '');
+        const isVacation = labelLower === 'vacanza';
+        const isAuto = isFood || isPet || isVacation;
+        const autoClass = isFood ? 'food-auto-amount' : (isPet ? 'pet-auto-amount' : (isVacation ? 'vacation-auto-amount' : ''));
         
         div.innerHTML = `
           <input type="text" class="item-label-input" placeholder="Nome" value="${escapeAttr(item.label)}" ${isAuto ? 'readonly style="cursor:not-allowed;"' : ''}>
@@ -1386,7 +1428,7 @@
         const labelInput = row.querySelector('.item-label-input');
         if (labelInput) {
           const labelLower = labelInput.value.trim().toLowerCase();
-          if (labelLower === 'spesa alimentare' || labelLower === 'spese animali') {
+          if (labelLower === 'spesa alimentare' || labelLower === 'spese animali' || labelLower === 'vacanza') {
             if (!confirm(`⚠️ Questa è la voce "${labelInput.value}" auto-generata. Vuoi davvero eliminarla? (Si rigenererà automaticamente)`)) {
               return;
             }
@@ -1448,7 +1490,7 @@
       // Regular entries
       if (t.classList.contains("item-label-input") || t.classList.contains("item-amount-input")){
         // Previeni modifica manuale delle voci auto
-        if (t.classList.contains("food-auto-amount") || t.classList.contains("pet-auto-amount")) {
+        if (t.classList.contains("food-auto-amount") || t.classList.contains("pet-auto-amount") || t.classList.contains("vacation-auto-amount")) {
           e.preventDefault();
           return;
         }
