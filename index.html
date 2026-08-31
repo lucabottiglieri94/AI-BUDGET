@@ -1158,6 +1158,9 @@
 
     // ===== Pie =====
     let pieChart = null;
+    // Importo già accantonato nel Salvadanaio Vacanze per il mese corrente.
+    // Viene sottratto dal risparmio disponibile, perché è già stato destinato alle vacanze.
+    let vacationSavedAmount = 0;
     function updatePieChart(){
       const canvas = document.getElementById("budgetPie");
       if (!canvas || typeof Chart === "undefined") return;
@@ -1223,77 +1226,85 @@
     // 🔥🔥🔥 NUOVA FUNZIONE CON CALCOLO CORRETTO DEL RISPARMIO
     function updateSavingsGoal(){
       const goalAmount = parseAmount(savingsGoalInput.value) || 250;
-      
-      // ENTRATE
-      const totalIncome = parseFloat((document.getElementById('summary-entrate')?.textContent || "€ 0,00")
-        .replace('€','').replace(/\./g, '').replace(',', '.').trim()) || 0;
-      
-      // SPESE MANUALI (escludendo food e pet auto-generati)
+
+      // Entrate reali del mese.
+      let totalIncome = 0;
+      document.querySelectorAll('#entrate-items .item-amount-input').forEach(input => {
+        totalIncome += parseAmount(input.value);
+      });
+
+      // Spese manuali.
       let manualExpenses = 0;
       document.querySelectorAll('#spese-items .item-amount-input').forEach(input => {
-        // Escludi le voci auto-generate
-        if (!input.classList.contains('food-auto-amount') && 
+        if (!input.classList.contains('food-auto-amount') &&
             !input.classList.contains('pet-auto-amount')) {
           manualExpenses += parseAmount(input.value);
         }
       });
 
-      // CALCOLA QUANTO HAI SPESO DAVVERO per cibo e animali
+      // Spesa reale per cibo.
       const foodBudget = parseAmount(foodBudgetInput.value) || 500;
-      const petBudget = parseAmount(petBudgetInput.value) || 200;
-      
       let actualFoodSpent = 0;
       for (let week=1; week<=4; week++){
-        document.querySelectorAll(`.week${week}-shopping`).forEach(i => 
-          actualFoodSpent += parseAmount(i.value)
-        );
-      }
-      
-      let actualPetSpent = 0;
-      for (let week=1; week<=4; week++){
-        document.querySelectorAll(`.pet-week${week}-shopping`).forEach(i => 
-          actualPetSpent += parseAmount(i.value)
-        );
+        document.querySelectorAll(`.week${week}-shopping`).forEach(i => {
+          actualFoodSpent += parseAmount(i.value);
+        });
       }
 
-      // 🎯 CALCOLO CORRETTO DEL RISPARMIO
-      // Risparmio = Entrate - (Spese Manuali + Spesa Food Reale + Spesa Pet Reale)
+      // Spesa reale per animali.
+      const petBudget = parseAmount(petBudgetInput.value) || 200;
+      let actualPetSpent = 0;
+      for (let week=1; week<=4; week++){
+        document.querySelectorAll(`.pet-week${week}-shopping`).forEach(i => {
+          actualPetSpent += parseAmount(i.value);
+        });
+      }
+
+      // Prima calcoliamo il saldo normale del mese.
       const totalExpenses = manualExpenses + actualFoodSpent + actualPetSpent;
-      const savedAmount = totalIncome - totalExpenses;
-      
-      // 💰 CALCOLA I RISPARMI SPECIFICI
+      const monthlyBalance = totalIncome - totalExpenses;
+
+      // Il denaro già messo nel Salvadanaio Vacanze è già "risparmiato"
+      // ma non è più risparmio libero: è destinato alle vacanze.
+      const savedAmount = Math.max(0, monthlyBalance - vacationSavedAmount);
+
       const foodSavings = foodBudget - actualFoodSpent;
       const petSavings = petBudget - actualPetSpent;
-      
-      // Aggiorna UI principale
+
       let percentage = (savedAmount / goalAmount) * 100;
       percentage = Math.max(0, Math.min(100, percentage));
 
-      document.getElementById('savings-progress-bar').style.width = percentage + "%";
-      document.getElementById('progress-percentage').textContent = percentage.toFixed(0) + "%";
-      document.getElementById('saved-amount').textContent = "€" + savedAmount.toFixed(2).replace('.', ',');
-      document.getElementById('remaining-amount').textContent = "€" + Math.max(0, goalAmount - savedAmount).toFixed(2).replace('.', ',');
-      
-      // 🆕 AGGIORNA IL BREAKDOWN DEI RISPARMI
+      const progress = document.getElementById('savings-progress-bar');
+      const progressPct = document.getElementById('progress-percentage');
+      const savedEl = document.getElementById('saved-amount');
+      const remainingEl = document.getElementById('remaining-amount');
+
+      if (progress) progress.style.width = percentage + "%";
+      if (progressPct) progressPct.textContent = percentage.toFixed(0) + "%";
+      if (savedEl) savedEl.textContent = "€" + savedAmount.toFixed(2).replace('.', ',');
+      if (remainingEl) {
+        remainingEl.textContent = "€" +
+          Math.max(0, goalAmount - savedAmount).toFixed(2).replace('.', ',');
+      }
+
       const foodSavingsEl = document.getElementById('food-savings-detail');
       const petSavingsEl = document.getElementById('pet-savings-detail');
-      
+
       if (foodSavingsEl) {
         foodSavingsEl.textContent = "€" + foodSavings.toFixed(2).replace('.', ',');
         foodSavingsEl.classList.toggle('pos', foodSavings >= 0);
         foodSavingsEl.classList.toggle('neg', foodSavings < 0);
       }
-      
+
       if (petSavingsEl) {
         petSavingsEl.textContent = "€" + petSavings.toFixed(2).replace('.', ',');
         petSavingsEl.classList.toggle('pos', petSavings >= 0);
         petSavingsEl.classList.toggle('neg', petSavings < 0);
       }
-      
-      // 🆕 OPZIONALE: Log per debug
-      console.log(`💚 Risparmiato su cibo: €${foodSavings.toFixed(2)}`);
-      console.log(`🐾 Risparmiato su animali: €${petSavings.toFixed(2)}`);
-      console.log(`💰 Risparmio totale: €${savedAmount.toFixed(2)}`);
+
+      console.log(`💰 Saldo mensile: €${monthlyBalance.toFixed(2)}`);
+      console.log(`🏖️ Già accantonato Vacanze: €${vacationSavedAmount.toFixed(2)}`);
+      console.log(`💚 Risparmio disponibile: €${savedAmount.toFixed(2)}`);
     }
 
     // ===== Sincronizzazione Salvadanaio Vacanze =====
@@ -1317,13 +1328,19 @@
 
       const remaining = Math.max(0,120-saved);
       const pct = Math.max(0,Math.min(100,(saved/120)*100));
+      vacationSavedAmount = saved;
       document.getElementById('budget-vacation-saved').textContent = formatCurrency(saved);
       document.getElementById('budget-vacation-remaining').textContent = formatCurrency(remaining);
       document.getElementById('budget-vacation-progress').style.width = pct + '%';
       document.getElementById('budget-vacation-percent').textContent = Math.round(pct) + '%';
+
+      // Il risparmio principale deve riflettere subito quanto è già stato
+      // destinato al Salvadanaio Vacanze.
+      updateSavingsGoal();
     }
 
     function resetVacationBudget(){
+      vacationSavedAmount = 0;
       renderVacationBudget({weeks:[{amount:30,paid:false},{amount:30,paid:false},{amount:30,paid:false},{amount:30,paid:false}]});
       const sync = document.getElementById('budget-vacation-sync');
       if(sync) sync.textContent = 'Salvadanaio non ancora sincronizzato.';
