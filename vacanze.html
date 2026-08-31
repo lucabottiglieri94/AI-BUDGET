@@ -385,9 +385,24 @@
     if(!currentUser) return;
     try{
       setStatus("Salvataggio…");
+      const data = collect();
       const ref=doc(db,"users",currentUser.uid,"vacanze",monthSelector.value);
-      await setDoc(ref,collect(),{merge:true});
-      setStatus("Salvato ✓");
+      await setDoc(ref,data,{merge:true});
+
+      // Mirror nel documento Budget: in questo modo Dashboard e Salvadanaio
+      // leggono lo stesso stato anche se una pagina viene aperta per prima.
+      const saved = data.weeks.reduce((sum,w)=> sum + (w.paid ? Number(w.amount || 0) : 0), 0);
+      const budgetRef=doc(db,"users",currentUser.uid,"budgets",monthSelector.value);
+      await setDoc(budgetRef,{
+        month: monthSelector.value,
+        vacanzaWeeks: data.weeks,
+        vacanzaAccantonato: saved,
+        vacanzaTarget: 120,
+        vacanzaWeeklyTarget: 30,
+        vacanzaLastModified: data.lastModified
+      },{merge:true});
+
+      setStatus("Salvato e sincronizzato ✓");
     }catch(e){
       console.error(e);
       setStatus("Errore ❌");
