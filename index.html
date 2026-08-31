@@ -1338,8 +1338,21 @@
       document.getElementById('budget-vacation-progress').style.width = pct + '%';
       document.getElementById('budget-vacation-percent').textContent = Math.round(pct) + '%';
 
-      // Il risparmio principale deve riflettere subito quanto è già stato
-      // destinato al Salvadanaio Vacanze.
+      // Aggiornamento diretto del riquadro RISPARMIO.
+      // Saldo del mese - importo già accantonato nel Salvadanaio Vacanze.
+      const incomeNow = Array.from(document.querySelectorAll('#entrate-items .item-amount-input'))
+        .reduce((sum, input) => sum + parseAmount(input.value), 0);
+      const expenseNow = Array.from(document.querySelectorAll('#spese-items .item-amount-input'))
+        .reduce((sum, input) => sum + parseAmount(input.value), 0);
+      const availableNow = incomeNow - expenseNow - vacationSavedAmount;
+      const topSavings = document.getElementById('summary-balance');
+
+      if (topSavings) {
+        topSavings.textContent = formatCurrency(availableNow);
+        topSavings.classList.toggle('pos', availableNow >= 0);
+        topSavings.classList.toggle('neg', availableNow < 0);
+      }
+
       updateSavingsGoal();
     }
 
