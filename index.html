@@ -935,7 +935,7 @@
     function formatCurrency(v){ return "€ " + (Number(v||0)).toFixed(2).replace(".", ","); }
     function escapeAttr(s){ return (s ?? "").toString().replaceAll('"','&quot;'); }
 
-    let currentMonth = localStorage.getItem("budgetMonth") || "";
+    let currentMonth = localStorage.getItem("sharedBudgetMonth") || localStorage.getItem("budgetMonth") || "";
     let currentUser = null;
     let unsubscribe = null;
     let unsubscribeVacation = null;
@@ -976,6 +976,9 @@
     if (!currentMonth){
       currentMonth = monthSelector.value;
       localStorage.setItem("budgetMonth", currentMonth);
+      localStorage.setItem("sharedBudgetMonth", currentMonth);
+      localStorage.setItem("sharedBudgetMonth", currentMonth);
+      localStorage.setItem("vacanzeMonth", currentMonth);
     } else {
       monthSelector.value = currentMonth;
     }
