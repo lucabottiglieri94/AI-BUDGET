@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0B1220">
+  <title>Vacanze - Salvadanaio</title>
+  <style>
+    :root{
+      --bg0:#070B14;
+      --bg1:#0B1220;
+      --card:rgba(15,23,42,.72);
+      --text:#E5E7EB;
+      --muted:#9CA3AF;
+      --green:#22C55E;
+      --blue:#38BDF8;
+      --purple:#7C3AED;
+      --shadow:0 22px 70px rgba(0,0,0,.45);
+      --shadow2:0 14px 40px rgba(0,0,0,.30);
+      --radius:18px;
+      --safe-top:env(safe-area-inset-top,0px);
+      --safe-bottom:env(safe-area-inset-bottom,0px);
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    html,body{min-height:100%}
+    body{
+      font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(1200px 700px at 20% 10%,rgba(124,58,237,.18),transparent 55%),
+        radial-gradient(900px 600px at 80% 30%,rgba(34,197,94,.10),transparent 55%),
+        linear-gradient(180deg,var(--bg0),var(--bg1));
+      overflow-x:hidden;
+    }
+    #login-screen{
+      position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;
+      padding:20px;background:
+        radial-gradient(1200px 700px at 20% 10%,rgba(124,58,237,.20),transparent 55%),
+        linear-gradient(180deg,var(--bg0),var(--bg1));
+    }
+    #login-card{
+      width:min(560px,94vw);padding:24px;border-radius:22px;text-align:center;
+      background:rgba(15,23,42,.75);border:1px solid rgba(255,255,255,.14);
+      box-shadow:var(--shadow);backdrop-filter:blur(10px);
+    }
+    .pill{display:inline-flex;padding:8px 11px;border-radius:999px;background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.14);font-size:12px;font-weight:800;margin-bottom:14px}
+    #login-card h1{font-size:clamp(28px,5vw,40px);margin-bottom:8px;font-weight:950}
+    #login-card p{font-weight:700;line-height:1.4;margin-bottom:16px;color:rgba(229,231,235,.88)}
+    .primary{
+      border:0;border-radius:14px;padding:14px 16px;width:100%;font-weight:950;cursor:pointer;
+      background:linear-gradient(135deg,var(--purple),var(--blue));color:#061019;
+    }
+    #app{display:none;min-height:100vh}
+    .shell{
+      min-height:100vh;display:grid;grid-template-columns:280px 1fr;gap:16px;
+      padding:calc(16px + var(--safe-top)) 16px calc(70px + var(--safe-bottom)) 16px;
+    }
+    .sidebar,.card,.topbar{
+      background:var(--card);border:1px solid rgba(255,255,255,.12);
+      box-shadow:var(--shadow2);backdrop-filter:blur(10px);border-radius:var(--radius);
+    }
+    .sidebar{padding:16px;height:fit-content;position:sticky;top:16px}
+    .brand{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}
+    .brand h2{font-size:16px;font-weight:950}
+    .badge{font-size:11px;font-weight:900;padding:6px 9px;border-radius:999px;
+      background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14)}
+    .menu{display:flex;flex-direction:column;gap:10px;margin-top:14px}
+    .navbtn{
+      width:100%;border:1px solid rgba(255,255,255,.10);border-radius:14px;padding:12px;
+      color:var(--text);background:rgba(255,255,255,.06);font-weight:950;cursor:pointer;
+      text-align:left;display:flex;justify-content:space-between;gap:10px
+    }
+    .hint{font-size:12px;color:rgba(229,231,235,.70)}
+    .main{display:flex;flex-direction:column;gap:14px}
+    .topbar{padding:14px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+    .top-title{font-size:20px;font-weight:950}
+    .sub{font-size:12px;color:rgba(229,231,235,.72);font-weight:700;margin-top:5px}
+    .top-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    select,.btn{
+      border:1px solid rgba(255,255,255,.14);background:rgba(15,23,42,.85);color:var(--text);
+      border-radius:14px;padding:11px 12px;font-weight:900
+    }
+    .btn{cursor:pointer;background:rgba(255,255,255,.06)}
+    .hero{
+      display:grid;grid-template-columns:1.2fr .8fr;gap:14px
+    }
+    .card{padding:18px}
+    .hero h1{font-size:clamp(26px,4vw,44px);font-weight:950;line-height:1.05;margin-bottom:8px}
+    .hero p{color:rgba(229,231,235,.75);font-weight:700;line-height:1.45}
+    .target{
+      display:flex;align-items:center;justify-content:center;flex-direction:column;text-align:center;
+      min-height:190px
+    }
+    .target .amount{font-size:42px;font-weight:950}
+    .target .label{font-size:12px;color:var(--muted);font-weight:900;text-transform:uppercase;letter-spacing:.8px}
+    .progress-card h2,.entries h2{font-size:15px;font-weight:950;margin-bottom:14px}
+    .progress-shell{height:40px;border-radius:999px;background:rgba(255,255,255,.08);
+      border:1px solid rgba(255,255,255,.12);overflow:hidden;position:relative}
+    #progress-bar{height:100%;width:0%;border-radius:999px;
+      background:linear-gradient(90deg,var(--green),var(--blue));transition:width .2s ease}
+    #progress-text{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+      color:#061019;font-weight:950}
+    .progress-meta{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;
+      margin-top:10px;font-size:13px;font-weight:900;color:rgba(229,231,235,.80)}
+    .green{color:var(--green)}
+    .entries-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .week{
+      border-radius:16px;padding:14px;background:rgba(255,255,255,.045);
+      border:1px solid rgba(255,255,255,.10)
+    }
+    .week-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+    .week-title{font-weight:950}
+    .date{font-size:11px;color:var(--muted);font-weight:800}
+    .row{display:flex;align-items:center;gap:10px}
+    .money{
+      width:110px;text-align:right;border-radius:12px;border:1px solid rgba(255,255,255,.14);
+      background:rgba(255,255,255,.06);color:var(--text);padding:10px;font-size:16px;font-weight:900
+    }
+    .check{width:20px;height:20px;accent-color:var(--green)}
+    .state{font-size:12px;font-weight:900}
+    .footer-note{font-size:12px;color:rgba(229,231,235,.60);font-weight:700;line-height:1.4}
+    @media(max-width:980px){
+      .shell{grid-template-columns:1fr}
+      .sidebar{display:none}
+      .hero,.entries-grid{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+  <div id="login-screen">
+    <div id="login-card">
+      <div class="pill">🔒 Salvadanaio Vacanze • Per-account • Firebase</div>
+      <h1>🏖️ Salvadanaio Vacanze</h1>
+      <p>Metti da parte 30 € a settimana e raggiungi automaticamente il target mensile di 120 €.</p>
+      <button id="login-btn" class="primary">Accedi con Google</button>
+    </div>
+  </div>
+
+  <div id="app">
+    <div class="shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <h2>Budget Dashboard</h2>
+          <div class="badge">Vacanze</div>
+        </div>
+        <div id="status" class="sub">Stato: In attesa…</div>
+        <div id="user" class="sub"></div>
+        <div class="menu">
+          <button class="navbtn" onclick="location.href='index_vacanze.html'">
+            <span>💰 Dashboard</span><span class="hint">Home</span>
+          </button>
+          <button class="navbtn" onclick="location.href='risparmi.html'">
+            <span>📊 Grafico Risparmi</span><span class="hint">Stats</span>
+          </button>
+          <button class="navbtn" onclick="location.href='comparatori.html'">
+            <span>🛒 Comparatori</span><span class="hint">Offerte</span>
+          </button>
+          <button id="logout-btn" class="navbtn" style="display:none">
+            <span>🚪 Esci</span><span class="hint">Logout</span>
+          </button>
+        </div>
+      </aside>
+
+      <main class="main">
+        <div class="topbar">
+          <div>
+            <div class="top-title">🏖️ Vacanze</div>
+            <div class="sub">Salvadanaio personale • 30 € a settimana</div>
+          </div>
+          <div class="top-actions">
+            <select id="month-selector"></select>
+            <button id="top-logout" class="btn" style="display:none">Esci</button>
+          </div>
+        </div>
+
+        <div class="hero">
+          <section class="card">
+            <h1>Il tuo salvadanaio<br>per le vacanze.</h1>
+            <p>Ogni mese l'obiettivo è di 120 €. Segna ogni versamento settimanale quando hai realmente messo da parte i 30 €.</p>
+          </section>
+          <section class="card target">
+            <div class="label">Obiettivo mensile</div>
+            <div class="amount">€ 120</div>
+            <div id="next-payment" class="sub">Prossimo versamento: —</div>
+          </section>
+        </div>
+
+        <section class="card progress-card">
+          <h2>🎯 Avanzamento del mese</h2>
+          <div class="progress-shell">
+            <div id="progress-bar"></div>
+            <div id="progress-text">0%</div>
+          </div>
+          <div class="progress-meta">
+            <span>Versato: <b id="saved">€ 0,00</b></span>
+            <span>Manca: <b id="remaining">€ 120,00</b></span>
+          </div>
+        </section>
+
+        <section class="card entries">
+          <h2>📥 Entrate — categoria Vacanza</h2>
+          <div class="entries-grid">
+            <div class="week">
+              <div class="week-head">
+                <div class="week-title">Settimana 1</div>
+                <div id="date1" class="date"></div>
+              </div>
+              <div class="row">
+                <input id="amount1" class="money" type="number" min="0" step="0.01" value="30">
+                <input id="check1" class="check" type="checkbox">
+                <span id="state1" class="state">Da versare</span>
+              </div>
+            </div>
+            <div class="week">
+              <div class="week-head">
+                <div class="week-title">Settimana 2</div>
+                <div id="date2" class="date"></div>
+              </div>
+              <div class="row">
+                <input id="amount2" class="money" type="number" min="0" step="0.01" value="30">
+                <input id="check2" class="check" type="checkbox">
+                <span id="state2" class="state">Da versare</span>
+              </div>
+            </div>
+            <div class="week">
+              <div class="week-head">
+                <div class="week-title">Settimana 3</div>
+                <div id="date3" class="date"></div>
+              </div>
+              <div class="row">
+                <input id="amount3" class="money" type="number" min="0" step="0.01" value="30">
+                <input id="check3" class="check" type="checkbox">
+                <span id="state3" class="state">Da versare</span>
+              </div>
+            </div>
+            <div class="week">
+              <div class="week-head">
+                <div class="week-title">Settimana 4</div>
+                <div id="date4" class="date"></div>
+              </div>
+              <div class="row">
+                <input id="amount4" class="money" type="number" min="0" step="0.01" value="30">
+                <input id="check4" class="check" type="checkbox">
+                <span id="state4" class="state">Da versare</span>
+              </div>
+            </div>
+          </div>
+          <div class="footer-note" style="margin-top:14px">
+            I versamenti sono salvati separatamente per ogni mese e per il tuo account Google.
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+  import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+  import {
+    getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect,
+    getRedirectResult, onAuthStateChanged, signOut, setPersistence, browserSessionPersistence
+  } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyAdZbBv6JYbYnl6CxuFVfHhSftvIxwf2DY",
+    authDomain: "budget-luca.firebaseapp.com",
+    projectId: "budget-luca",
+    storageBucket: "budget-luca.firebasestorage.app",
+    messagingSenderId: "67496424698",
+    appId: "1:67496424698:web:b1822e04ef4efc07408543",
+    measurementId: "G-7LEYRZE9QN"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const auth = getAuth(app);
+  const provider = new GoogleAuthProvider();
+  provider.setCustomParameters({prompt:"select_account"});
+  await setPersistence(auth, browserSessionPersistence);
+
+  const loginScreen = document.getElementById("login-screen");
+  const appEl = document.getElementById("app");
+  const statusEl = document.getElementById("status");
+  const userEl = document.getElementById("user");
+  const monthSelector = document.getElementById("month-selector");
+  const logoutBtn = document.getElementById("logout-btn");
+  const topLogout = document.getElementById("top-logout");
+
+  let currentUser = null;
+  let unsubscribe = null;
+  let saveTimer = null;
+
+  const months = ["Gennaio","Febbraio","Marzo","Aprile","Maggio","Giugno","Luglio","Agosto","Settembre","Ottobre","Novembre","Dicembre"];
+  const pad = n => String(n).padStart(2,"0");
+  const money = n => "€ " + Number(n || 0).toFixed(2).replace(".",",");
+  const amount = v => parseFloat(String(v ?? "").replace(",", ".")) || 0;
+
+  function currentMonth(){
+    const d = new Date();
+    return `${d.getFullYear()}-${pad(d.getMonth()+1)}`;
+  }
+
+  function buildMonths(){
+    const now = new Date();
+    const start = new Date(now.getFullYear(), now.getMonth(), 1);
+    for(let i=0;i<12;i++){
+      const d = new Date(start.getFullYear(), start.getMonth()+i, 1);
+      const value = `${d.getFullYear()}-${pad(d.getMonth()+1)}`;
+      const opt = document.createElement("option");
+      opt.value = value;
+      opt.textContent = `${months[d.getMonth()]} ${d.getFullYear()}`;
+      monthSelector.appendChild(opt);
+    }
+    const saved = localStorage.getItem("vacanzeMonth") || currentMonth();
+    if ([...monthSelector.options].some(o=>o.value===saved)) monthSelector.value=saved;
+  }
+
+  function setStatus(text){ statusEl.textContent = "Stato: " + text; }
+
+  function reset(){
+    for(let i=1;i<=4;i++){
+      document.getElementById(`amount${i}`).value = 30;
+      document.getElementById(`check${i}`).checked = false;
+    }
+    render();
+  }
+
+  function monthDates(){
+    const [y,m] = monthSelector.value.split("-").map(Number);
+    for(let i=1;i<=4;i++){
+      const d = new Date(y,m-1,1 + (i-1)*7);
+      document.getElementById(`date${i}`).textContent =
+        d.toLocaleDateString("it-IT",{day:"2-digit",month:"short"});
+    }
+  }
+
+  function render(){
+    let saved=0;
+    let firstPending=0;
+    for(let i=1;i<=4;i++){
+      const a=amount(document.getElementById(`amount${i}`).value);
+      const checked=document.getElementById(`check${i}`).checked;
+      if(checked) saved += a;
+      else if(!firstPending) firstPending=i;
+      document.getElementById(`state${i}`).textContent = checked ? "Versato ✓" : "Da versare";
+      document.getElementById(`state${i}`).classList.toggle("green",checked);
+    }
+    const remaining=Math.max(0,120-saved);
+    const pct=Math.max(0,Math.min(100,(saved/120)*100));
+    document.getElementById("saved").textContent=money(saved);
+    document.getElementById("remaining").textContent=money(remaining);
+    document.getElementById("progress-bar").style.width=pct+"%";
+    document.getElementById("progress-text").textContent=Math.round(pct)+"%";
+
+    if(firstPending){
+      const [y,m]=monthSelector.value.split("-").map(Number);
+      const d=new Date(y,m-1,1+(firstPending-1)*7);
+      document.getElementById("next-payment").textContent =
+        `Prossimo versamento: ${d.toLocaleDateString("it-IT",{weekday:"long",day:"2-digit",month:"long"})}`;
+    }else{
+      document.getElementById("next-payment").textContent="Obiettivo mensile raggiunto ✓";
+    }
+  }
+
+  function collect(){
+    const weeks=[];
+    for(let i=1;i<=4;i++){
+      weeks.push({
+        amount: amount(document.getElementById(`amount${i}`).value),
+        paid: document.getElementById(`check${i}`).checked
+      });
+    }
+    return {month:monthSelector.value, target:120, weeklyTarget:30, weeks, lastModified:new Date().toISOString()};
+  }
+
+  async function save(){
+    if(!currentUser) return;
+    try{
+      setStatus("Salvataggio…");
+      const ref=doc(db,"users",currentUser.uid,"vacanze",monthSelector.value);
+      await setDoc(ref,collect(),{merge:true});
+      setStatus("Salvato ✓");
+    }catch(e){
+      console.error(e);
+      setStatus("Errore ❌");
+    }
+  }
+
+  function debouncedSave(){
+    clearTimeout(saveTimer);
+    saveTimer=setTimeout(save,700);
+  }
+
+  function populate(data){
+    for(let i=1;i<=4;i++){
+      const w=(data.weeks||[])[i-1]||{};
+      document.getElementById(`amount${i}`).value = w.amount ?? 30;
+      document.getElementById(`check${i}`).checked = !!w.paid;
+    }
+    monthDates();
+    render();
+  }
+
+  function attach(){
+    if(!currentUser) return;
+    if(unsubscribe){unsubscribe();unsubscribe=null;}
+    setStatus("Caricamento…");
+    const ref=doc(db,"users",currentUser.uid,"vacanze",monthSelector.value);
+    unsubscribe=onSnapshot(ref,snap=>{
+      if(snap.exists()) populate(snap.data());
+      else reset();
+      setStatus(snap.exists() ? "Sincronizzato ✓" : "Nuovo mese ✓");
+    },err=>{
+      console.error(err);
+      setStatus("Errore ❌");
+    });
+  }
+
+  async function login(){
+    try{ await signInWithPopup(auth,provider); }
+    catch(e){
+      if(["auth/popup-blocked","auth/cancelled-popup-request","auth/operation-not-supported-in-this-environment"].includes(e?.code)){
+        await signInWithRedirect(auth,provider);
+      }else{
+        console.error(e);
+        alert("Errore login Google.");
+      }
+    }
+  }
+
+  async function logout(){
+    if(unsubscribe){unsubscribe();unsubscribe=null;}
+    await signOut(auth);
+  }
+
+  buildMonths();
+  monthDates();
+
+  monthSelector.addEventListener("change",()=>{
+    localStorage.setItem("vacanzeMonth",monthSelector.value);
+    monthDates();
+    if(currentUser) attach();
+  });
+
+  document.addEventListener("input",e=>{
+    if(e.target.matches(".money")){
+      render();
+      debouncedSave();
+    }
+  });
+  document.addEventListener("change",e=>{
+    if(e.target.matches(".check")){
+      render();
+      debouncedSave();
+    }
+  });
+
+  document.getElementById("login-btn").addEventListener("click",login);
+  logoutBtn.addEventListener("click",logout);
+  topLogout.addEventListener("click",logout);
+  getRedirectResult(auth).catch(()=>{});
+
+  onAuthStateChanged(auth,user=>{
+    currentUser=user||null;
+    if(!user){
+      loginScreen.style.display="flex";
+      appEl.style.display="none";
+      userEl.textContent="";
+      logoutBtn.style.display="none";
+      topLogout.style.display="none";
+      setStatus("Login richiesto");
+      reset();
+      return;
+    }
+    loginScreen.style.display="none";
+    appEl.style.display="block";
+    userEl.textContent=user.email||"";
+    logoutBtn.style.display="flex";
+    topLogout.style.display="inline-flex";
+    attach();
+  });
+</script>
+</body>
+</html>
