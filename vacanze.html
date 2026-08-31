@@ -82,6 +82,13 @@
       border-radius:14px;padding:11px 12px;font-weight:900
     }
     .btn{cursor:pointer;background:rgba(255,255,255,.06)}
+    .home-btn{
+      font-weight:950;
+      letter-spacing:.2px;
+      cursor:pointer;
+      background:rgba(255,255,255,.08);
+    }
+
     .hero{
       display:grid;grid-template-columns:1.2fr .8fr;gap:14px
     }
@@ -170,7 +177,7 @@
           </div>
           <div class="top-actions">
             <select id="month-selector"></select>
-            <button id="top-logout" class="btn" style="display:none">Esci</button>
+            <button id="top-home" class="btn home-btn" type="button">⌂&nbsp; HOME</button>
           </div>
         </div>
 
@@ -285,7 +292,7 @@
   const userEl = document.getElementById("user");
   const monthSelector = document.getElementById("month-selector");
   const logoutBtn = document.getElementById("logout-btn");
-  const topLogout = document.getElementById("top-logout");
+  const topHome = document.getElementById("top-home");
 
   let currentUser = null;
   let unsubscribe = null;
@@ -458,7 +465,7 @@
 
   document.getElementById("login-btn").addEventListener("click",login);
   logoutBtn.addEventListener("click",logout);
-  topLogout.addEventListener("click",logout);
+  topHome.addEventListener("click",()=>{ location.href="index.html"; });
   getRedirectResult(auth).catch(()=>{});
 
   onAuthStateChanged(auth,user=>{
@@ -468,7 +475,7 @@
       appEl.style.display="none";
       userEl.textContent="";
       logoutBtn.style.display="none";
-      topLogout.style.display="none";
+      
       setStatus("Login richiesto");
       reset();
       return;
@@ -477,7 +484,7 @@
     appEl.style.display="block";
     userEl.textContent=user.email||"";
     logoutBtn.style.display="flex";
-    topLogout.style.display="inline-flex";
+    
     attach();
   });
 </script>
