@@ -1454,7 +1454,12 @@
       unsubscribe = fb.onSnapshot(ref, (snap)=>{
         if (isSaving) return;
         if (snap.exists()){
-          populateUIFromData(snap.data());
+          const budgetData = snap.data();
+          populateUIFromData(budgetData);
+          // Il Budget legge anche il mirror del Salvadanaio Vacanze presente nello stesso documento.
+          if (Array.isArray(budgetData.vacanzaWeeks)) {
+            renderVacationBudget({ weeks: budgetData.vacanzaWeeks });
+          }
           setSyncStatus("Sincronizzato ✅", "rgba(34,197,94,1)");
         } else {
           resetUIEmpty();
