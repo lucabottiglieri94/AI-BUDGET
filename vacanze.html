@@ -319,7 +319,7 @@
       opt.textContent = `${months[d.getMonth()]} ${d.getFullYear()}`;
       monthSelector.appendChild(opt);
     }
-    const saved = localStorage.getItem("vacanzeMonth") || currentMonth();
+    const saved = localStorage.getItem("sharedBudgetMonth") || localStorage.getItem("vacanzeMonth") || currentMonth();
     if ([...monthSelector.options].some(o=>o.value===saved)) monthSelector.value=saved;
   }
 
@@ -457,10 +457,16 @@
   }
 
   buildMonths();
+  monthSelector.value = localStorage.getItem("sharedBudgetMonth") || monthSelector.value;
+  localStorage.setItem("sharedBudgetMonth", monthSelector.value);
+  localStorage.setItem("vacanzeMonth", monthSelector.value);
+  localStorage.setItem("budgetMonth", monthSelector.value);
   monthDates();
 
   monthSelector.addEventListener("change",()=>{
     localStorage.setItem("vacanzeMonth",monthSelector.value);
+    localStorage.setItem("sharedBudgetMonth",monthSelector.value);
+    localStorage.setItem("budgetMonth",monthSelector.value);
     monthDates();
     if(currentUser) attach();
   });
