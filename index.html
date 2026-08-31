@@ -1214,10 +1214,14 @@
       document.getElementById('summary-entrate').textContent = formatCurrency(totalEntrate);
       document.getElementById('summary-spese').textContent = formatCurrency(totalSpese);
 
+      // Il "Risparmio" principale rappresenta il denaro ancora libero.
+      // Quanto già destinato alle Vacanze viene quindi sottratto dal saldo.
+      const availableBalance = balance - vacationSavedAmount;
+
       const balEl = document.getElementById('summary-balance');
-      balEl.textContent = formatCurrency(balance);
-      balEl.classList.toggle('pos', balance >= 0);
-      balEl.classList.toggle('neg', balance < 0);
+      balEl.textContent = formatCurrency(availableBalance);
+      balEl.classList.toggle('pos', availableBalance >= 0);
+      balEl.classList.toggle('neg', availableBalance < 0);
 
       updatePieChart();
       updateSavingsGoal();
@@ -1541,6 +1545,9 @@
           // Il Budget legge anche il mirror del Salvadanaio Vacanze presente nello stesso documento.
           if (Array.isArray(budgetData.vacanzaWeeks)) {
             renderVacationBudget({ weeks: budgetData.vacanzaWeeks });
+          } else {
+            vacationSavedAmount = 0;
+            updateBudgetTotals();
           }
           setSyncStatus("Sincronizzato ✅", "rgba(34,197,94,1)");
         } else {
