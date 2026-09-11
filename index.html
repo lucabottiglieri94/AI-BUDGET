@@ -1025,18 +1025,11 @@
     function showApp(){ loginScreen.style.display = "none"; appEl.style.display = "block"; }
 
     buildMonthOptions(monthSelector);
-    if (!currentMonth){
-      currentMonth = monthSelector.value;
-      localStorage.setItem("budgetMonth", currentMonth);
-      localStorage.setItem("sharedBudgetMonth", currentMonth);
-      localStorage.setItem("sharedBudgetMonth", currentMonth);
-      localStorage.setItem("vacanzeMonth", currentMonth);
-    } else {
-      monthSelector.value = currentMonth;
-    }
+    // Il mese viene gestito dalla pagina e i dati vengono letti esclusivamente da Firestore.
+    currentMonth = monthSelector.value;
+
     monthSelector.addEventListener("change", ()=>{
       currentMonth = monthSelector.value;
-      localStorage.setItem("budgetMonth", currentMonth);
       attachRealtimeListener();
       attachVacationListener();
     });
@@ -1439,7 +1432,7 @@
 
         const data = collectCurrentData();
         const ref = fb.doc(fb.db, "users", currentUser.uid, "budgets", currentMonth);
-        await fb.setDoc(ref, data, { merge:true });
+        await fb.setDoc(ref, data);
 
         setSyncStatus("Salvato ✅", "rgba(34,197,94,1)");
       }catch(e){
@@ -1551,7 +1544,6 @@
 
       const ref = fb.doc(fb.db, "users", currentUser.uid, "budgets", currentMonth);
       unsubscribe = fb.onSnapshot(ref, (snap)=>{
-        if (isSaving) return;
         if (snap.exists()){
           const budgetData = snap.data();
           populateUIFromData(budgetData);
@@ -1824,7 +1816,7 @@
         const typingId = addMsg("Sto analizzando…", 'ai');
 
         const budgetContext = {
-          month: localStorage.getItem("budgetMonth") || "",
+          month: currentMonth,
           summary: {
             entrate: getText("summary-entrate"),
             spese: getText("summary-spese"),
