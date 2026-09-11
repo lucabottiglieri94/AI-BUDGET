@@ -1275,7 +1275,22 @@
     }
     function addShoppingRow(id,item={}){ const c=document.getElementById(id); if(!c)return; const d=document.createElement('div');d.className='entry-item';d.innerHTML=`<input type="text" class="shopping-name" placeholder="Prodotto" value="${escapeAttr(item.name||'')}"><input type="number" class="shopping-price" placeholder="€" step="0.01" min="0" value="${escapeAttr(item.price||'')}"><button class="btn-remove" type="button" onclick="removeShoppingRow(this)">✕</button>`;c.appendChild(d);d.querySelector('.shopping-name').focus();localChangesPending=true;debouncedSave();}
     function removeShoppingRow(btn){btn.closest('.entry-item')?.remove();localChangesPending=true;updateFoodTotals();updatePetTotals();debouncedSave();}
-    function populateShoppingUI(data={}){['ll-mon-thu','ll-fri-sun','cats-mon-thu','cats-fri-sun'].forEach(id=>{const c=document.getElementById(id);if(!c)return;c.innerHTML='';(data[id]||[]).forEach(x=>addShoppingRow(id,x));});updateShoppingTotals();}
+    function populateShoppingUI(data={}){
+      isApplyingRemoteData = true;
+      ['ll-mon-thu','ll-fri-sun','cats-mon-thu','cats-fri-sun'].forEach(id=>{
+        const c=document.getElementById(id);
+        if(!c)return;
+        c.innerHTML='';
+        (data[id]||[]).forEach(item=>{
+          const d=document.createElement('div');
+          d.className='entry-item';
+          d.innerHTML=`<input type=\"text\" class=\"shopping-name\" placeholder=\"Prodotto\" value=\"${escapeAttr(item?.name||'')}\"><input type=\"number\" class=\"shopping-price\" placeholder=\"€\" step=\"0.01\" min=\"0\" value=\"${escapeAttr(item?.price||'')}\"><button class=\"btn-remove\" type=\"button\" onclick=\"removeShoppingRow(this)\">✕</button>`;
+          c.appendChild(d);
+        });
+      });
+      updateShoppingTotals();
+      localChangesPending = false;
+    }
     window.addShoppingRow=addShoppingRow; window.removeShoppingRow=removeShoppingRow;
 
     function collectCurrentData(){
@@ -1354,6 +1369,8 @@
     }
 
     function resetUIEmpty(){
+      localChangesPending = false;
+      clearTimeout(saveTimeout);
       document.getElementById('entrate-items').innerHTML = '';
       document.getElementById('spese-items').innerHTML = '';
       resetVacationBudget();
@@ -1429,6 +1446,9 @@
         petWeeklyInput.value = data.settings.petWeekly || 50;
       }
 
+      // Carica anche la nuova sezione Spesa settimanale da Firestore.
+      populateShoppingUI(data.spesaSettimanale || {});
+
       updateBudgetTotals();
       updatePieChart();
       updateSavingsGoal();
@@ -1442,6 +1462,8 @@
 
       if (unsubscribe){ unsubscribe(); unsubscribe = null; }
       firebaseDataLoaded = false;
+      localChangesPending = false;
+      clearTimeout(saveTimeout);
       const loadToken = ++firebaseLoadToken;
       setSyncStatus("Caricamento da Firebase…", "rgba(245,158,11,1)");
 
@@ -1454,6 +1476,7 @@
           const budgetData = snap.data();
           lastRemoteUpdate = budgetData._updatedAt || Date.now();
           isApplyingRemoteData = true;
+          localChangesPending = false;
           populateUIFromData(budgetData);
           setTimeout(()=>{ isApplyingRemoteData = false; }, 100);
           // Il Budget legge anche il mirror del Salvadanaio Vacanze presente nello stesso documento.
@@ -1466,6 +1489,7 @@
           if (loadToken === firebaseLoadToken) firebaseDataLoaded = true;
           setSyncStatus("Sincronizzato da Firebase ✅", "rgba(34,197,94,1)");
         } else {
+          localChangesPending = false;
           resetUIEmpty();
           if (loadToken === firebaseLoadToken) firebaseDataLoaded = true;
           setSyncStatus("Nessun dato su Firebase", "rgba(229,231,235,.85)");
