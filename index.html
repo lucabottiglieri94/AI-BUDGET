@@ -993,6 +993,8 @@
     let unsubscribeVacation = null;
     let isSaving = false;
     let isApplyingRemoteData = false;
+    let firebaseDataLoaded = false;
+    let firebaseLoadToken = 0;
     let lastRemoteUpdate = 0;
 
     // 🔥 DEBOUNCING: Salva dopo 800ms dall'ultima modifica
@@ -1426,7 +1428,7 @@
     // 🔥🔥🔥 DEBOUNCED SAVE - Salva solo dopo 800ms dall'ultima modifica
     async function saveMonthData(){
       const fb = window.firebaseAuth;
-      if (!fb || !currentUser || !currentMonth) return;
+      if (!fb || !currentUser || !currentMonth || !firebaseDataLoaded || isApplyingRemoteData) return;
 
       try{
         isSaving = true;
@@ -1447,7 +1449,7 @@
 
     // 🔥 WRAPPER CON DEBOUNCING
     function debouncedSave() {
-      if (isApplyingRemoteData) return;
+      if (isApplyingRemoteData || !firebaseDataLoaded) return;
       clearTimeout(saveTimeout);
       setSyncStatus("In attesa…", "rgba(156,163,175,1)");
       saveTimeout = setTimeout(() => {
@@ -1543,7 +1545,9 @@
       if (!fb || !currentUser) return;
 
       if (unsubscribe){ unsubscribe(); unsubscribe = null; }
-      setSyncStatus("Caricamento…", "rgba(245,158,11,1)");
+      firebaseDataLoaded = false;
+      const loadToken = ++firebaseLoadToken;
+      setSyncStatus("Caricamento da Firebase…", "rgba(245,158,11,1)");
 
       const ref = fb.doc(fb.db, "users", currentUser.uid, "budgets", currentMonth);
       unsubscribe = fb.onSnapshot(ref, (snap)=>{
@@ -1560,10 +1564,12 @@
             vacationSavedAmount = 0;
             updateBudgetTotals();
           }
-          setSyncStatus("Sincronizzato ✅", "rgba(34,197,94,1)");
+          if (loadToken === firebaseLoadToken) firebaseDataLoaded = true;
+          setSyncStatus("Sincronizzato da Firebase ✅", "rgba(34,197,94,1)");
         } else {
           resetUIEmpty();
-          setSyncStatus("Vuoto ✅", "rgba(229,231,235,.85)");
+          if (loadToken === firebaseLoadToken) firebaseDataLoaded = true;
+          setSyncStatus("Nessun dato su Firebase", "rgba(229,231,235,.85)");
         }
       }, (err)=>{
         console.error("Snapshot error:", err);
@@ -1896,31 +1902,10 @@
         widget.style.bottom = 'calc(78px + env(safe-area-inset-bottom, 0px))';
       }
 
-      function restoreSessionPos(){
-        const raw = sessionStorage.getItem('aiWidgetPosSession');
-        if(!raw) return false;
-        try{
-          const p = JSON.parse(raw);
-          if(!p || !p.left || !p.top) return false;
-          widget.style.left = p.left;
-          widget.style.top  = p.top;
-          widget.style.right = 'auto';
-          widget.style.bottom = 'auto';
-          return true;
-        }catch(e){
-          return false;
-        }
-      }
+      function restoreSessionPos(){ return false; }
+      function saveSessionPos(){ /* Posizione non salvata localmente */ }
 
-      function saveSessionPos(){
-        const rect = widget.getBoundingClientRect();
-        sessionStorage.setItem('aiWidgetPosSession', JSON.stringify({
-          left: rect.left + 'px',
-          top: rect.top + 'px'
-        }));
-      }
-
-      if(!restoreSessionPos()) setDefault();
+      setDefault();
 
       function pointFromEvent(e){
         return (e.touches && e.touches[0]) ? e.touches[0] : e;
@@ -2005,7 +1990,7 @@
           const r = widget.getBoundingClientRect();
           if (r.right > window.innerWidth || r.bottom > window.innerHeight || r.left < 0 || r.top < 0){
             setDefault();
-            sessionStorage.removeItem('aiWidgetPosSession');
+            
           } else {
             saveSessionPos();
           }
