@@ -203,23 +203,12 @@
       padding: 11px 12px;
       border-radius: 14px;
       border: 1px solid rgba(255,255,255,.14);
-      background: rgba(15,23,42,.85);
+      background: rgba(255,255,255,.06);
       color: rgba(229,231,235,.92);
       font-size: 15px;
       font-weight: 900;
       outline:none;
       appearance:none;
-      cursor: pointer;
-      transition: background 0.2s ease;
-    }
-    .select:hover{
-      background: rgba(15,23,42,.95);
-    }
-    .select option{
-      background: #0B1220;
-      color: rgba(229,231,235,.92);
-      padding: 10px;
-      font-weight: 900;
     }
     .btn{
       border:none;
@@ -292,48 +281,6 @@
     }
     .card .muted{ color: rgba(229,231,235,.70); font-weight:800; font-size:12px; }
 
-    /* ===== Entrate / Spese: pannelli richiudibili ===== */
-    .dynamic-card .card-toggle{
-      flex:0 0 auto;
-      width:36px;
-      height:36px;
-      border:1px solid rgba(255,255,255,.14);
-      border-radius:12px;
-      background:rgba(255,255,255,.07);
-      color:rgba(229,231,235,.95);
-      font-size:22px;
-      line-height:1;
-      font-weight:950;
-      cursor:pointer;
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      transition:transform .15s ease, background .15s ease;
-    }
-    .dynamic-card .card-toggle:hover{
-      background:rgba(255,255,255,.13);
-      transform:scale(1.05);
-    }
-    .dynamic-card .card-content{
-      overflow:hidden;
-      max-height:2000px;
-      opacity:1;
-      transition:max-height .28s ease, opacity .2s ease;
-    }
-    .dynamic-card.collapsed .card-content{
-      max-height:0;
-      opacity:0;
-    }
-    .dynamic-card.collapsed .card-toggle{
-      transform:scale(.96);
-    }
-    .dynamic-card h2{
-      margin-bottom:0;
-    }
-    .dynamic-card:not(.collapsed) h2{
-      margin-bottom:12px;
-    }
-
     .entry-items{ display:flex; flex-direction:column; gap:10px; margin-bottom: 12px; }
     .entry-item{
       display:flex;
@@ -402,40 +349,6 @@
       border: 1px solid rgba(255,255,255,.10);
       font-weight: 950;
       margin-top: 10px;
-    }
-
-    /* Budget Settings Input */
-    .budget-input{
-      width: 120px;
-      border-radius: 14px;
-      border: 1px solid rgba(255,255,255,.14);
-      background: rgba(255,255,255,.06);
-      color: rgba(229,231,235,.92);
-      padding: 8px 10px;
-      font-size: 14px;
-      font-weight: 900;
-      outline:none;
-      text-align: center;
-    }
-
-    /* Savings Breakdown */
-    .savings-breakdown{
-      margin-top:16px; 
-      padding-top:12px; 
-      border-top:1px solid rgba(255,255,255,.10);
-    }
-    .savings-breakdown-title{
-      font-size:11px; 
-      font-weight:900; 
-      color:rgba(229,231,235,.65); 
-      margin-bottom:8px;
-    }
-    .savings-breakdown-grid{
-      display:grid; 
-      grid-template-columns:1fr 1fr; 
-      gap:8px; 
-      font-size:12px; 
-      font-weight:800;
     }
 
     /* ===== AI ORB + CHAT ===== */
@@ -584,22 +497,11 @@
       box-shadow: 0 14px 34px rgba(0,0,0,.35);
     }
 
-    /* 🏖️ Salvadanaio Vacanze */
-    .vacation-budget-card{margin-top:0;}
-    .vacation-head{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:16px;}
-    .vacation-open-btn{font-weight:950;}
-    .vacation-progress-track{height:38px;border-radius:999px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);overflow:hidden;position:relative;}
-    #budget-vacation-progress{height:100%;width:0%;border-radius:999px;background:linear-gradient(90deg,rgba(34,197,94,1),rgba(56,189,248,1));transition:width .2s ease;}
-    #budget-vacation-percent{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-weight:950;color:#061019;}
-    .vacation-meta{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:9px;font-size:12px;font-weight:900;color:rgba(229,231,235,.78);}
-    .vacation-week-list{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:14px;}
-    .vacation-week{padding:12px;border-radius:14px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.10);}
-    .vacation-week-title{font-weight:950;font-size:13px;}
-    .vacation-week-status{font-size:12px;font-weight:900;margin-top:5px;}
-    .vacation-paid{color:rgba(34,197,94,1);}
-    @media (max-width: 980px){
-      .vacation-week-list{grid-template-columns:1fr 1fr;}
-    }
+
+    #weekly-shopping-page{display:none;}
+    #weekly-shopping-page .entry-item{align-items:center;}
+    .shopping-name{flex:1;min-width:0;}
+    .shopping-price{width:110px;}
 
     /* Mobile */
     @media (max-width: 980px){
@@ -640,20 +542,14 @@
         <div id="user-info"></div>
 
         <div class="menu">
-          <button class="navbtn" type="button" onclick="location.href='risparmi.html'">
-            <span>📊 Grafico Risparmi</span><span class="hint">Stats</span>
-          </button>
-          <button class="navbtn" type="button" onclick="location.href='vacanze.html'">
-            <span>🏖️ Vacanze</span><span class="hint">Salvadanaio</span>
-          </button>
-          <button class="navbtn" type="button" onclick="location.href='comparatori.html'">
-            <span>🛒 Comparatori</span><span class="hint">Offerte</span>
-          </button>
           <button id="login-btn" class="navbtn" type="button">
             <span>🔑 Accedi Google</span><span class="hint">Login</span>
           </button>
           <button id="logout-btn" class="navbtn" type="button" style="display:none;">
             <span>🚪 Esci</span><span class="hint">Logout</span>
+          </button>
+          <button id="weekly-shopping-nav" class="navbtn" type="button">
+            <span>🛒 Spesa settimanale</span><span class="hint">Apri</span>
           </button>
         </div>
       </aside>
@@ -662,7 +558,7 @@
         <div class="topbar">
           <div class="topbar-left">
             <div class="topbar-title">💰 Budget Mensile</div>
-            <div class="topbar-sub">Gestione entrate/spese • sincronizzato • ottimizzato</div>
+            <div class="topbar-sub">Gestione entrate/spese • sincronizzato</div>
           </div>
           <div class="topbar-right">
             <select id="month-selector" class="select"></select>
@@ -678,50 +574,18 @@
         </div>
 
         <div class="grid">
-          <section class="card dynamic-card collapsed" id="entrate-card">
-            <h2>
-              <span>📥 Entrate <span class="muted">totale: <span id="total-entrate">€ 0,00</span></span></span>
-              <button class="card-toggle" type="button" aria-label="Apri Entrate" aria-expanded="false" onclick="toggleBudgetCard('entrate-card', this)">＋</button>
-            </h2>
-            <div class="card-content">
-              <div class="entry-items" id="entrate-items"></div>
-              <button class="btn-add income" type="button" onclick="addEntryItem('entrate')">+ Aggiungi Entrata</button>
-            </div>
+          <section class="card">
+            <h2>📥 Entrate <span class="muted">totale: <span id="total-entrate">€ 0,00</span></span></h2>
+            <div class="entry-items" id="entrate-items"></div>
+            <button class="btn-add income" type="button" onclick="addEntryItem('entrate')">+ Aggiungi Entrata</button>
           </section>
 
-          <section class="card dynamic-card collapsed" id="spese-card">
-            <h2>
-              <span>📤 Spese <span class="muted">totale: <span id="total-spese">€ 0,00</span></span></span>
-              <button class="card-toggle" type="button" aria-label="Apri Spese" aria-expanded="false" onclick="toggleBudgetCard('spese-card', this)">＋</button>
-            </h2>
-            <div class="card-content">
-              <div class="entry-items" id="spese-items"></div>
-              <button class="btn-add cost" type="button" onclick="addEntryItem('spese')">+ Aggiungi Spesa</button>
-            </div>
+          <section class="card">
+            <h2>📤 Spese <span class="muted">totale: <span id="total-spese">€ 0,00</span></span></h2>
+            <div class="entry-items" id="spese-items"></div>
+            <button class="btn-add cost" type="button" onclick="addEntryItem('spese')">+ Aggiungi Spesa</button>
           </section>
         </div>
-
-        <!-- 🏖️ SALVADANAIO VACANZE - sincronizzato con vacanze.html -->
-        <section class="card vacation-budget-card">
-          <div class="vacation-head">
-            <div>
-              <h2>🏖️ Salvadanaio Vacanze <span class="muted">categoria separata</span></h2>
-              <div class="muted">30 € a settimana • obiettivo mensile 120 € • sincronizzato</div>
-            </div>
-            <button class="btn vacation-open-btn" type="button" onclick="location.href='vacanze.html'">🏠 Apri Salvadanaio</button>
-          </div>
-
-          <div class="vacation-progress-wrap">
-            <div class="vacation-progress-track"><div id="budget-vacation-progress"></div><span id="budget-vacation-percent">0%</span></div>
-            <div class="vacation-meta">
-              <span>Accantonato: <b id="budget-vacation-saved">€ 0,00</b></span>
-              <span>Mancano: <b id="budget-vacation-remaining">€ 120,00</b></span>
-            </div>
-          </div>
-
-          <div id="budget-vacation-weeks" class="vacation-week-list"></div>
-          <div id="budget-vacation-sync" class="muted" style="margin-top:10px;">Salvadanaio non ancora sincronizzato.</div>
-        </section>
 
         <div class="grid">
           <section class="card">
@@ -730,10 +594,8 @@
           </section>
 
           <section class="card">
-            <h2>🎯 Obiettivo Risparmio <span class="muted">
-              €<input type="number" id="savings-goal-input" class="budget-input" min="0" step="50" value="250" placeholder="250">
-            </span></h2>
-            <div class="muted" style="margin-bottom:8px;">Risparmio mensile target</div>
+            <h2>🎯 Obiettivo <span class="muted">€250</span></h2>
+            <div class="muted" style="margin-bottom:8px;">Risparmio mensile</div>
             <div style="height:38px;border-radius:999px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);overflow:hidden;position:relative;margin-bottom:10px;">
               <div id="savings-progress-bar" style="height:100%;width:0%;background:linear-gradient(90deg, rgba(34,197,94,1), rgba(56,189,248,1));border-radius:999px;transition:width .18s linear;"></div>
               <span id="progress-percentage" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-weight:950;color:#061019;text-shadow:0 2px 12px rgba(0,0,0,.35);">0%</span>
@@ -742,26 +604,21 @@
               <span>Risparmiato: <b id="saved-amount">€0,00</b></span>
               <span>Mancano: <b id="remaining-amount">€250,00</b></span>
             </div>
-            
-            <!-- 🆕 BREAKDOWN RISPARMI -->
-            <div class="savings-breakdown">
-              <div class="savings-breakdown-title">💡 BREAKDOWN RISPARMI</div>
-              <div class="savings-breakdown-grid">
-                <div>🛒 Cibo: <span id="food-savings-detail" class="pos">€0,00</span></div>
-                <div>🐾 Animali: <span id="pet-savings-detail" class="pos">€0,00</span></div>
-              </div>
-            </div>
+            <div style="display:none" id="goal-amount">250,00</div>
           </section>
         </div>
 
-        <!-- ✅ SPESE ALIMENTARI (4 settimane) -->
         <section class="card">
-          <h2>🛒 Spese Alimentari 
-            <span class="muted">
-              Budget: €<input type="number" id="food-budget-input" class="budget-input" min="0" step="50" value="500" placeholder="500"> 
-              • Target/sett: €<input type="number" id="food-weekly-input" class="budget-input" min="0" step="10" value="125" placeholder="125">
-            </span>
-          </h2>
+          <h2>🛒 Spese settimanali <span class="muted">sincronizzate</span></h2>
+          <div class="grid">
+            <div class="total-row"><span>Lunedì–Giovedì</span><b id="home-week-a">€ 0,00</b></div>
+            <div class="total-row"><span>Venerdì–Domenica</span><b id="home-week-b">€ 0,00</b></div>
+          </div>
+        </section>
+
+        <!-- ✅ SPESE ALIMENTARI (4 settimane) -->
+        <section id="old-food-section" class="card" style="display:none;">
+          <h2>🛒 Spese Alimentari <span class="muted">€500/mese • €125/settimana</span></h2>
 
           <div style="display:grid; grid-template-columns: 1fr 1fr; gap:14px;">
             <div class="card" style="background: rgba(255,255,255,.04); box-shadow:none;">
@@ -810,75 +667,52 @@
           </div>
 
           <div class="summary" style="margin-top:14px;">
-            <div class="sum"><div class="label">Budget</div><div class="value" id="display-food-budget">€ 500</div></div>
+            <div class="sum"><div class="label">Budget</div><div class="value">€ 500</div></div>
             <div class="sum"><div class="label">Speso</div><div class="value" id="total-food-spent">€ 0,00</div></div>
             <div class="sum"><div class="label">Rimasto</div><div class="value pos" id="total-food-remaining">€ 500,00</div></div>
           </div>
         </section>
-
-        <!-- 🐾 SPESE ANIMALI (4 settimane) -->
-        <section class="card">
-          <h2>🐾 Spese Animali 
-            <span class="muted">
-              Budget: €<input type="number" id="pet-budget-input" class="budget-input" min="0" step="50" value="200" placeholder="200"> 
-              • Target/sett: €<input type="number" id="pet-weekly-input" class="budget-input" min="0" step="10" value="50" placeholder="50">
-            </span>
-          </h2>
-
-          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:14px;">
-            <div class="card" style="background: rgba(255,255,255,.04); box-shadow:none;">
-              <div style="font-weight:950; margin-bottom:10px;">📅 Settimana 1</div>
-              <div class="week-grid">
-                <div><label>Spesa 1</label><input type="number" class="item-amount-input pet-week1-shopping" placeholder="€" step="0.01" min="0"></div>
-                <div><label>Spesa 2</label><input type="number" class="item-amount-input pet-week1-shopping" placeholder="€" step="0.01" min="0"></div>
-                <div><label>Spesa 3</label><input type="number" class="item-amount-input pet-week1-shopping" placeholder="€" step="0.01" min="0"></div>
-                <div><label>Spesa 4</label><input type="number" class="item-amount-input pet-week1-shopping" placeholder="€" step="0.01" min="0"></div>
-              </div>
-              <div class="total-row"><span>Totale</span><span id="total-pet-week1">€ 0,00</span></div>
-            </div>
-
-            <div class="card" style="background: rgba(255,255,255,.04); box-shadow:none;">
-              <div style="font-weight:950; margin-bottom:10px;">📅 Settimana 2</div>
-              <div class="week-grid">
-                <div><label>Spesa 1</label><input type="number" class="item-amount-input pet-week2-shopping" placeholder="€" step="0.01" min="0"></div>
-                <div><label>Spesa 2</label><input type="number" class="item-amount-input pet-week2-shopping" placeholder="€" step="0.01" min="0"></div>
-                <div><label>Spesa 3</label><input type="number" class="item-amount-input pet-week2-shopping" placeholder="€" step="0.01" min="0"></div>
-                <div><label>Spesa 4</label><input type="number" class="item-amount-input pet-week2-shopping" placeholder="€" step="0.01" min="0"></div>
-              </div>
-              <div class="total-row"><span>Totale</span><span id="total-pet-week2">€ 0,00</span></div>
-            </div>
-
-            <div class="card" style="background: rgba(255,255,255,.04); box-shadow:none;">
-              <div style="font-weight:950; margin-bottom:10px;">📅 Settimana 3</div>
-              <div class="week-grid">
-                <div><label>Spesa 1</label><input type="number" class="item-amount-input pet-week3-shopping" placeholder="€" step="0.01" min="0"></div>
-                <div><label>Spesa 2</label><input type="number" class="item-amount-input pet-week3-shopping" placeholder="€" step="0.01" min="0"></div>
-                <div><label>Spesa 3</label><input type="number" class="item-amount-input pet-week3-shopping" placeholder="€" step="0.01" min="0"></div>
-                <div><label>Spesa 4</label><input type="number" class="item-amount-input pet-week3-shopping" placeholder="€" step="0.01" min="0"></div>
-              </div>
-              <div class="total-row"><span>Totale</span><span id="total-pet-week3">€ 0,00</span></div>
-            </div>
-
-            <div class="card" style="background: rgba(255,255,255,.04); box-shadow:none;">
-              <div style="font-weight:950; margin-bottom:10px;">📅 Settimana 4</div>
-              <div class="week-grid">
-                <div><label>Spesa 1</label><input type="number" class="item-amount-input pet-week4-shopping" placeholder="€" step="0.01" min="0"></div>
-                <div><label>Spesa 2</label><input type="number" class="item-amount-input pet-week4-shopping" placeholder="€" step="0.01" min="0"></div>
-                <div><label>Spesa 3</label><input type="number" class="item-amount-input pet-week4-shopping" placeholder="€" step="0.01" min="0"></div>
-                <div><label>Spesa 4</label><input type="number" class="item-amount-input pet-week4-shopping" placeholder="€" step="0.01" min="0"></div>
-              </div>
-              <div class="total-row"><span>Totale</span><span id="total-pet-week4">€ 0,00</span></div>
-            </div>
-          </div>
-
-          <div class="summary" style="margin-top:14px;">
-            <div class="sum"><div class="label">Budget</div><div class="value" id="display-pet-budget">€ 200</div></div>
-            <div class="sum"><div class="label">Speso</div><div class="value" id="total-pet-spent">€ 0,00</div></div>
-            <div class="sum"><div class="label">Rimasto</div><div class="value pos" id="total-pet-remaining">€ 200,00</div></div>
-          </div>
-        </section>
       </main>
     </div>
+
+    <!-- PAGINA SPESA SETTIMANALE -->
+    <section id="weekly-shopping-page" style="display:none;">
+      <div class="topbar" style="margin-bottom:14px;">
+        <div class="topbar-left">
+          <div class="topbar-title">🛒 Spesa settimanale</div>
+          <div class="topbar-sub">Inserisci le spese una sola volta: i totali si sincronizzano con la home.</div>
+        </div>
+        <button id="back-home-btn" class="btn" type="button">← Torna alla home</button>
+      </div>
+      <div class="grid">
+        <section class="card">
+          <h2>👫 Luca e Lisa <span class="muted">Spese alimentari</span></h2>
+          <div class="card" style="background:rgba(255,255,255,.04);box-shadow:none;margin-bottom:12px;">
+            <h2>📅 Lunedì–Giovedì <span class="muted" id="ll-total-a">€ 0,00</span></h2>
+            <div class="entry-items" id="ll-mon-thu"></div>
+            <button class="btn-add income" type="button" onclick="addShoppingRow('ll-mon-thu')">+ Aggiungi prodotto</button>
+          </div>
+          <div class="card" style="background:rgba(255,255,255,.04);box-shadow:none;">
+            <h2>📅 Venerdì–Domenica <span class="muted" id="ll-total-b">€ 0,00</span></h2>
+            <div class="entry-items" id="ll-fri-sun"></div>
+            <button class="btn-add income" type="button" onclick="addShoppingRow('ll-fri-sun')">+ Aggiungi prodotto</button>
+          </div>
+        </section>
+        <section class="card">
+          <h2>🐈 Gatti <span class="muted">Spese animali</span></h2>
+          <div class="card" style="background:rgba(255,255,255,.04);box-shadow:none;margin-bottom:12px;">
+            <h2>📅 Lunedì–Giovedì <span class="muted" id="cats-total-a">€ 0,00</span></h2>
+            <div class="entry-items" id="cats-mon-thu"></div>
+            <button class="btn-add cost" type="button" onclick="addShoppingRow('cats-mon-thu')">+ Aggiungi prodotto</button>
+          </div>
+          <div class="card" style="background:rgba(255,255,255,.04);box-shadow:none;">
+            <h2>📅 Venerdì–Domenica <span class="muted" id="cats-total-b">€ 0,00</span></h2>
+            <div class="entry-items" id="cats-fri-sun"></div>
+            <button class="btn-add cost" type="button" onclick="addShoppingRow('cats-fri-sun')">+ Aggiungi prodotto</button>
+          </div>
+        </section>
+      </div>
+    </section>
 
     <!-- AI CHAT -->
     <div id="ai-chat-widget">
@@ -987,20 +821,10 @@
     function formatCurrency(v){ return "€ " + (Number(v||0)).toFixed(2).replace(".", ","); }
     function escapeAttr(s){ return (s ?? "").toString().replaceAll('"','&quot;'); }
 
-    let currentMonth = "";
+    let currentMonth = localStorage.getItem("budgetMonth") || "";
     let currentUser = null;
     let unsubscribe = null;
-    let unsubscribeVacation = null;
     let isSaving = false;
-    let isApplyingRemoteData = false;
-    let firebaseDataLoaded = false;
-    let firebaseLoadToken = 0;
-    let lastRemoteUpdate = 0;
-    // Blocca il listener remoto mentre l'utente sta modificando una riga locale.
-    let localChangesPending = false;
-
-    // 🔥 DEBOUNCING: Salva dopo 800ms dall'ultima modifica
-    let saveTimeout = null;
 
     const loginScreen = document.getElementById("login-screen");
     const loginScreenBtn = document.getElementById("login-screen-btn");
@@ -1016,13 +840,6 @@
     const userInfo = document.getElementById("user-info");
     const syncLabel = document.getElementById("sync-label");
 
-    // Settings inputs
-    const savingsGoalInput = document.getElementById("savings-goal-input");
-    const foodBudgetInput = document.getElementById("food-budget-input");
-    const foodWeeklyInput = document.getElementById("food-weekly-input");
-    const petBudgetInput = document.getElementById("pet-budget-input");
-    const petWeeklyInput = document.getElementById("pet-weekly-input");
-
     function setSyncStatus(text, color="rgba(229,231,235,.85)"){
       syncLabel.textContent = text;
       syncLabel.style.color = color;
@@ -1031,58 +848,21 @@
     function showApp(){ loginScreen.style.display = "none"; appEl.style.display = "block"; }
 
     buildMonthOptions(monthSelector);
-    // Il mese viene gestito dalla pagina e i dati vengono letti esclusivamente da Firestore.
-    currentMonth = monthSelector.value;
-
+    if (!currentMonth){
+      currentMonth = monthSelector.value;
+      localStorage.setItem("budgetMonth", currentMonth);
+    } else {
+      monthSelector.value = currentMonth;
+    }
     monthSelector.addEventListener("change", ()=>{
       currentMonth = monthSelector.value;
+      localStorage.setItem("budgetMonth", currentMonth);
       attachRealtimeListener();
-      attachVacationListener();
     });
 
-    // ===== Pannelli dinamici Entrate / Spese =====
-    function toggleBudgetCard(cardId, button){
-      const card = document.getElementById(cardId);
-      if (!card) return;
-      const collapsed = card.classList.toggle('collapsed');
-      button.textContent = collapsed ? '＋' : '−';
-      button.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
-      button.setAttribute('aria-label', collapsed ? 'Apri ' + (cardId === 'entrate-card' ? 'Entrate' : 'Spese') : 'Riduci ' + (cardId === 'entrate-card' ? 'Entrate' : 'Spese'));
-    }
-
-    // ===== Auto-expense items =====
-    function getAutoExpenseItem(labelName) {
-      const items = document.querySelectorAll('#spese-items .entry-item');
-      for (let item of items) {
-        const labelInput = item.querySelector('.item-label-input');
-        if (labelInput && labelInput.value.trim().toLowerCase() === labelName.toLowerCase()) {
-          return item.querySelector('.item-amount-input');
-        }
-      }
-      return null;
-    }
-
-    function ensureAutoExpenseItem(labelName, cssClass) {
-      let amountInput = getAutoExpenseItem(labelName);
-      
-      if (!amountInput) {
-        const container = document.getElementById('spese-items');
-        const div = document.createElement('div');
-        div.className = 'entry-item';
-        div.innerHTML = `
-          <input type="text" class="item-label-input" placeholder="Nome" value="${labelName}" readonly style="cursor:not-allowed;">
-          <input type="number" class="item-amount-input ${cssClass}" placeholder="€" value="0" step="0.01" min="0" readonly style="cursor:not-allowed;">
-          <button class="btn-remove" type="button" onclick="removeEntry(this)">✕</button>
-        `;
-        container.insertBefore(div, container.firstChild);
-        amountInput = div.querySelector('.item-amount-input');
-      }
-      
-      return amountInput;
-    }
-
+    // ===== Food totals =====
     function updateFoodTotals(){
-      const monthlyBudget = parseAmount(foodBudgetInput.value) || 500;
+      const monthlyBudget = 500;
       let monthlyTotal = 0;
 
       for (let week=1; week<=4; week++){
@@ -1096,9 +876,7 @@
 
       const spentEl = document.getElementById('total-food-spent');
       const remEl = document.getElementById('total-food-remaining');
-      const displayBudget = document.getElementById('display-food-budget');
 
-      if (displayBudget) displayBudget.textContent = formatCurrency(monthlyBudget);
       if (spentEl) spentEl.textContent = formatCurrency(monthlyTotal);
 
       if (remEl){
@@ -1107,59 +885,10 @@
         remEl.classList.toggle('pos', remaining >= 0);
         remEl.classList.toggle('neg', remaining < 0);
       }
-
-      // 🔥 AGGIORNA AUTOMATICAMENTE LA VOCE "Spesa alimentare" in Spese
-      const foodAmountInput = ensureAutoExpenseItem('Spesa alimentare', 'food-auto-amount');
-      if (foodAmountInput) {
-        foodAmountInput.value = monthlyTotal.toFixed(2);
-      }
-
-      // Aggiorna totali generali
-      updateBudgetTotals();
-    }
-
-    function updatePetTotals(){
-      const monthlyBudget = parseAmount(petBudgetInput.value) || 200;
-      let monthlyTotal = 0;
-
-      for (let week=1; week<=4; week++){
-        let weekTotal = 0;
-        document.querySelectorAll(`.pet-week${week}-shopping`).forEach(i => weekTotal += parseAmount(i.value));
-        monthlyTotal += weekTotal;
-
-        const el = document.getElementById(`total-pet-week${week}`);
-        if (el) el.textContent = formatCurrency(weekTotal);
-      }
-
-      const spentEl = document.getElementById('total-pet-spent');
-      const remEl = document.getElementById('total-pet-remaining');
-      const displayBudget = document.getElementById('display-pet-budget');
-
-      if (displayBudget) displayBudget.textContent = formatCurrency(monthlyBudget);
-      if (spentEl) spentEl.textContent = formatCurrency(monthlyTotal);
-
-      if (remEl){
-        const remaining = monthlyBudget - monthlyTotal;
-        remEl.textContent = formatCurrency(remaining);
-        remEl.classList.toggle('pos', remaining >= 0);
-        remEl.classList.toggle('neg', remaining < 0);
-      }
-
-      // 🔥 AGGIORNA AUTOMATICAMENTE LA VOCE "Spese animali" in Spese
-      const petAmountInput = ensureAutoExpenseItem('Spese animali', 'pet-auto-amount');
-      if (petAmountInput) {
-        petAmountInput.value = monthlyTotal.toFixed(2);
-      }
-
-      // Aggiorna totali generali
-      updateBudgetTotals();
     }
 
     // ===== Pie =====
     let pieChart = null;
-    // Importo già accantonato nel Salvadanaio Vacanze per il mese corrente.
-    // Viene sottratto dal risparmio disponibile, perché è già stato destinato alle vacanze.
-    let vacationSavedAmount = 0;
     function updatePieChart(){
       const canvas = document.getElementById("budgetPie");
       if (!canvas || typeof Chart === "undefined") return;
@@ -1213,193 +942,38 @@
       document.getElementById('summary-entrate').textContent = formatCurrency(totalEntrate);
       document.getElementById('summary-spese').textContent = formatCurrency(totalSpese);
 
-      // Il "Risparmio" principale rappresenta il denaro ancora libero.
-      // Quanto già destinato alle Vacanze viene quindi sottratto dal saldo.
-      const availableBalance = balance - vacationSavedAmount;
-
       const balEl = document.getElementById('summary-balance');
-      balEl.textContent = formatCurrency(availableBalance);
-      balEl.classList.toggle('pos', availableBalance >= 0);
-      balEl.classList.toggle('neg', availableBalance < 0);
+      balEl.textContent = formatCurrency(balance);
+      balEl.classList.toggle('pos', balance >= 0);
+      balEl.classList.toggle('neg', balance < 0);
 
       updatePieChart();
       updateSavingsGoal();
     }
 
-    // 🔥🔥🔥 NUOVA FUNZIONE CON CALCOLO CORRETTO DEL RISPARMIO
     function updateSavingsGoal(){
-      const goalAmount = parseAmount(savingsGoalInput.value) || 250;
+      const goalAmount = 250;
+      const totalIncome = parseFloat((document.getElementById('summary-entrate')?.textContent || "€ 0,00").replace('€','').replace('.', '').replace(',', '.').trim()) || 0;
+      const totalExpense = parseFloat((document.getElementById('total-spese')?.textContent || "€ 0,00").replace('€','').replace('.', '').replace(',', '.').trim()) || 0;
 
-      // Entrate reali del mese.
-      let totalIncome = 0;
-      document.querySelectorAll('#entrate-items .item-amount-input').forEach(input => {
-        totalIncome += parseAmount(input.value);
-      });
-
-      // Spese manuali.
-      let manualExpenses = 0;
-      document.querySelectorAll('#spese-items .item-amount-input').forEach(input => {
-        if (!input.classList.contains('food-auto-amount') &&
-            !input.classList.contains('pet-auto-amount')) {
-          manualExpenses += parseAmount(input.value);
-        }
-      });
-
-      // Spesa reale per cibo.
-      const foodBudget = parseAmount(foodBudgetInput.value) || 500;
-      let actualFoodSpent = 0;
-      for (let week=1; week<=4; week++){
-        document.querySelectorAll(`.week${week}-shopping`).forEach(i => {
-          actualFoodSpent += parseAmount(i.value);
-        });
-      }
-
-      // Spesa reale per animali.
-      const petBudget = parseAmount(petBudgetInput.value) || 200;
-      let actualPetSpent = 0;
-      for (let week=1; week<=4; week++){
-        document.querySelectorAll(`.pet-week${week}-shopping`).forEach(i => {
-          actualPetSpent += parseAmount(i.value);
-        });
-      }
-
-      // Prima calcoliamo il saldo normale del mese.
-      const totalExpenses = manualExpenses + actualFoodSpent + actualPetSpent;
-      const monthlyBalance = totalIncome - totalExpenses;
-
-      // Il denaro già messo nel Salvadanaio Vacanze è già "risparmiato"
-      // ma non è più risparmio libero: è destinato alle vacanze.
-      const savedAmount = Math.max(0, monthlyBalance - vacationSavedAmount);
-
-      const foodSavings = foodBudget - actualFoodSpent;
-      const petSavings = petBudget - actualPetSpent;
-
+      const savedAmount = totalIncome - totalExpense;
       let percentage = (savedAmount / goalAmount) * 100;
       percentage = Math.max(0, Math.min(100, percentage));
 
-      const progress = document.getElementById('savings-progress-bar');
-      const progressPct = document.getElementById('progress-percentage');
-      const savedEl = document.getElementById('saved-amount');
-      const remainingEl = document.getElementById('remaining-amount');
-
-      if (progress) progress.style.width = percentage + "%";
-      if (progressPct) progressPct.textContent = percentage.toFixed(0) + "%";
-      if (savedEl) savedEl.textContent = "€" + savedAmount.toFixed(2).replace('.', ',');
-      if (remainingEl) {
-        remainingEl.textContent = "€" +
-          Math.max(0, goalAmount - savedAmount).toFixed(2).replace('.', ',');
-      }
-
-      const foodSavingsEl = document.getElementById('food-savings-detail');
-      const petSavingsEl = document.getElementById('pet-savings-detail');
-
-      if (foodSavingsEl) {
-        foodSavingsEl.textContent = "€" + foodSavings.toFixed(2).replace('.', ',');
-        foodSavingsEl.classList.toggle('pos', foodSavings >= 0);
-        foodSavingsEl.classList.toggle('neg', foodSavings < 0);
-      }
-
-      if (petSavingsEl) {
-        petSavingsEl.textContent = "€" + petSavings.toFixed(2).replace('.', ',');
-        petSavingsEl.classList.toggle('pos', petSavings >= 0);
-        petSavingsEl.classList.toggle('neg', petSavings < 0);
-      }
-
-      console.log(`💰 Saldo mensile: €${monthlyBalance.toFixed(2)}`);
-      console.log(`🏖️ Già accantonato Vacanze: €${vacationSavedAmount.toFixed(2)}`);
-      console.log(`💚 Risparmio disponibile: €${savedAmount.toFixed(2)}`);
+      document.getElementById('savings-progress-bar').style.width = percentage + "%";
+      document.getElementById('progress-percentage').textContent = percentage.toFixed(0) + "%";
+      document.getElementById('saved-amount').textContent = "€" + savedAmount.toFixed(2).replace('.', ',');
+      document.getElementById('remaining-amount').textContent = "€" + Math.max(0, goalAmount - savedAmount).toFixed(2).replace('.', ',');
     }
 
-    // ===== Sincronizzazione Salvadanaio Vacanze =====
-    function renderVacationBudget(data){
-      const weeks = Array.isArray(data?.weeks) ? data.weeks : [];
-      let saved = 0;
-      const list = document.getElementById('budget-vacation-weeks');
-      if (!list) return;
-      list.innerHTML = '';
-
-      for(let i=0;i<4;i++){
-        const w = weeks[i] || {};
-        const value = parseAmount(w.amount ?? 30);
-        const paid = !!w.paid;
-        if(paid) saved += value;
-        const div = document.createElement('div');
-        div.className = 'vacation-week';
-        div.innerHTML = `<div class="vacation-week-title">Settimana ${i+1}</div><div class="vacation-week-status ${paid ? 'vacation-paid' : ''}">${paid ? '✓ Versati € ' + value.toFixed(2).replace('.',',') : 'Da versare € ' + value.toFixed(2).replace('.',',')}</div>`;
-        list.appendChild(div);
-      }
-
-      const remaining = Math.max(0,120-saved);
-      const pct = Math.max(0,Math.min(100,(saved/120)*100));
-      vacationSavedAmount = saved;
-      document.getElementById('budget-vacation-saved').textContent = formatCurrency(saved);
-      document.getElementById('budget-vacation-remaining').textContent = formatCurrency(remaining);
-      document.getElementById('budget-vacation-progress').style.width = pct + '%';
-      document.getElementById('budget-vacation-percent').textContent = Math.round(pct) + '%';
-
-      // Aggiornamento diretto del riquadro RISPARMIO.
-      // Saldo del mese - importo già accantonato nel Salvadanaio Vacanze.
-      const incomeNow = Array.from(document.querySelectorAll('#entrate-items .item-amount-input'))
-        .reduce((sum, input) => sum + parseAmount(input.value), 0);
-      const expenseNow = Array.from(document.querySelectorAll('#spese-items .item-amount-input'))
-        .reduce((sum, input) => sum + parseAmount(input.value), 0);
-      const availableNow = incomeNow - expenseNow - vacationSavedAmount;
-      const topSavings = document.getElementById('summary-balance');
-
-      if (topSavings) {
-        topSavings.textContent = formatCurrency(availableNow);
-        topSavings.classList.toggle('pos', availableNow >= 0);
-        topSavings.classList.toggle('neg', availableNow < 0);
-      }
-
-      updateSavingsGoal();
-    }
-
-    function resetVacationBudget(){
-      vacationSavedAmount = 0;
-      renderVacationBudget({weeks:[{amount:30,paid:false},{amount:30,paid:false},{amount:30,paid:false},{amount:30,paid:false}]});
-      const sync = document.getElementById('budget-vacation-sync');
-      if(sync) sync.textContent = 'Salvadanaio non ancora sincronizzato.';
-    }
-
-    function attachVacationListener(){
-      const fb = window.firebaseAuth;
-      if (!fb || !currentUser) return;
-      if (unsubscribeVacation){ unsubscribeVacation(); unsubscribeVacation = null; }
-
-      const ref = fb.doc(fb.db, 'users', currentUser.uid, 'vacanze', currentMonth);
-      unsubscribeVacation = fb.onSnapshot(ref, (snap)=>{
-        if(snap.exists()){
-          renderVacationBudget(snap.data());
-          const sync = document.getElementById('budget-vacation-sync');
-          if(sync) sync.textContent = 'Sincronizzato con il Salvadanaio Vacanze ✓';
-        }else{
-          resetVacationBudget();
-          const sync = document.getElementById('budget-vacation-sync');
-          if(sync) sync.textContent = 'Nessun versamento salvato per questo mese.';
-        }
-      }, (err)=>{
-        console.error('Vacation snapshot error:', err);
-        const sync = document.getElementById('budget-vacation-sync');
-        if(sync) sync.textContent = 'Errore sincronizzazione ❌';
-      });
-    }
-
-    // ===== Data (include food + pets + settings) =====
+    // ===== Data (include food) =====
     function collectCurrentData(){
       const data = {
         month: currentMonth,
         entrate: [],
         spese: [],
         spesaAlimentare: { week1:[], week2:[], week3:[], week4:[] },
-        spesaAnimali: { week1:[], week2:[], week3:[], week4:[] },
-        settings: {
-          savingsGoal: parseAmount(savingsGoalInput.value) || 250,
-          foodBudget: parseAmount(foodBudgetInput.value) || 500,
-          foodWeekly: parseAmount(foodWeeklyInput.value) || 125,
-          petBudget: parseAmount(petBudgetInput.value) || 200,
-          petWeekly: parseAmount(petWeeklyInput.value) || 50
-        },
+        spesaSettimanale: collectShoppingData(),
         lastModified: new Date().toISOString()
       };
 
@@ -1419,68 +993,42 @@
         document.querySelectorAll(`.week${week}-shopping`).forEach(input=>{
           data.spesaAlimentare[`week${week}`].push(input.value || "");
         });
-        document.querySelectorAll(`.pet-week${week}-shopping`).forEach(input=>{
-          data.spesaAnimali[`week${week}`].push(input.value || "");
-        });
       }
 
       return data;
     }
 
-    // 🔥🔥🔥 DEBOUNCED SAVE - Salva solo dopo 800ms dall'ultima modifica
     async function saveMonthData(){
       const fb = window.firebaseAuth;
-      if (!fb || !currentUser || !currentMonth || !firebaseDataLoaded || isApplyingRemoteData) return;
+      if (!fb || !currentUser) return;
 
       try{
         isSaving = true;
-        setSyncStatus("Salvataggio cloud…", "rgba(245,158,11,1)");
+        setSyncStatus("Salvataggio…", "rgba(245,158,11,1)");
+
         const data = collectCurrentData();
-        data._updatedAt = Date.now();
-        data._updatedBy = currentUser.uid;
         const ref = fb.doc(fb.db, "users", currentUser.uid, "budgets", currentMonth);
-        await fb.setDoc(ref, data, { merge: false });
-        localChangesPending = false;
-        setSyncStatus("Salvato sul cloud ✓", "rgba(34,197,94,1)");
+        await fb.setDoc(ref, data, { merge:true });
+
+        setSyncStatus("Salvato ✅", "rgba(34,197,94,1)");
       }catch(e){
         console.error("Save error:", e);
-        setSyncStatus("Errore salvataggio cloud", "rgba(239,68,68,1)");
+        setSyncStatus("Errore ❌", "rgba(239,68,68,1)");
       }finally{
-        setTimeout(()=>{ isSaving = false; }, 500);
+        setTimeout(()=>{ isSaving = false; }, 200);
       }
-    }
-
-    // 🔥 WRAPPER CON DEBOUNCING
-    function debouncedSave() {
-      if (isApplyingRemoteData || !firebaseDataLoaded) return;
-      clearTimeout(saveTimeout);
-      setSyncStatus("In attesa…", "rgba(156,163,175,1)");
-      saveTimeout = setTimeout(() => {
-        saveMonthData();
-      }, 800); // Aspetta 800ms dall'ultima modifica
     }
 
     function resetUIEmpty(){
       document.getElementById('entrate-items').innerHTML = '';
       document.getElementById('spese-items').innerHTML = '';
-      resetVacationBudget();
       for (let week=1; week<=4; week++){
         document.querySelectorAll(`.week${week}-shopping`).forEach(input => input.value = '');
-        document.querySelectorAll(`.pet-week${week}-shopping`).forEach(input => input.value = '');
       }
-      
-      // Reset settings to defaults
-      savingsGoalInput.value = 250;
-      foodBudgetInput.value = 500;
-      foodWeeklyInput.value = 125;
-      petBudgetInput.value = 200;
-      petWeeklyInput.value = 50;
-      
       updateBudgetTotals();
       updatePieChart();
       updateSavingsGoal();
       updateFoodTotals();
-      updatePetTotals();
     }
 
     function populateUIFromData(data){
@@ -1503,44 +1051,25 @@
       (data.spese || []).forEach(item=>{
         const div = document.createElement('div');
         div.className = 'entry-item';
-        const labelLower = item.label.toLowerCase();
-        const isFood = labelLower === 'spesa alimentare';
-        const isPet = labelLower === 'spese animali';
-        const isAuto = isFood || isPet;
-        const autoClass = isFood ? 'food-auto-amount' : (isPet ? 'pet-auto-amount' : '');
-        
         div.innerHTML = `
-          <input type="text" class="item-label-input" placeholder="Nome" value="${escapeAttr(item.label)}" ${isAuto ? 'readonly style="cursor:not-allowed;"' : ''}>
-          <input type="number" class="item-amount-input ${autoClass}" placeholder="€" value="${escapeAttr(item.amount)}" step="0.01" min="0" ${isAuto ? 'readonly style="cursor:not-allowed;"' : ''}>
+          <input type="text" class="item-label-input" placeholder="Nome" value="${escapeAttr(item.label)}">
+          <input type="number" class="item-amount-input" placeholder="€" value="${escapeAttr(item.amount)}" step="0.01" min="0">
           <button class="btn-remove" type="button" onclick="removeEntry(this)">✕</button>
         `;
         speseContainer.appendChild(div);
       });
 
       for (let week=1; week<=4; week++){
-        const foodInputs = document.querySelectorAll(`.week${week}-shopping`);
-        const foodData = (data.spesaAlimentare && data.spesaAlimentare[`week${week}`]) ? data.spesaAlimentare[`week${week}`] : [];
-        foodInputs.forEach((input, idx)=> input.value = foodData[idx] || '');
-        
-        const petInputs = document.querySelectorAll(`.pet-week${week}-shopping`);
-        const petData = (data.spesaAnimali && data.spesaAnimali[`week${week}`]) ? data.spesaAnimali[`week${week}`] : [];
-        petInputs.forEach((input, idx)=> input.value = petData[idx] || '');
-      }
-
-      // Load settings
-      if (data.settings) {
-        savingsGoalInput.value = data.settings.savingsGoal || 250;
-        foodBudgetInput.value = data.settings.foodBudget || 500;
-        foodWeeklyInput.value = data.settings.foodWeekly || 125;
-        petBudgetInput.value = data.settings.petBudget || 200;
-        petWeeklyInput.value = data.settings.petWeekly || 50;
+        const inputs = document.querySelectorAll(`.week${week}-shopping`);
+        const weekData = (data.spesaAlimentare && data.spesaAlimentare[`week${week}`]) ? data.spesaAlimentare[`week${week}`] : [];
+        inputs.forEach((input, idx)=> input.value = weekData[idx] || '');
       }
 
       updateBudgetTotals();
       updatePieChart();
       updateSavingsGoal();
       updateFoodTotals();
-      updatePetTotals();
+      populateShoppingUI(data.spesaSettimanale || {});
     }
 
     function attachRealtimeListener(){
@@ -1548,34 +1077,17 @@
       if (!fb || !currentUser) return;
 
       if (unsubscribe){ unsubscribe(); unsubscribe = null; }
-      firebaseDataLoaded = false;
-      const loadToken = ++firebaseLoadToken;
-      setSyncStatus("Caricamento da Firebase…", "rgba(245,158,11,1)");
+      setSyncStatus("Caricamento…", "rgba(245,158,11,1)");
 
       const ref = fb.doc(fb.db, "users", currentUser.uid, "budgets", currentMonth);
       unsubscribe = fb.onSnapshot(ref, (snap)=>{
-        // Se l'utente ha appena aggiunto/modificato una riga, non distruggere il suo input
-        // con uno snapshot vecchio o ancora in arrivo.
-        if (localChangesPending) return;
+        if (isSaving) return;
         if (snap.exists()){
-          const budgetData = snap.data();
-          lastRemoteUpdate = budgetData._updatedAt || Date.now();
-          isApplyingRemoteData = true;
-          populateUIFromData(budgetData);
-          setTimeout(()=>{ isApplyingRemoteData = false; }, 100);
-          // Il Budget legge anche il mirror del Salvadanaio Vacanze presente nello stesso documento.
-          if (Array.isArray(budgetData.vacanzaWeeks)) {
-            renderVacationBudget({ weeks: budgetData.vacanzaWeeks });
-          } else {
-            vacationSavedAmount = 0;
-            updateBudgetTotals();
-          }
-          if (loadToken === firebaseLoadToken) firebaseDataLoaded = true;
-          setSyncStatus("Sincronizzato da Firebase ✅", "rgba(34,197,94,1)");
+          populateUIFromData(snap.data());
+          setSyncStatus("Sincronizzato ✅", "rgba(34,197,94,1)");
         } else {
           resetUIEmpty();
-          if (loadToken === firebaseLoadToken) firebaseDataLoaded = true;
-          setSyncStatus("Nessun dato su Firebase", "rgba(229,231,235,.85)");
+          setSyncStatus("Vuoto ✅", "rgba(229,231,235,.85)");
         }
       }, (err)=>{
         console.error("Snapshot error:", err);
@@ -1583,7 +1095,45 @@
       });
     }
 
-    window.salvaBudgetCloud = function(){ saveMonthData(); };
+    // ===== Spesa settimanale =====
+    const shoppingIds = ['ll-mon-thu','ll-fri-sun','cats-mon-thu','cats-fri-sun'];
+    function collectShoppingData(){
+      const out={};
+      shoppingIds.forEach(id=>{
+        out[id]=[...document.querySelectorAll(`#${id} .entry-item`)].map(row=>({
+          label:row.querySelector('.shopping-name')?.value||'', amount:row.querySelector('.shopping-price')?.value||''
+        })).filter(x=>x.label||x.amount);
+      });
+      return out;
+    }
+    function shoppingTotal(id){return [...document.querySelectorAll(`#${id} .shopping-price`)].reduce((a,i)=>a+parseAmount(i.value),0);}
+    function updateShoppingTotals(){
+      const map={'ll-mon-thu':'ll-total-a','ll-fri-sun':'ll-total-b','cats-mon-thu':'cats-total-a','cats-fri-sun':'cats-total-b'};
+      Object.entries(map).forEach(([id,out])=>{const e=document.getElementById(out);if(e)e.textContent=formatCurrency(shoppingTotal(id));});
+      const a=shoppingTotal('ll-mon-thu')+shoppingTotal('cats-mon-thu');
+      const b=shoppingTotal('ll-fri-sun')+shoppingTotal('cats-fri-sun');
+      document.getElementById('home-week-a').textContent=formatCurrency(a);
+      document.getElementById('home-week-b').textContent=formatCurrency(b);
+    }
+    function addShoppingRow(id,item={}){
+      const c=document.getElementById(id); if(!c)return;
+      const d=document.createElement('div'); d.className='entry-item';
+      d.innerHTML=`<input class="item-label-input shopping-name" type="text" placeholder="Prodotto" value="${escapeAttr(item.label||'')}">
+      <input class="item-amount-input shopping-price" type="number" min="0" step="0.01" placeholder="€" value="${escapeAttr(item.amount||'')}">
+      <button class="btn-remove" type="button" onclick="removeShoppingRow(this)">✕</button>`;
+      c.appendChild(d); updateShoppingTotals(); saveMonthData();
+    }
+    function removeShoppingRow(btn){btn.closest('.entry-item')?.remove();updateShoppingTotals();saveMonthData();}
+    function populateShoppingUI(data){
+      shoppingIds.forEach(id=>{const c=document.getElementById(id);if(c){c.innerHTML='';(data[id]||[]).forEach(x=>addShoppingRowNoSave(id,x));}});updateShoppingTotals();
+    }
+    function addShoppingRowNoSave(id,item){
+      const c=document.getElementById(id);const d=document.createElement('div');d.className='entry-item';
+      d.innerHTML=`<input class="item-label-input shopping-name" type="text" placeholder="Prodotto" value="${escapeAttr(item.label||'')}"><input class="item-amount-input shopping-price" type="number" min="0" step="0.01" placeholder="€" value="${escapeAttr(item.amount||'')}"><button class="btn-remove" type="button" onclick="removeShoppingRow(this)">✕</button>`;c.appendChild(d);
+    }
+    window.addShoppingRow=addShoppingRow; window.removeShoppingRow=removeShoppingRow;
+    document.getElementById('weekly-shopping-nav').addEventListener('click',()=>{document.querySelector('.shell').style.display='none';document.getElementById('weekly-shopping-page').style.display='block';});
+    document.getElementById('back-home-btn').addEventListener('click',()=>{document.querySelector('.shell').style.display='grid';document.getElementById('weekly-shopping-page').style.display='none';});
 
     // ===== Add/Remove =====
     function addEntryItem(type){
@@ -1596,94 +1146,37 @@
         <button class="btn-remove" type="button" onclick="removeEntry(this)">✕</button>
       `;
       container.appendChild(div);
-      localChangesPending = true;
       updateBudgetTotals();
-      // Non salvare una riga vuota appena creata: attendi che l'utente inserisca i dati.
-      const firstInput = div.querySelector('.item-label-input');
-      if (firstInput) firstInput.focus();
+      saveMonthData();
     }
     function removeEntry(btn){
       const row = btn.closest(".entry-item");
       if (row){
-        // Check if it's an auto-generated expense
-        const labelInput = row.querySelector('.item-label-input');
-        if (labelInput) {
-          const labelLower = labelInput.value.trim().toLowerCase();
-          if (labelLower === 'spesa alimentare' || labelLower === 'spese animali') {
-            if (!confirm(`⚠️ Questa è la voce "${labelInput.value}" auto-generata. Vuoi davvero eliminarla? (Si rigenererà automaticamente)`)) {
-              return;
-            }
-          }
-        }
-        
         row.remove();
-        localChangesPending = true;
         updateBudgetTotals();
-        updateFoodTotals();
-        updatePetTotals();
-        debouncedSave(); // 🔥 USA IL DEBOUNCED SAVE
+        saveMonthData();
       }
     }
     window.addEntryItem = addEntryItem;
     window.removeEntry = removeEntry;
 
-    // 🔥 AUTOSAVE CON DEBOUNCING - evita troppi salvataggi
+    // autosave: entrate/spese + food
     document.addEventListener("input", (e)=>{
       const t = e.target;
       if (!t) return;
 
-      // Food
+      if (t.classList.contains("shopping-name") || t.classList.contains("shopping-price")){ updateShoppingTotals(); saveMonthData(); return; }
+
       if (t.classList.contains("week1-shopping") || t.classList.contains("week2-shopping") ||
           t.classList.contains("week3-shopping") || t.classList.contains("week4-shopping")){
         updateFoodTotals();
-        localChangesPending = true;
-        debouncedSave(); // 🔥 DEBOUNCED
+        saveMonthData();
         return;
       }
 
-      // Pets
-      if (t.classList.contains("pet-week1-shopping") || t.classList.contains("pet-week2-shopping") ||
-          t.classList.contains("pet-week3-shopping") || t.classList.contains("pet-week4-shopping")){
-        updatePetTotals();
-        localChangesPending = true;
-        debouncedSave(); // 🔥 DEBOUNCED
-        return;
-      }
-
-      // Savings goal
-      if (t.id === 'savings-goal-input') {
-        updateSavingsGoal();
-        localChangesPending = true;
-        debouncedSave(); // 🔥 DEBOUNCED
-        return;
-      }
-
-      // Food settings
-      if (t.id === 'food-budget-input' || t.id === 'food-weekly-input') {
-        updateFoodTotals();
-        localChangesPending = true;
-        debouncedSave(); // 🔥 DEBOUNCED
-        return;
-      }
-
-      // Pet settings
-      if (t.id === 'pet-budget-input' || t.id === 'pet-weekly-input') {
-        updatePetTotals();
-        localChangesPending = true;
-        debouncedSave(); // 🔥 DEBOUNCED
-        return;
-      }
-
-      // Regular entries
       if (t.classList.contains("item-label-input") || t.classList.contains("item-amount-input")){
-        // Previeni modifica manuale delle voci auto
-        if (t.classList.contains("food-auto-amount") || t.classList.contains("pet-auto-amount")) {
-          e.preventDefault();
-          return;
-        }
-        localChangesPending = true;
         updateBudgetTotals();
-        debouncedSave(); // 🔥 DEBOUNCED
+        saveMonthData();
       }
     });
 
@@ -1739,8 +1232,6 @@
           currentUser = user || null;
 
           if (!currentUser){
-            if (unsubscribeVacation){ unsubscribeVacation(); unsubscribeVacation = null; }
-            resetVacationBudget();
             userInfo.textContent = "";
             logoutBtnSidebar.style.display = "none";
             logoutBtnTop.style.display = "none";
@@ -1758,8 +1249,7 @@
           loginBtnTop.style.display = "none";
           setSyncStatus("Pronto ✅", "rgba(229,231,235,.85)");
           attachRealtimeListener();
-          attachVacationListener();
-          setTimeout(()=>{ updatePieChart(); updateSavingsGoal(); updateFoodTotals(); updatePetTotals(); }, 120);
+          setTimeout(()=>{ updatePieChart(); updateSavingsGoal(); updateFoodTotals(); }, 120);
         });
       }, 60);
     })();
@@ -1826,6 +1316,7 @@
         delete messagesEl.dataset.started;
       });
 
+      // minimize = chiudi (niente barra rimasta)
       minimizeBtn.addEventListener('click', ()=>{
         chatBox.classList.add('hidden');
       });
@@ -1846,7 +1337,7 @@
         const typingId = addMsg("Sto analizzando…", 'ai');
 
         const budgetContext = {
-          month: currentMonth,
+          month: localStorage.getItem("budgetMonth") || "",
           summary: {
             entrate: getText("summary-entrate"),
             spese: getText("summary-spese"),
@@ -1859,19 +1350,6 @@
             week2: [...document.querySelectorAll(".week2-shopping")].map(i=>i.value||""),
             week3: [...document.querySelectorAll(".week3-shopping")].map(i=>i.value||""),
             week4: [...document.querySelectorAll(".week4-shopping")].map(i=>i.value||"")
-          },
-          pets: {
-            week1: [...document.querySelectorAll(".pet-week1-shopping")].map(i=>i.value||""),
-            week2: [...document.querySelectorAll(".pet-week2-shopping")].map(i=>i.value||""),
-            week3: [...document.querySelectorAll(".pet-week3-shopping")].map(i=>i.value||""),
-            week4: [...document.querySelectorAll(".pet-week4-shopping")].map(i=>i.value||"")
-          },
-          settings: {
-            savingsGoal: savingsGoalInput.value,
-            foodBudget: foodBudgetInput.value,
-            foodWeekly: foodWeeklyInput.value,
-            petBudget: petBudgetInput.value,
-            petWeekly: petWeeklyInput.value
           }
         };
 
@@ -1894,12 +1372,12 @@
           updateMsg(typingId, data.answer || "Nessuna risposta.");
         }catch(err){
           console.error(err);
-          updateMsg(typingId, "Errore nel contattare l'AI.");
+          updateMsg(typingId, "Errore nel contattare l’AI.");
         }
       });
     })();
 
-    // ===== ORB DRAG =====
+    // ===== ORB DRAG: sessione (resta finché non refresh), NO scroll dietro su iPhone =====
     (function(){
       const widget = document.getElementById('ai-chat-widget');
       const btn = document.getElementById('ai-chat-button');
@@ -1918,10 +1396,31 @@
         widget.style.bottom = 'calc(78px + env(safe-area-inset-bottom, 0px))';
       }
 
-      function restoreSessionPos(){ return false; }
-      function saveSessionPos(){ /* Posizione non salvata localmente */ }
+      function restoreSessionPos(){
+        const raw = sessionStorage.getItem('aiWidgetPosSession');
+        if(!raw) return false;
+        try{
+          const p = JSON.parse(raw);
+          if(!p || !p.left || !p.top) return false;
+          widget.style.left = p.left;
+          widget.style.top  = p.top;
+          widget.style.right = 'auto';
+          widget.style.bottom = 'auto';
+          return true;
+        }catch(e){
+          return false;
+        }
+      }
 
-      setDefault();
+      function saveSessionPos(){
+        const rect = widget.getBoundingClientRect();
+        sessionStorage.setItem('aiWidgetPosSession', JSON.stringify({
+          left: rect.left + 'px',
+          top: rect.top + 'px'
+        }));
+      }
+
+      if(!restoreSessionPos()) setDefault();
 
       function pointFromEvent(e){
         return (e.touches && e.touches[0]) ? e.touches[0] : e;
@@ -2006,7 +1505,7 @@
           const r = widget.getBoundingClientRect();
           if (r.right > window.innerWidth || r.bottom > window.innerHeight || r.left < 0 || r.top < 0){
             setDefault();
-            
+            sessionStorage.removeItem('aiWidgetPosSession');
           } else {
             saveSessionPos();
           }
@@ -2020,9 +1519,6 @@
   service cloud.firestore {
     match /databases/{database}/documents {
       match /users/{userId}/budgets/{monthId} {
-        allow read, write: if request.auth != null && request.auth.uid == userId;
-      }
-      match /users/{userId}/vacanze/{monthId} {
         allow read, write: if request.auth != null && request.auth.uid == userId;
       }
     }
