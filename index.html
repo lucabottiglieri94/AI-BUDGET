@@ -601,12 +601,6 @@
       .vacation-week-list{grid-template-columns:1fr 1fr;}
     }
 
-
-    #weekly-shopping-page{display:none;}
-    .shopping-name{flex:1;min-width:0;}
-    .shopping-price{width:110px;}
-    #weekly-shopping-page .entry-item{align-items:center;}
-
     /* Mobile */
     @media (max-width: 980px){
       .shell{ grid-template-columns: 1fr; }
@@ -660,9 +654,6 @@
           </button>
           <button id="logout-btn" class="navbtn" type="button" style="display:none;">
             <span>🚪 Esci</span><span class="hint">Logout</span>
-          </button>
-          <button id="weekly-shopping-nav" class="navbtn" type="button">
-            <span>🛒 Spesa settimanale</span><span class="hint">Apri</span>
           </button>
         </div>
       </aside>
@@ -763,67 +754,131 @@
           </section>
         </div>
 
-        <!-- 🛒 SPESE ALIMENTARI COLLEGATE ALLA SPESA SETTIMANALE -->
+        <!-- ✅ SPESE ALIMENTARI (4 settimane) -->
         <section class="card">
-          <h2>🛒 Spese Alimentari <span class="muted">Luca e Lisa • sincronizzato</span></h2>
-          <div class="grid">
-            <div class="card" style="background:rgba(255,255,255,.04);box-shadow:none;">
-              <div style="font-weight:950;margin-bottom:10px;">📅 Lunedì–Giovedì</div>
-              <div class="total-row"><span>Totale periodo</span><b id="home-ll-a">€ 0,00</b></div>
+          <h2>🛒 Spese Alimentari 
+            <span class="muted">
+              Budget: €<input type="number" id="food-budget-input" class="budget-input" min="0" step="50" value="500" placeholder="500"> 
+              • Target/sett: €<input type="number" id="food-weekly-input" class="budget-input" min="0" step="10" value="125" placeholder="125">
+            </span>
+          </h2>
+
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:14px;">
+            <div class="card" style="background: rgba(255,255,255,.04); box-shadow:none;">
+              <div style="font-weight:950; margin-bottom:10px;">📅 Settimana 1</div>
+              <div class="week-grid">
+                <div><label>Spesa 1</label><input type="number" class="item-amount-input week1-shopping" placeholder="€" step="0.01" min="0"></div>
+                <div><label>Spesa 2</label><input type="number" class="item-amount-input week1-shopping" placeholder="€" step="0.01" min="0"></div>
+                <div><label>Spesa 3</label><input type="number" class="item-amount-input week1-shopping" placeholder="€" step="0.01" min="0"></div>
+                <div><label>Spesa 4</label><input type="number" class="item-amount-input week1-shopping" placeholder="€" step="0.01" min="0"></div>
+              </div>
+              <div class="total-row"><span>Totale</span><span id="total-week1">€ 0,00</span></div>
             </div>
-            <div class="card" style="background:rgba(255,255,255,.04);box-shadow:none;">
-              <div style="font-weight:950;margin-bottom:10px;">📅 Venerdì–Domenica</div>
-              <div class="total-row"><span>Totale periodo</span><b id="home-ll-b">€ 0,00</b></div>
+
+            <div class="card" style="background: rgba(255,255,255,.04); box-shadow:none;">
+              <div style="font-weight:950; margin-bottom:10px;">📅 Settimana 2</div>
+              <div class="week-grid">
+                <div><label>Spesa 1</label><input type="number" class="item-amount-input week2-shopping" placeholder="€" step="0.01" min="0"></div>
+                <div><label>Spesa 2</label><input type="number" class="item-amount-input week2-shopping" placeholder="€" step="0.01" min="0"></div>
+                <div><label>Spesa 3</label><input type="number" class="item-amount-input week2-shopping" placeholder="€" step="0.01" min="0"></div>
+                <div><label>Spesa 4</label><input type="number" class="item-amount-input week2-shopping" placeholder="€" step="0.01" min="0"></div>
+              </div>
+              <div class="total-row"><span>Totale</span><span id="total-week2">€ 0,00</span></div>
+            </div>
+
+            <div class="card" style="background: rgba(255,255,255,.04); box-shadow:none;">
+              <div style="font-weight:950; margin-bottom:10px;">📅 Settimana 3</div>
+              <div class="week-grid">
+                <div><label>Spesa 1</label><input type="number" class="item-amount-input week3-shopping" placeholder="€" step="0.01" min="0"></div>
+                <div><label>Spesa 2</label><input type="number" class="item-amount-input week3-shopping" placeholder="€" step="0.01" min="0"></div>
+                <div><label>Spesa 3</label><input type="number" class="item-amount-input week3-shopping" placeholder="€" step="0.01" min="0"></div>
+                <div><label>Spesa 4</label><input type="number" class="item-amount-input week3-shopping" placeholder="€" step="0.01" min="0"></div>
+              </div>
+              <div class="total-row"><span>Totale</span><span id="total-week3">€ 0,00</span></div>
+            </div>
+
+            <div class="card" style="background: rgba(255,255,255,.04); box-shadow:none;">
+              <div style="font-weight:950; margin-bottom:10px;">📅 Settimana 4</div>
+              <div class="week-grid">
+                <div><label>Spesa 1</label><input type="number" class="item-amount-input week4-shopping" placeholder="€" step="0.01" min="0"></div>
+                <div><label>Spesa 2</label><input type="number" class="item-amount-input week4-shopping" placeholder="€" step="0.01" min="0"></div>
+                <div><label>Spesa 3</label><input type="number" class="item-amount-input week4-shopping" placeholder="€" step="0.01" min="0"></div>
+                <div><label>Spesa 4</label><input type="number" class="item-amount-input week4-shopping" placeholder="€" step="0.01" min="0"></div>
+              </div>
+              <div class="total-row"><span>Totale</span><span id="total-week4">€ 0,00</span></div>
             </div>
           </div>
+
           <div class="summary" style="margin-top:14px;">
-            <div class="sum"><div class="label">Budget mensile</div><div class="value">€<input type="number" id="food-budget-input" class="budget-input" min="0" step="50" value="500"></div></div>
+            <div class="sum"><div class="label">Budget</div><div class="value" id="display-food-budget">€ 500</div></div>
             <div class="sum"><div class="label">Speso</div><div class="value" id="total-food-spent">€ 0,00</div></div>
             <div class="sum"><div class="label">Rimasto</div><div class="value pos" id="total-food-remaining">€ 500,00</div></div>
           </div>
         </section>
 
-        <!-- 🐈 SPESE ANIMALI COLLEGATE ALLA SPESA SETTIMANALE -->
+        <!-- 🐾 SPESE ANIMALI (4 settimane) -->
         <section class="card">
-          <h2>🐈 Spese Animali <span class="muted">Gatti • sincronizzato</span></h2>
-          <div class="grid">
-            <div class="card" style="background:rgba(255,255,255,.04);box-shadow:none;">
-              <div style="font-weight:950;margin-bottom:10px;">📅 Lunedì–Giovedì</div>
-              <div class="total-row"><span>Totale periodo</span><b id="home-cats-a">€ 0,00</b></div>
+          <h2>🐾 Spese Animali 
+            <span class="muted">
+              Budget: €<input type="number" id="pet-budget-input" class="budget-input" min="0" step="50" value="200" placeholder="200"> 
+              • Target/sett: €<input type="number" id="pet-weekly-input" class="budget-input" min="0" step="10" value="50" placeholder="50">
+            </span>
+          </h2>
+
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:14px;">
+            <div class="card" style="background: rgba(255,255,255,.04); box-shadow:none;">
+              <div style="font-weight:950; margin-bottom:10px;">📅 Settimana 1</div>
+              <div class="week-grid">
+                <div><label>Spesa 1</label><input type="number" class="item-amount-input pet-week1-shopping" placeholder="€" step="0.01" min="0"></div>
+                <div><label>Spesa 2</label><input type="number" class="item-amount-input pet-week1-shopping" placeholder="€" step="0.01" min="0"></div>
+                <div><label>Spesa 3</label><input type="number" class="item-amount-input pet-week1-shopping" placeholder="€" step="0.01" min="0"></div>
+                <div><label>Spesa 4</label><input type="number" class="item-amount-input pet-week1-shopping" placeholder="€" step="0.01" min="0"></div>
+              </div>
+              <div class="total-row"><span>Totale</span><span id="total-pet-week1">€ 0,00</span></div>
             </div>
-            <div class="card" style="background:rgba(255,255,255,.04);box-shadow:none;">
-              <div style="font-weight:950;margin-bottom:10px;">📅 Venerdì–Domenica</div>
-              <div class="total-row"><span>Totale periodo</span><b id="home-cats-b">€ 0,00</b></div>
+
+            <div class="card" style="background: rgba(255,255,255,.04); box-shadow:none;">
+              <div style="font-weight:950; margin-bottom:10px;">📅 Settimana 2</div>
+              <div class="week-grid">
+                <div><label>Spesa 1</label><input type="number" class="item-amount-input pet-week2-shopping" placeholder="€" step="0.01" min="0"></div>
+                <div><label>Spesa 2</label><input type="number" class="item-amount-input pet-week2-shopping" placeholder="€" step="0.01" min="0"></div>
+                <div><label>Spesa 3</label><input type="number" class="item-amount-input pet-week2-shopping" placeholder="€" step="0.01" min="0"></div>
+                <div><label>Spesa 4</label><input type="number" class="item-amount-input pet-week2-shopping" placeholder="€" step="0.01" min="0"></div>
+              </div>
+              <div class="total-row"><span>Totale</span><span id="total-pet-week2">€ 0,00</span></div>
+            </div>
+
+            <div class="card" style="background: rgba(255,255,255,.04); box-shadow:none;">
+              <div style="font-weight:950; margin-bottom:10px;">📅 Settimana 3</div>
+              <div class="week-grid">
+                <div><label>Spesa 1</label><input type="number" class="item-amount-input pet-week3-shopping" placeholder="€" step="0.01" min="0"></div>
+                <div><label>Spesa 2</label><input type="number" class="item-amount-input pet-week3-shopping" placeholder="€" step="0.01" min="0"></div>
+                <div><label>Spesa 3</label><input type="number" class="item-amount-input pet-week3-shopping" placeholder="€" step="0.01" min="0"></div>
+                <div><label>Spesa 4</label><input type="number" class="item-amount-input pet-week3-shopping" placeholder="€" step="0.01" min="0"></div>
+              </div>
+              <div class="total-row"><span>Totale</span><span id="total-pet-week3">€ 0,00</span></div>
+            </div>
+
+            <div class="card" style="background: rgba(255,255,255,.04); box-shadow:none;">
+              <div style="font-weight:950; margin-bottom:10px;">📅 Settimana 4</div>
+              <div class="week-grid">
+                <div><label>Spesa 1</label><input type="number" class="item-amount-input pet-week4-shopping" placeholder="€" step="0.01" min="0"></div>
+                <div><label>Spesa 2</label><input type="number" class="item-amount-input pet-week4-shopping" placeholder="€" step="0.01" min="0"></div>
+                <div><label>Spesa 3</label><input type="number" class="item-amount-input pet-week4-shopping" placeholder="€" step="0.01" min="0"></div>
+                <div><label>Spesa 4</label><input type="number" class="item-amount-input pet-week4-shopping" placeholder="€" step="0.01" min="0"></div>
+              </div>
+              <div class="total-row"><span>Totale</span><span id="total-pet-week4">€ 0,00</span></div>
             </div>
           </div>
+
           <div class="summary" style="margin-top:14px;">
-            <div class="sum"><div class="label">Budget mensile</div><div class="value">€<input type="number" id="pet-budget-input" class="budget-input" min="0" step="50" value="200"></div></div>
+            <div class="sum"><div class="label">Budget</div><div class="value" id="display-pet-budget">€ 200</div></div>
             <div class="sum"><div class="label">Speso</div><div class="value" id="total-pet-spent">€ 0,00</div></div>
             <div class="sum"><div class="label">Rimasto</div><div class="value pos" id="total-pet-remaining">€ 200,00</div></div>
           </div>
         </section>
       </main>
     </div>
-
-    <!-- PAGINA INTERNA SPESA SETTIMANALE -->
-    <section id="weekly-shopping-page">
-      <div class="topbar" style="margin-bottom:14px;">
-        <div class="topbar-left"><div class="topbar-title">🛒 Spesa settimanale</div><div class="topbar-sub">Inserisci i prodotti una sola volta: i totali si sincronizzano con la home.</div></div>
-        <button id="back-home-btn" class="btn" type="button">← Torna alla home</button>
-      </div>
-      <div class="grid">
-        <section class="card">
-          <h2>👫 Luca e Lisa <span class="muted">Spese alimentari</span></h2>
-          <div class="card" style="background:rgba(255,255,255,.04);box-shadow:none;margin-bottom:12px;"><h2>📅 Lunedì–Giovedì <span class="muted" id="ll-total-a">€ 0,00</span></h2><div class="entry-items" id="ll-mon-thu"></div><button class="btn-add income" type="button" onclick="addShoppingRow('ll-mon-thu')">+ Aggiungi prodotto</button></div>
-          <div class="card" style="background:rgba(255,255,255,.04);box-shadow:none;"><h2>📅 Venerdì–Domenica <span class="muted" id="ll-total-b">€ 0,00</span></h2><div class="entry-items" id="ll-fri-sun"></div><button class="btn-add income" type="button" onclick="addShoppingRow('ll-fri-sun')">+ Aggiungi prodotto</button></div>
-        </section>
-        <section class="card">
-          <h2>🐈 Gatti <span class="muted">Spese animali</span></h2>
-          <div class="card" style="background:rgba(255,255,255,.04);box-shadow:none;margin-bottom:12px;"><h2>📅 Lunedì–Giovedì <span class="muted" id="cats-total-a">€ 0,00</span></h2><div class="entry-items" id="cats-mon-thu"></div><button class="btn-add cost" type="button" onclick="addShoppingRow('cats-mon-thu')">+ Aggiungi prodotto</button></div>
-          <div class="card" style="background:rgba(255,255,255,.04);box-shadow:none;"><h2>📅 Venerdì–Domenica <span class="muted" id="cats-total-b">€ 0,00</span></h2><div class="entry-items" id="cats-fri-sun"></div><button class="btn-add cost" type="button" onclick="addShoppingRow('cats-fri-sun')">+ Aggiungi prodotto</button></div>
-        </section>
-      </div>
-    </section>
 
     <!-- AI CHAT -->
     <div id="ai-chat-widget">
@@ -868,7 +923,7 @@
       onAuthStateChanged,
       signOut,
       setPersistence,
-      inMemoryPersistence
+      browserSessionPersistence
     } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
 
     const firebaseConfig = {
@@ -887,7 +942,7 @@
     const provider = new GoogleAuthProvider();
     provider.setCustomParameters({ prompt: "select_account" });
 
-    await setPersistence(auth, inMemoryPersistence);
+    await setPersistence(auth, browserSessionPersistence);
 
     window.firebaseAuth = {
       db,
@@ -941,7 +996,7 @@
     let firebaseDataLoaded = false;
     let firebaseLoadToken = 0;
     let lastRemoteUpdate = 0;
-    // Stato UI soltanto: nessun dato viene salvato in firebaseOnlyStorageDisabled/firebaseSessionStorageDisabled.
+    // Blocca il listener remoto mentre l'utente sta modificando una riga locale.
     let localChangesPending = false;
 
     // 🔥 DEBOUNCING: Salva dopo 800ms dall'ultima modifica
@@ -1026,26 +1081,78 @@
       return amountInput;
     }
 
-    function shoppingTotal(id){ let t=0; document.querySelectorAll('#'+id+' .shopping-price').forEach(i=>t+=parseAmount(i.value)); return t; }
-    function updateShoppingTotals(){
-      const vals={
-        llA:shoppingTotal('ll-mon-thu'),llB:shoppingTotal('ll-fri-sun'),catsA:shoppingTotal('cats-mon-thu'),catsB:shoppingTotal('cats-fri-sun')
-      };
-      const map=[['ll-total-a',vals.llA],['ll-total-b',vals.llB],['cats-total-a',vals.catsA],['cats-total-b',vals.catsB],['home-ll-a',vals.llA],['home-ll-b',vals.llB],['home-cats-a',vals.catsA],['home-cats-b',vals.catsB]];
-      map.forEach(([id,v])=>{const e=document.getElementById(id);if(e)e.textContent=formatCurrency(v);});
-      return vals;
-    }
     function updateFoodTotals(){
-      const v=updateShoppingTotals(), total=v.llA+v.llB, budget=parseAmount(foodBudgetInput.value)||500;
-      const s=document.getElementById('total-food-spent'),r=document.getElementById('total-food-remaining');
-      if(s)s.textContent=formatCurrency(total); if(r){r.textContent=formatCurrency(budget-total);r.classList.toggle('pos',budget-total>=0);r.classList.toggle('neg',budget-total<0);}
-      const a=ensureAutoExpenseItem('Spesa alimentare','food-auto-amount'); if(a)a.value=total.toFixed(2); updateBudgetTotals();
+      const monthlyBudget = parseAmount(foodBudgetInput.value) || 500;
+      let monthlyTotal = 0;
+
+      for (let week=1; week<=4; week++){
+        let weekTotal = 0;
+        document.querySelectorAll(`.week${week}-shopping`).forEach(i => weekTotal += parseAmount(i.value));
+        monthlyTotal += weekTotal;
+
+        const el = document.getElementById(`total-week${week}`);
+        if (el) el.textContent = formatCurrency(weekTotal);
+      }
+
+      const spentEl = document.getElementById('total-food-spent');
+      const remEl = document.getElementById('total-food-remaining');
+      const displayBudget = document.getElementById('display-food-budget');
+
+      if (displayBudget) displayBudget.textContent = formatCurrency(monthlyBudget);
+      if (spentEl) spentEl.textContent = formatCurrency(monthlyTotal);
+
+      if (remEl){
+        const remaining = monthlyBudget - monthlyTotal;
+        remEl.textContent = formatCurrency(remaining);
+        remEl.classList.toggle('pos', remaining >= 0);
+        remEl.classList.toggle('neg', remaining < 0);
+      }
+
+      // 🔥 AGGIORNA AUTOMATICAMENTE LA VOCE "Spesa alimentare" in Spese
+      const foodAmountInput = ensureAutoExpenseItem('Spesa alimentare', 'food-auto-amount');
+      if (foodAmountInput) {
+        foodAmountInput.value = monthlyTotal.toFixed(2);
+      }
+
+      // Aggiorna totali generali
+      updateBudgetTotals();
     }
+
     function updatePetTotals(){
-      const v=updateShoppingTotals(), total=v.catsA+v.catsB, budget=parseAmount(petBudgetInput.value)||200;
-      const s=document.getElementById('total-pet-spent'),r=document.getElementById('total-pet-remaining');
-      if(s)s.textContent=formatCurrency(total); if(r){r.textContent=formatCurrency(budget-total);r.classList.toggle('pos',budget-total>=0);r.classList.toggle('neg',budget-total<0);}
-      const a=ensureAutoExpenseItem('Spese animali','pet-auto-amount'); if(a)a.value=total.toFixed(2); updateBudgetTotals();
+      const monthlyBudget = parseAmount(petBudgetInput.value) || 200;
+      let monthlyTotal = 0;
+
+      for (let week=1; week<=4; week++){
+        let weekTotal = 0;
+        document.querySelectorAll(`.pet-week${week}-shopping`).forEach(i => weekTotal += parseAmount(i.value));
+        monthlyTotal += weekTotal;
+
+        const el = document.getElementById(`total-pet-week${week}`);
+        if (el) el.textContent = formatCurrency(weekTotal);
+      }
+
+      const spentEl = document.getElementById('total-pet-spent');
+      const remEl = document.getElementById('total-pet-remaining');
+      const displayBudget = document.getElementById('display-pet-budget');
+
+      if (displayBudget) displayBudget.textContent = formatCurrency(monthlyBudget);
+      if (spentEl) spentEl.textContent = formatCurrency(monthlyTotal);
+
+      if (remEl){
+        const remaining = monthlyBudget - monthlyTotal;
+        remEl.textContent = formatCurrency(remaining);
+        remEl.classList.toggle('pos', remaining >= 0);
+        remEl.classList.toggle('neg', remaining < 0);
+      }
+
+      // 🔥 AGGIORNA AUTOMATICAMENTE LA VOCE "Spese animali" in Spese
+      const petAmountInput = ensureAutoExpenseItem('Spese animali', 'pet-auto-amount');
+      if (petAmountInput) {
+        petAmountInput.value = monthlyTotal.toFixed(2);
+      }
+
+      // Aggiorna totali generali
+      updateBudgetTotals();
     }
 
     // ===== Pie =====
@@ -1138,12 +1245,23 @@
         }
       });
 
-      // Spese reali lette dai quattro slot della nuova Spesa settimanale.
+      // Spesa reale per cibo.
       const foodBudget = parseAmount(foodBudgetInput.value) || 500;
+      let actualFoodSpent = 0;
+      for (let week=1; week<=4; week++){
+        document.querySelectorAll(`.week${week}-shopping`).forEach(i => {
+          actualFoodSpent += parseAmount(i.value);
+        });
+      }
+
+      // Spesa reale per animali.
       const petBudget = parseAmount(petBudgetInput.value) || 200;
-      const shopping = updateShoppingTotals();
-      const actualFoodSpent = shopping.llA + shopping.llB;
-      const actualPetSpent = shopping.catsA + shopping.catsB;
+      let actualPetSpent = 0;
+      for (let week=1; week<=4; week++){
+        document.querySelectorAll(`.pet-week${week}-shopping`).forEach(i => {
+          actualPetSpent += parseAmount(i.value);
+        });
+      }
 
       // Prima calcoliamo il saldo normale del mese.
       const totalExpenses = manualExpenses + actualFoodSpent + actualPetSpent;
@@ -1249,7 +1367,7 @@
       if (!fb || !currentUser) return;
       if (unsubscribeVacation){ unsubscribeVacation(); unsubscribeVacation = null; }
 
-      const ref = fb.doc(fb.db, 'users', currentUser.uid, 'vacanze', currentMonth + '_fresh');
+      const ref = fb.doc(fb.db, 'users', currentUser.uid, 'vacanze', currentMonth);
       unsubscribeVacation = fb.onSnapshot(ref, (snap)=>{
         if(snap.exists()){
           renderVacationBudget(snap.data());
@@ -1267,38 +1385,14 @@
       });
     }
 
-    // ===== Dati esclusivamente Firebase: nuova area pulita =====
-    function collectShoppingData(){
-      const out={};
-      ['ll-mon-thu','ll-fri-sun','cats-mon-thu','cats-fri-sun'].forEach(id=>{out[id]=[];document.querySelectorAll('#'+id+' .entry-item').forEach(row=>{out[id].push({name:row.querySelector('.shopping-name')?.value||'',price:row.querySelector('.shopping-price')?.value||''});});});
-      return out;
-    }
-    function addShoppingRow(id,item={}){ const c=document.getElementById(id); if(!c)return; const d=document.createElement('div');d.className='entry-item';d.innerHTML=`<input type="text" class="shopping-name" placeholder="Prodotto" value="${escapeAttr(item.name||'')}"><input type="number" class="shopping-price" placeholder="€" step="0.01" min="0" value="${escapeAttr(item.price||'')}"><button class="btn-remove" type="button" onclick="removeShoppingRow(this)">✕</button>`;c.appendChild(d);d.querySelector('.shopping-name').focus();localChangesPending=true;debouncedSave();}
-    function removeShoppingRow(btn){btn.closest('.entry-item')?.remove();localChangesPending=true;updateFoodTotals();updatePetTotals();debouncedSave();}
-    function populateShoppingUI(data={}){
-      isApplyingRemoteData = true;
-      ['ll-mon-thu','ll-fri-sun','cats-mon-thu','cats-fri-sun'].forEach(id=>{
-        const c=document.getElementById(id);
-        if(!c)return;
-        c.innerHTML='';
-        (data[id]||[]).forEach(item=>{
-          const d=document.createElement('div');
-          d.className='entry-item';
-          d.innerHTML=`<input type=\"text\" class=\"shopping-name\" placeholder=\"Prodotto\" value=\"${escapeAttr(item?.name||'')}\"><input type=\"number\" class=\"shopping-price\" placeholder=\"€\" step=\"0.01\" min=\"0\" value=\"${escapeAttr(item?.price||'')}\"><button class=\"btn-remove\" type=\"button\" onclick=\"removeShoppingRow(this)\">✕</button>`;
-          c.appendChild(d);
-        });
-      });
-      updateShoppingTotals();
-      localChangesPending = false;
-    }
-    window.addShoppingRow=addShoppingRow; window.removeShoppingRow=removeShoppingRow;
-
+    // ===== Data (include food + pets + settings) =====
     function collectCurrentData(){
       const data = {
         month: currentMonth,
         entrate: [],
         spese: [],
-        spesaSettimanale: collectShoppingData(),
+        spesaAlimentare: { week1:[], week2:[], week3:[], week4:[] },
+        spesaAnimali: { week1:[], week2:[], week3:[], week4:[] },
         settings: {
           savingsGoal: parseAmount(savingsGoalInput.value) || 250,
           foodBudget: parseAmount(foodBudgetInput.value) || 500,
@@ -1321,6 +1415,15 @@
         if (label || amount) data.spese.push({ label, amount });
       });
 
+      for (let week=1; week<=4; week++){
+        document.querySelectorAll(`.week${week}-shopping`).forEach(input=>{
+          data.spesaAlimentare[`week${week}`].push(input.value || "");
+        });
+        document.querySelectorAll(`.pet-week${week}-shopping`).forEach(input=>{
+          data.spesaAnimali[`week${week}`].push(input.value || "");
+        });
+      }
+
       return data;
     }
 
@@ -1335,7 +1438,7 @@
         const data = collectCurrentData();
         data._updatedAt = Date.now();
         data._updatedBy = currentUser.uid;
-        const ref = fb.doc(fb.db, "users", currentUser.uid, "budgets", currentMonth + "_fresh");
+        const ref = fb.doc(fb.db, "users", currentUser.uid, "budgets", currentMonth);
         await fb.setDoc(ref, data, { merge: false });
         localChangesPending = false;
         setSyncStatus("Salvato sul cloud ✓", "rgba(34,197,94,1)");
@@ -1349,7 +1452,7 @@
 
     // 🔥 WRAPPER CON DEBOUNCING
     function debouncedSave() {
-      if (isApplyingRemoteData || !firebaseDataLoaded || !currentUser) return;
+      if (isApplyingRemoteData || !firebaseDataLoaded) return;
       clearTimeout(saveTimeout);
       setSyncStatus("In attesa…", "rgba(156,163,175,1)");
       saveTimeout = setTimeout(() => {
@@ -1358,8 +1461,6 @@
     }
 
     function resetUIEmpty(){
-      localChangesPending = false;
-      clearTimeout(saveTimeout);
       document.getElementById('entrate-items').innerHTML = '';
       document.getElementById('spese-items').innerHTML = '';
       resetVacationBudget();
@@ -1416,6 +1517,16 @@
         speseContainer.appendChild(div);
       });
 
+      for (let week=1; week<=4; week++){
+        const foodInputs = document.querySelectorAll(`.week${week}-shopping`);
+        const foodData = (data.spesaAlimentare && data.spesaAlimentare[`week${week}`]) ? data.spesaAlimentare[`week${week}`] : [];
+        foodInputs.forEach((input, idx)=> input.value = foodData[idx] || '');
+        
+        const petInputs = document.querySelectorAll(`.pet-week${week}-shopping`);
+        const petData = (data.spesaAnimali && data.spesaAnimali[`week${week}`]) ? data.spesaAnimali[`week${week}`] : [];
+        petInputs.forEach((input, idx)=> input.value = petData[idx] || '');
+      }
+
       // Load settings
       if (data.settings) {
         savingsGoalInput.value = data.settings.savingsGoal || 250;
@@ -1424,9 +1535,6 @@
         petBudgetInput.value = data.settings.petBudget || 200;
         petWeeklyInput.value = data.settings.petWeekly || 50;
       }
-
-      // Carica anche la nuova sezione Spesa settimanale da Firestore.
-      populateShoppingUI(data.spesaSettimanale || {});
 
       updateBudgetTotals();
       updatePieChart();
@@ -1441,20 +1549,18 @@
 
       if (unsubscribe){ unsubscribe(); unsubscribe = null; }
       firebaseDataLoaded = false;
-      localChangesPending = false;
-      clearTimeout(saveTimeout);
       const loadToken = ++firebaseLoadToken;
       setSyncStatus("Caricamento da Firebase…", "rgba(245,158,11,1)");
 
-      const ref = fb.doc(fb.db, "users", currentUser.uid, "budgets", currentMonth + "_fresh");
+      const ref = fb.doc(fb.db, "users", currentUser.uid, "budgets", currentMonth);
       unsubscribe = fb.onSnapshot(ref, (snap)=>{
         // Se l'utente ha appena aggiunto/modificato una riga, non distruggere il suo input
         // con uno snapshot vecchio o ancora in arrivo.
+        if (localChangesPending) return;
         if (snap.exists()){
           const budgetData = snap.data();
           lastRemoteUpdate = budgetData._updatedAt || Date.now();
           isApplyingRemoteData = true;
-          localChangesPending = false;
           populateUIFromData(budgetData);
           setTimeout(()=>{ isApplyingRemoteData = false; }, 100);
           // Il Budget legge anche il mirror del Salvadanaio Vacanze presente nello stesso documento.
@@ -1467,10 +1573,9 @@
           if (loadToken === firebaseLoadToken) firebaseDataLoaded = true;
           setSyncStatus("Sincronizzato da Firebase ✅", "rgba(34,197,94,1)");
         } else {
-          localChangesPending = false;
           resetUIEmpty();
           if (loadToken === firebaseLoadToken) firebaseDataLoaded = true;
-          setSyncStatus("Nessun dato: inserisci il primo budget", "rgba(229,231,235,.85)");
+          setSyncStatus("Nessun dato su Firebase", "rgba(229,231,235,.85)");
         }
       }, (err)=>{
         console.error("Snapshot error:", err);
@@ -1527,9 +1632,6 @@
       const t = e.target;
       if (!t) return;
 
-      // Spesa settimanale
-      if (t.classList.contains("shopping-name") || t.classList.contains("shopping-price")){ updateFoodTotals(); updatePetTotals(); localChangesPending=true; debouncedSave(); return; }
-
       // Food
       if (t.classList.contains("week1-shopping") || t.classList.contains("week2-shopping") ||
           t.classList.contains("week3-shopping") || t.classList.contains("week4-shopping")){
@@ -1584,9 +1686,6 @@
         debouncedSave(); // 🔥 DEBOUNCED
       }
     });
-
-    document.getElementById('weekly-shopping-nav')?.addEventListener('click',()=>{document.querySelector('.shell').style.display='none';document.getElementById('weekly-shopping-page').style.display='block';});
-    document.getElementById('back-home-btn')?.addEventListener('click',()=>{document.querySelector('.shell').style.display='grid';document.getElementById('weekly-shopping-page').style.display='none';});
 
     // ===== Login/Logout (popup + redirect fallback) =====
     async function doLogin(){
