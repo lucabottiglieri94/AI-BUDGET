@@ -1138,25 +1138,12 @@
         }
       });
 
-      // Spesa reale per cibo.
+      // Spese reali lette dai quattro slot della nuova Spesa settimanale.
       const foodBudget = parseAmount(foodBudgetInput.value) || 500;
-      let actualFoodSpent = 0;
-      populateShoppingUI(data.spesaSettimanale || {});
-
-      for (let week=1; week<=4; week++){
-        document.querySelectorAll(`.week${week}-shopping`).forEach(i => {
-          actualFoodSpent += parseAmount(i.value);
-        });
-      }
-
-      // Spesa reale per animali.
       const petBudget = parseAmount(petBudgetInput.value) || 200;
-      let actualPetSpent = 0;
-      for (let week=1; week<=4; week++){
-        document.querySelectorAll(`.pet-week${week}-shopping`).forEach(i => {
-          actualPetSpent += parseAmount(i.value);
-        });
-      }
+      const shopping = updateShoppingTotals();
+      const actualFoodSpent = shopping.llA + shopping.llB;
+      const actualPetSpent = shopping.catsA + shopping.catsB;
 
       // Prima calcoliamo il saldo normale del mese.
       const totalExpenses = manualExpenses + actualFoodSpent + actualPetSpent;
