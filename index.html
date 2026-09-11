@@ -754,46 +754,128 @@
           </section>
         </div>
 
-        <!-- SPESE ALIMENTARI: 2 periodi -->
+        <!-- ✅ SPESE ALIMENTARI (4 settimane) -->
         <section class="card">
-          <h2>🛒 Spese Alimentari <span class="muted">Budget mensile configurabile</span></h2>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
-            <div class="card" style="background:rgba(255,255,255,.04);box-shadow:none;">
-              <div style="font-weight:950;margin-bottom:10px;">📅 Lunedì - Giovedì</div>
+          <h2>🛒 Spese Alimentari 
+            <span class="muted">
+              Budget: €<input type="number" id="food-budget-input" class="budget-input" min="0" step="50" value="500" placeholder="500"> 
+              • Target/sett: €<input type="number" id="food-weekly-input" class="budget-input" min="0" step="10" value="125" placeholder="125">
+            </span>
+          </h2>
+
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:14px;">
+            <div class="card" style="background: rgba(255,255,255,.04); box-shadow:none;">
+              <div style="font-weight:950; margin-bottom:10px;">📅 Settimana 1</div>
               <div class="week-grid">
                 <div><label>Spesa 1</label><input type="number" class="item-amount-input week1-shopping" placeholder="€" step="0.01" min="0"></div>
                 <div><label>Spesa 2</label><input type="number" class="item-amount-input week1-shopping" placeholder="€" step="0.01" min="0"></div>
                 <div><label>Spesa 3</label><input type="number" class="item-amount-input week1-shopping" placeholder="€" step="0.01" min="0"></div>
                 <div><label>Spesa 4</label><input type="number" class="item-amount-input week1-shopping" placeholder="€" step="0.01" min="0"></div>
-              </div><div class="total-row"><span>Totale</span><span id="total-week1">€ 0,00</span></div>
+              </div>
+              <div class="total-row"><span>Totale</span><span id="total-week1">€ 0,00</span></div>
             </div>
-            <div class="card" style="background:rgba(255,255,255,.04);box-shadow:none;">
-              <div style="font-weight:950;margin-bottom:10px;">📅 Venerdì - Domenica</div>
+
+            <div class="card" style="background: rgba(255,255,255,.04); box-shadow:none;">
+              <div style="font-weight:950; margin-bottom:10px;">📅 Settimana 2</div>
               <div class="week-grid">
                 <div><label>Spesa 1</label><input type="number" class="item-amount-input week2-shopping" placeholder="€" step="0.01" min="0"></div>
                 <div><label>Spesa 2</label><input type="number" class="item-amount-input week2-shopping" placeholder="€" step="0.01" min="0"></div>
                 <div><label>Spesa 3</label><input type="number" class="item-amount-input week2-shopping" placeholder="€" step="0.01" min="0"></div>
                 <div><label>Spesa 4</label><input type="number" class="item-amount-input week2-shopping" placeholder="€" step="0.01" min="0"></div>
-              </div><div class="total-row"><span>Totale</span><span id="total-week2">€ 0,00</span></div>
+              </div>
+              <div class="total-row"><span>Totale</span><span id="total-week2">€ 0,00</span></div>
+            </div>
+
+            <div class="card" style="background: rgba(255,255,255,.04); box-shadow:none;">
+              <div style="font-weight:950; margin-bottom:10px;">📅 Settimana 3</div>
+              <div class="week-grid">
+                <div><label>Spesa 1</label><input type="number" class="item-amount-input week3-shopping" placeholder="€" step="0.01" min="0"></div>
+                <div><label>Spesa 2</label><input type="number" class="item-amount-input week3-shopping" placeholder="€" step="0.01" min="0"></div>
+                <div><label>Spesa 3</label><input type="number" class="item-amount-input week3-shopping" placeholder="€" step="0.01" min="0"></div>
+                <div><label>Spesa 4</label><input type="number" class="item-amount-input week3-shopping" placeholder="€" step="0.01" min="0"></div>
+              </div>
+              <div class="total-row"><span>Totale</span><span id="total-week3">€ 0,00</span></div>
+            </div>
+
+            <div class="card" style="background: rgba(255,255,255,.04); box-shadow:none;">
+              <div style="font-weight:950; margin-bottom:10px;">📅 Settimana 4</div>
+              <div class="week-grid">
+                <div><label>Spesa 1</label><input type="number" class="item-amount-input week4-shopping" placeholder="€" step="0.01" min="0"></div>
+                <div><label>Spesa 2</label><input type="number" class="item-amount-input week4-shopping" placeholder="€" step="0.01" min="0"></div>
+                <div><label>Spesa 3</label><input type="number" class="item-amount-input week4-shopping" placeholder="€" step="0.01" min="0"></div>
+                <div><label>Spesa 4</label><input type="number" class="item-amount-input week4-shopping" placeholder="€" step="0.01" min="0"></div>
+              </div>
+              <div class="total-row"><span>Totale</span><span id="total-week4">€ 0,00</span></div>
             </div>
           </div>
-          <div class="summary" style="margin-top:14px;"><div class="sum"><div class="label">Budget</div><div class="value" id="display-food-budget">€ 500</div></div><div class="sum"><div class="label">Speso</div><div class="value" id="total-food-spent">€ 0,00</div></div><div class="sum"><div class="label">Rimasto</div><div class="value pos" id="total-food-remaining">€ 500,00</div></div></div>
+
+          <div class="summary" style="margin-top:14px;">
+            <div class="sum"><div class="label">Budget</div><div class="value" id="display-food-budget">€ 500</div></div>
+            <div class="sum"><div class="label">Speso</div><div class="value" id="total-food-spent">€ 0,00</div></div>
+            <div class="sum"><div class="label">Rimasto</div><div class="value pos" id="total-food-remaining">€ 500,00</div></div>
+          </div>
         </section>
 
-        <!-- SPESE ANIMALI: 4 settimane in 2 riquadri -->
+        <!-- 🐾 SPESE ANIMALI (4 settimane) -->
         <section class="card">
-          <h2>🐾 Spese Animali <span class="muted">4 settimane organizzate in 2 riquadri</span></h2>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
-            <div class="card" style="background:rgba(255,255,255,.04);box-shadow:none;"><div style="font-weight:950;margin-bottom:10px;">📅 Settimane 1 - 2</div>
-              <div class="muted" style="margin-bottom:6px;">Settimana 1</div><div class="week-grid">${[1,2,3,4].map(i=>`<div><label>Spesa ${i}</label><input type="number" class="item-amount-input pet-week1-shopping" placeholder="€" step="0.01" min="0"></div>`).join('')}</div><div class="total-row"><span>Totale settimana 1</span><span id="total-pet-week1">€ 0,00</span></div>
-              <div class="muted" style="margin:12px 0 6px;">Settimana 2</div><div class="week-grid">${[1,2,3,4].map(i=>`<div><label>Spesa ${i}</label><input type="number" class="item-amount-input pet-week2-shopping" placeholder="€" step="0.01" min="0"></div>`).join('')}</div><div class="total-row"><span>Totale settimana 2</span><span id="total-pet-week2">€ 0,00</span></div>
+          <h2>🐾 Spese Animali 
+            <span class="muted">
+              Budget: €<input type="number" id="pet-budget-input" class="budget-input" min="0" step="50" value="200" placeholder="200"> 
+              • Target/sett: €<input type="number" id="pet-weekly-input" class="budget-input" min="0" step="10" value="50" placeholder="50">
+            </span>
+          </h2>
+
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:14px;">
+            <div class="card" style="background: rgba(255,255,255,.04); box-shadow:none;">
+              <div style="font-weight:950; margin-bottom:10px;">📅 Settimana 1</div>
+              <div class="week-grid">
+                <div><label>Spesa 1</label><input type="number" class="item-amount-input pet-week1-shopping" placeholder="€" step="0.01" min="0"></div>
+                <div><label>Spesa 2</label><input type="number" class="item-amount-input pet-week1-shopping" placeholder="€" step="0.01" min="0"></div>
+                <div><label>Spesa 3</label><input type="number" class="item-amount-input pet-week1-shopping" placeholder="€" step="0.01" min="0"></div>
+                <div><label>Spesa 4</label><input type="number" class="item-amount-input pet-week1-shopping" placeholder="€" step="0.01" min="0"></div>
+              </div>
+              <div class="total-row"><span>Totale</span><span id="total-pet-week1">€ 0,00</span></div>
             </div>
-            <div class="card" style="background:rgba(255,255,255,.04);box-shadow:none;"><div style="font-weight:950;margin-bottom:10px;">📅 Settimane 3 - 4</div>
-              <div class="muted" style="margin-bottom:6px;">Settimana 3</div><div class="week-grid">${[1,2,3,4].map(i=>`<div><label>Spesa ${i}</label><input type="number" class="item-amount-input pet-week3-shopping" placeholder="€" step="0.01" min="0"></div>`).join('')}</div><div class="total-row"><span>Totale settimana 3</span><span id="total-pet-week3">€ 0,00</span></div>
-              <div class="muted" style="margin:12px 0 6px;">Settimana 4</div><div class="week-grid">${[1,2,3,4].map(i=>`<div><label>Spesa ${i}</label><input type="number" class="item-amount-input pet-week4-shopping" placeholder="€" step="0.01" min="0"></div>`).join('')}</div><div class="total-row"><span>Totale settimana 4</span><span id="total-pet-week4">€ 0,00</span></div>
+
+            <div class="card" style="background: rgba(255,255,255,.04); box-shadow:none;">
+              <div style="font-weight:950; margin-bottom:10px;">📅 Settimana 2</div>
+              <div class="week-grid">
+                <div><label>Spesa 1</label><input type="number" class="item-amount-input pet-week2-shopping" placeholder="€" step="0.01" min="0"></div>
+                <div><label>Spesa 2</label><input type="number" class="item-amount-input pet-week2-shopping" placeholder="€" step="0.01" min="0"></div>
+                <div><label>Spesa 3</label><input type="number" class="item-amount-input pet-week2-shopping" placeholder="€" step="0.01" min="0"></div>
+                <div><label>Spesa 4</label><input type="number" class="item-amount-input pet-week2-shopping" placeholder="€" step="0.01" min="0"></div>
+              </div>
+              <div class="total-row"><span>Totale</span><span id="total-pet-week2">€ 0,00</span></div>
+            </div>
+
+            <div class="card" style="background: rgba(255,255,255,.04); box-shadow:none;">
+              <div style="font-weight:950; margin-bottom:10px;">📅 Settimana 3</div>
+              <div class="week-grid">
+                <div><label>Spesa 1</label><input type="number" class="item-amount-input pet-week3-shopping" placeholder="€" step="0.01" min="0"></div>
+                <div><label>Spesa 2</label><input type="number" class="item-amount-input pet-week3-shopping" placeholder="€" step="0.01" min="0"></div>
+                <div><label>Spesa 3</label><input type="number" class="item-amount-input pet-week3-shopping" placeholder="€" step="0.01" min="0"></div>
+                <div><label>Spesa 4</label><input type="number" class="item-amount-input pet-week3-shopping" placeholder="€" step="0.01" min="0"></div>
+              </div>
+              <div class="total-row"><span>Totale</span><span id="total-pet-week3">€ 0,00</span></div>
+            </div>
+
+            <div class="card" style="background: rgba(255,255,255,.04); box-shadow:none;">
+              <div style="font-weight:950; margin-bottom:10px;">📅 Settimana 4</div>
+              <div class="week-grid">
+                <div><label>Spesa 1</label><input type="number" class="item-amount-input pet-week4-shopping" placeholder="€" step="0.01" min="0"></div>
+                <div><label>Spesa 2</label><input type="number" class="item-amount-input pet-week4-shopping" placeholder="€" step="0.01" min="0"></div>
+                <div><label>Spesa 3</label><input type="number" class="item-amount-input pet-week4-shopping" placeholder="€" step="0.01" min="0"></div>
+                <div><label>Spesa 4</label><input type="number" class="item-amount-input pet-week4-shopping" placeholder="€" step="0.01" min="0"></div>
+              </div>
+              <div class="total-row"><span>Totale</span><span id="total-pet-week4">€ 0,00</span></div>
             </div>
           </div>
-          <div class="summary" style="margin-top:14px;"><div class="sum"><div class="label">Budget</div><div class="value" id="display-pet-budget">€ 200</div></div><div class="sum"><div class="label">Speso</div><div class="value" id="total-pet-spent">€ 0,00</div></div><div class="sum"><div class="label">Rimasto</div><div class="value pos" id="total-pet-remaining">€ 200,00</div></div></div>
+
+          <div class="summary" style="margin-top:14px;">
+            <div class="sum"><div class="label">Budget</div><div class="value" id="display-pet-budget">€ 200</div></div>
+            <div class="sum"><div class="label">Speso</div><div class="value" id="total-pet-spent">€ 0,00</div></div>
+            <div class="sum"><div class="label">Rimasto</div><div class="value pos" id="total-pet-remaining">€ 200,00</div></div>
+          </div>
         </section>
       </main>
     </div>
