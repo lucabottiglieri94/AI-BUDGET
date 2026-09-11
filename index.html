@@ -996,6 +996,8 @@
     let firebaseDataLoaded = false;
     let firebaseLoadToken = 0;
     let lastRemoteUpdate = 0;
+    // Blocca il listener remoto mentre l'utente sta modificando una riga locale.
+    let localChangesPending = false;
 
     // 🔥 DEBOUNCING: Salva dopo 800ms dall'ultima modifica
     let saveTimeout = null;
@@ -1438,6 +1440,7 @@
         data._updatedBy = currentUser.uid;
         const ref = fb.doc(fb.db, "users", currentUser.uid, "budgets", currentMonth);
         await fb.setDoc(ref, data, { merge: false });
+        localChangesPending = false;
         setSyncStatus("Salvato sul cloud ✓", "rgba(34,197,94,1)");
       }catch(e){
         console.error("Save error:", e);
@@ -1551,6 +1554,9 @@
 
       const ref = fb.doc(fb.db, "users", currentUser.uid, "budgets", currentMonth);
       unsubscribe = fb.onSnapshot(ref, (snap)=>{
+        // Se l'utente ha appena aggiunto/modificato una riga, non distruggere il suo input
+        // con uno snapshot vecchio o ancora in arrivo.
+        if (localChangesPending) return;
         if (snap.exists()){
           const budgetData = snap.data();
           lastRemoteUpdate = budgetData._updatedAt || Date.now();
@@ -1590,8 +1596,11 @@
         <button class="btn-remove" type="button" onclick="removeEntry(this)">✕</button>
       `;
       container.appendChild(div);
+      localChangesPending = true;
       updateBudgetTotals();
-      debouncedSave(); // 🔥 USA IL DEBOUNCED SAVE
+      // Non salvare una riga vuota appena creata: attendi che l'utente inserisca i dati.
+      const firstInput = div.querySelector('.item-label-input');
+      if (firstInput) firstInput.focus();
     }
     function removeEntry(btn){
       const row = btn.closest(".entry-item");
@@ -1608,6 +1617,7 @@
         }
         
         row.remove();
+        localChangesPending = true;
         updateBudgetTotals();
         updateFoodTotals();
         updatePetTotals();
@@ -1626,6 +1636,7 @@
       if (t.classList.contains("week1-shopping") || t.classList.contains("week2-shopping") ||
           t.classList.contains("week3-shopping") || t.classList.contains("week4-shopping")){
         updateFoodTotals();
+        localChangesPending = true;
         debouncedSave(); // 🔥 DEBOUNCED
         return;
       }
@@ -1634,6 +1645,7 @@
       if (t.classList.contains("pet-week1-shopping") || t.classList.contains("pet-week2-shopping") ||
           t.classList.contains("pet-week3-shopping") || t.classList.contains("pet-week4-shopping")){
         updatePetTotals();
+        localChangesPending = true;
         debouncedSave(); // 🔥 DEBOUNCED
         return;
       }
@@ -1641,6 +1653,7 @@
       // Savings goal
       if (t.id === 'savings-goal-input') {
         updateSavingsGoal();
+        localChangesPending = true;
         debouncedSave(); // 🔥 DEBOUNCED
         return;
       }
@@ -1648,6 +1661,7 @@
       // Food settings
       if (t.id === 'food-budget-input' || t.id === 'food-weekly-input') {
         updateFoodTotals();
+        localChangesPending = true;
         debouncedSave(); // 🔥 DEBOUNCED
         return;
       }
@@ -1655,6 +1669,7 @@
       // Pet settings
       if (t.id === 'pet-budget-input' || t.id === 'pet-weekly-input') {
         updatePetTotals();
+        localChangesPending = true;
         debouncedSave(); // 🔥 DEBOUNCED
         return;
       }
@@ -1666,6 +1681,7 @@
           e.preventDefault();
           return;
         }
+        localChangesPending = true;
         updateBudgetTotals();
         debouncedSave(); // 🔥 DEBOUNCED
       }
