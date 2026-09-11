@@ -987,11 +987,13 @@
     function formatCurrency(v){ return "€ " + (Number(v||0)).toFixed(2).replace(".", ","); }
     function escapeAttr(s){ return (s ?? "").toString().replaceAll('"','&quot;'); }
 
-    let currentMonth = localStorage.getItem("sharedBudgetMonth") || localStorage.getItem("budgetMonth") || "";
+    let currentMonth = "";
     let currentUser = null;
     let unsubscribe = null;
     let unsubscribeVacation = null;
     let isSaving = false;
+    let isApplyingRemoteData = false;
+    let lastRemoteUpdate = 0;
 
     // 🔥 DEBOUNCING: Salva dopo 800ms dall'ultima modifica
     let saveTimeout = null;
@@ -1424,27 +1426,28 @@
     // 🔥🔥🔥 DEBOUNCED SAVE - Salva solo dopo 800ms dall'ultima modifica
     async function saveMonthData(){
       const fb = window.firebaseAuth;
-      if (!fb || !currentUser) return;
+      if (!fb || !currentUser || !currentMonth) return;
 
       try{
         isSaving = true;
-        setSyncStatus("Salvataggio…", "rgba(245,158,11,1)");
-
+        setSyncStatus("Salvataggio cloud…", "rgba(245,158,11,1)");
         const data = collectCurrentData();
+        data._updatedAt = Date.now();
+        data._updatedBy = currentUser.uid;
         const ref = fb.doc(fb.db, "users", currentUser.uid, "budgets", currentMonth);
-        await fb.setDoc(ref, data);
-
-        setSyncStatus("Salvato ✅", "rgba(34,197,94,1)");
+        await fb.setDoc(ref, data, { merge: false });
+        setSyncStatus("Salvato sul cloud ✓", "rgba(34,197,94,1)");
       }catch(e){
         console.error("Save error:", e);
-        setSyncStatus("Errore ❌", "rgba(239,68,68,1)");
+        setSyncStatus("Errore salvataggio cloud", "rgba(239,68,68,1)");
       }finally{
-        setTimeout(()=>{ isSaving = false; }, 200);
+        setTimeout(()=>{ isSaving = false; }, 500);
       }
     }
 
     // 🔥 WRAPPER CON DEBOUNCING
     function debouncedSave() {
+      if (isApplyingRemoteData) return;
       clearTimeout(saveTimeout);
       setSyncStatus("In attesa…", "rgba(156,163,175,1)");
       saveTimeout = setTimeout(() => {
@@ -1546,7 +1549,10 @@
       unsubscribe = fb.onSnapshot(ref, (snap)=>{
         if (snap.exists()){
           const budgetData = snap.data();
+          lastRemoteUpdate = budgetData._updatedAt || Date.now();
+          isApplyingRemoteData = true;
           populateUIFromData(budgetData);
+          setTimeout(()=>{ isApplyingRemoteData = false; }, 100);
           // Il Budget legge anche il mirror del Salvadanaio Vacanze presente nello stesso documento.
           if (Array.isArray(budgetData.vacanzaWeeks)) {
             renderVacationBudget({ weeks: budgetData.vacanzaWeeks });
@@ -1564,6 +1570,8 @@
         setSyncStatus("Errore ❌", "rgba(239,68,68,1)");
       });
     }
+
+    window.salvaBudgetCloud = function(){ saveMonthData(); };
 
     // ===== Add/Remove =====
     function addEntryItem(type){
