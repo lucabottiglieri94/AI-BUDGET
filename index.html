@@ -170,9 +170,59 @@
       justify-content: space-between;
       align-items: center;
       gap: 16px;
+      flex-wrap: wrap;
     }
     .top h3 { font-size: 18px; font-weight: 800; letter-spacing: -0.3px; }
     .top .muted { font-size: 13px; margin-top: 2px; }
+
+    /* Navigatore Mesi accanto a Dashboard Mensile */
+    .month-navigator {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      padding: 3px 8px;
+    }
+    .month-btn {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.06);
+      color: #fff;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      font-weight: 700;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      padding: 0;
+      line-height: 1;
+    }
+    .month-btn:hover {
+      background: rgba(56, 189, 248, 0.25);
+      border-color: #38bdf8;
+      color: #38bdf8;
+      transform: scale(1.05);
+    }
+    #currentMonthDisplay {
+      font-size: 13px;
+      font-weight: 700;
+      color: #38bdf8;
+      padding: 0 6px;
+      min-width: 128px;
+      text-align: center;
+      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+      letter-spacing: 0.2px;
+      cursor: pointer;
+    }
+    #currentMonthDisplay:hover {
+      text-decoration: underline;
+    }
+
     .top-actions { display: flex; align-items: center; gap: 12px; }
 
     .calc-toggle-btn {
@@ -417,7 +467,7 @@
     .weekamount { font-weight: 700; font-family: 'JetBrains Mono', monospace; }
     .chartwrap { height: 260px; margin-top: 14px; }
 
-    /* Griglia Metà e Metà: Consumi Live (Sinistra) + Ampolla (Destra) */
+    /* Griglia Metà e Metà: Consumi Live + Ampolla */
     .grid-halves {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -425,7 +475,6 @@
       align-items: stretch;
     }
 
-    /* Card Consumi Presa Smart Tuya */
     .energy-live-card {
       display: flex;
       flex-direction: column;
@@ -515,7 +564,7 @@
       flex-wrap: wrap;
     }
 
-    /* Ampolla Wave Rigorosamente Centrata */
+    /* Ampolla Wave */
     .ampolla-card {
       display: flex;
       align-items: center;
@@ -623,6 +672,7 @@
       .entry { grid-template-columns: 1fr 1fr; }
       .ampolla-card { flex-direction: column; text-align: center; }
       .ampolla-actions { justify-content: center; }
+      .top { flex-direction: column; align-items: flex-start; }
     }
   </style>
 </head>
@@ -694,8 +744,16 @@
     <main class="main">
       <div class="top">
         <div>
-          <h3>Dashboard Mensile</h3>
-          <div class="muted">Gestione flussi di cassa e risparmi</div>
+          <!-- NAVIGAZIONE MENSILE ACCANTO A DASHBOARD MENSILE -->
+          <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+            <h3>Dashboard Mensile</h3>
+            <div class="month-navigator">
+              <button type="button" id="monthPrevBtn" class="month-btn" title="Mese precedente">‹</button>
+              <span id="currentMonthDisplay" title="Clicca per tornare al mese corrente">Settembre 2026</span>
+              <button type="button" id="monthNextBtn" class="month-btn" title="Mese successivo">›</button>
+            </div>
+          </div>
+          <div class="muted" id="currentMonthSubtext">Gestione flussi di cassa e risparmi</div>
         </div>
 
         <div class="top-actions">
@@ -873,15 +931,116 @@
   const provider = new GoogleAuthProvider();
   provider.setCustomParameters({ prompt: 'select_account' });
 
-  let ref = null, refVacanze = null, state = { income: [], expense: [] }, saveTimer = null, editing = false, monthlyChart = null, allWeeks = {}, selectedWeekOffset = 0;
+  // GESTIONE DINAMICA DEL MESE SELEZIONATO
+  let selectedDate = new Date();
+  selectedDate.setDate(1); // Previene overflow sui giorni a fine mese
+
+  function getMonthKey(d) {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    return `${y}-${m}`;
+  }
+
+  const monthKey = () => getMonthKey(selectedDate);
+  const today = () => new Date().toISOString().slice(0, 10);
+
+  function defaultDateForSelectedMonth() {
+    const currentMKey = new Date().toISOString().slice(0, 7);
+    const selMKey = getMonthKey(selectedDate);
+    if (selMKey === currentMKey) return today();
+    return `${selMKey}-01`;
+  }
+
+  let ref = null, refVacanze = null;
+  let unsubBudget = null, unsubVacanze = null;
+  let state = { income: [], expense: [] };
+  let saveTimer = null, editing = false, monthlyChart = null, allWeeks = {}, selectedWeekOffset = 0;
   let lastBudgetDoc = {}, lastVacanzeDoc = {};
 
   const $ = id => document.getElementById(id);
   const money = n => new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(Number(n) || 0);
-  const today = () => new Date().toISOString().slice(0, 10);
-  const monthKey = () => new Date().toISOString().slice(0, 7);
 
   function num(v) { return Number(String(v ?? '').replace(',', '.')) || 0; }
+
+  // AGGIORNAMENTO TESTATA MESE
+  function updateMonthHeader() {
+    const monthNames = [
+      'Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno',
+      'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'
+    ];
+    const mName = monthNames[selectedDate.getMonth()] + ' ' + selectedDate.getFullYear();
+    $('currentMonthDisplay').textContent = mName;
+
+    const currentMKey = new Date().toISOString().slice(0, 7);
+    const isCurrent = getMonthKey(selectedDate) === currentMKey;
+    if ($('currentMonthSubtext')) {
+      $('currentMonthSubtext').textContent = isCurrent 
+        ? 'Gestione flussi di cassa e risparmi (Mese corrente)' 
+        : `Gestione flussi di cassa e risparmi • Mese: ${mName}`;
+    }
+  }
+
+  // NAVIGAZIONE MESI AVANTI / INDIETRO
+  $('monthPrevBtn').onclick = () => changeMonth(-1);
+  $('monthNextBtn').onclick = () => changeMonth(1);
+
+  // Cliccando sul nome del mese si torna al mese corrente
+  $('currentMonthDisplay').onclick = () => {
+    const now = new Date();
+    if (getMonthKey(selectedDate) !== getMonthKey(now)) {
+      selectedDate = new Date();
+      selectedDate.setDate(1);
+      updateMonthHeader();
+      subscribeSelectedMonth();
+    }
+  };
+
+  function changeMonth(delta) {
+    if (editing) finishEdit();
+    selectedDate.setMonth(selectedDate.getMonth() + delta);
+    updateMonthHeader();
+    subscribeSelectedMonth();
+  }
+
+  // SINCRONIZZAZIONE LISTENER FIRESTORE PER IL MESE SELEZIONATO
+  function subscribeSelectedMonth() {
+    if (unsubBudget) unsubBudget();
+    if (unsubVacanze) unsubVacanze();
+
+    if (!auth.currentUser) return;
+
+    const mKey = getMonthKey(selectedDate);
+    ref = doc(db, 'users', auth.currentUser.uid, 'budgets', mKey);
+    refVacanze = doc(db, 'users', auth.currentUser.uid, 'vacanze', mKey);
+
+    $('syncStatus').textContent = `Caricamento dati ${mKey}...`;
+
+    // Listener Budget
+    unsubBudget = onSnapshot(ref, s => {
+      if (editing) return;
+      const d = s.exists() ? s.data() : {};
+      lastBudgetDoc = d;
+      refreshAmpollaFromDocs();
+
+      state = {
+        income: Array.isArray(d.income) ? d.income : [],
+        expense: Array.isArray(d.expense) ? d.expense : []
+      };
+      allWeeks = d.spesaSettimanale?.weeks && typeof d.spesaSettimanale.weeks === 'object' ? d.spesaSettimanale.weeks : {};
+      syncWeeklyExpenses();
+      render('income');
+      render('expense');
+      renderSelectedWeek();
+      drawMonthly();
+      $('syncStatus').textContent = `Cloud sincronizzato ✓ (${mKey})`;
+    }, e => $('syncStatus').textContent = 'Errore Database: ' + e.message);
+
+    // Listener Vacanze
+    unsubVacanze = onSnapshot(refVacanze, s => {
+      lastVacanzeDoc = s.exists() ? s.data() : {};
+      refreshAmpollaFromDocs();
+    }, () => {});
+  }
 
   function monday(d) {
     const x = new Date(d);
@@ -928,8 +1087,8 @@
     });
     state.expense = [
       ...manual,
-      { name: 'Spese alimentari Luca e Lisa', amount: food, date: today() },
-      { name: 'Spese animali', amount: pets, date: today() }
+      { name: 'Spese alimentari Luca e Lisa', amount: food, date: defaultDateForSelectedMonth() },
+      { name: 'Spese animali', amount: pets, date: defaultDateForSelectedMonth() }
     ];
   }
 
@@ -952,7 +1111,7 @@
       
       const date = document.createElement('input');
       date.type = 'date';
-      date.value = x.date || today();
+      date.value = x.date || defaultDateForSelectedMonth();
       
       const del = document.createElement('button');
       del.className = 'smallbtn';
@@ -996,7 +1155,7 @@
   }
 
   window.addRow = type => {
-    state[type].push({ name: '', amount: '', date: today() });
+    state[type].push({ name: '', amount: '', date: defaultDateForSelectedMonth() });
     render(type);
     setTimeout(() => $(type === 'income' ? 'incomeList' : 'expenseList').lastElementChild?.querySelector('input')?.focus(), 50);
   };
@@ -1011,27 +1170,29 @@
     if (!ref) return;
     try {
       await setDoc(ref, { income: state.income, expense: state.expense, updatedAt: Date.now() }, { merge: true });
-      $('syncStatus').textContent = 'Cloud sincronizzato ✓';
+      $('syncStatus').textContent = `Cloud sincronizzato ✓ (${getMonthKey(selectedDate)})`;
     } catch (e) {
       $('syncStatus').textContent = 'Errore di sincronizzazione: ' + e.message;
     }
   }
 
+  // Disegna il grafico relativo ai giorni del MESE SELEZIONATO
   function drawMonthly() {
-    const now = new Date(), y = now.getFullYear(), m = now.getMonth();
+    const y = selectedDate.getFullYear();
+    const m = selectedDate.getMonth();
     const days = new Date(y, m + 1, 0).getDate();
     const labels = Array.from({ length: days }, (_, i) => String(i + 1).padStart(2, '0'));
     const inc = Array(days).fill(0), exp = Array(days).fill(0);
 
     state.income.forEach(x => {
-      const d = new Date((x.date || today()) + 'T00:00:00');
+      const d = new Date((x.date || defaultDateForSelectedMonth()) + 'T00:00:00');
       if (d.getFullYear() === y && d.getMonth() === m) inc[d.getDate() - 1] += num(x.amount);
     });
 
     const auto = ['spese alimentari luca e lisa', 'spese animali'];
     state.expense.forEach(x => {
       if (auto.includes((x.name || '').trim().toLowerCase())) return;
-      const d = new Date((x.date || today()) + 'T00:00:00');
+      const d = new Date((x.date || defaultDateForSelectedMonth()) + 'T00:00:00');
       if (d.getFullYear() === y && d.getMonth() === m) exp[d.getDate() - 1] += num(x.amount);
     });
 
@@ -1128,7 +1289,6 @@
     currentFillLevel += (targetFillLevel - currentFillLevel) * 0.04;
     const baseHeight = h - (h * Math.max(0.04, Math.min(0.96, currentFillLevel)));
 
-    // Onda secondaria
     ctx.fillStyle = 'rgba(56, 189, 248, 0.35)';
     ctx.beginPath();
     ctx.moveTo(0, h);
@@ -1140,7 +1300,6 @@
     ctx.closePath();
     ctx.fill();
 
-    // Onda principale frontale
     const grad = ctx.createLinearGradient(0, baseHeight - 10, 0, h);
     grad.addColorStop(0, '#10b981');
     grad.addColorStop(1, '#064e3b');
@@ -1169,9 +1328,8 @@
   });
   drawWave();
 
-  // Rileva automaticamente i versamenti sia dall'input manuale che dalle checkbox di vacanze.html
   function calculateVacanzaSaved(d1, d2) {
-    let target = 120; // default 120 come da schermata
+    let target = 120;
     let saved = 0;
     let foundWeeksSum = 0;
     let hasWeeklyEntries = false;
@@ -1186,7 +1344,6 @@
       if (d.totaleVersato !== undefined) saved = Math.max(saved, num(d.totaleVersato));
       if (d.versato !== undefined && typeof d.versato === 'number') saved = Math.max(saved, num(d.versato));
 
-      // Ispezione settimane (array o oggetti)
       const weekContainers = [d.weeks, d.settimane, d.vacanze, d.vacanzeWeeks, d.vacanzaSettimane, d];
       for (const container of weekContainers) {
         if (!container || typeof container !== 'object') continue;
@@ -1203,7 +1360,6 @@
           }
         });
 
-        // Controlla anche campi diretti tipo settimana1_versato, w1_checked ecc.
         for (let i = 1; i <= 5; i++) {
           const isCheck = container[`settimana${i}_versato`] || container[`s${i}_versato`] || container[`w${i}_checked`] || container[`settimana${i}_checked`] || (container[`settimana${i}`] && container[`settimana${i}`].versato);
           const val = num(container[`settimana${i}`]?.amount || container[`settimana${i}`]?.importo || container[`settimana${i}`] || container[`s${i}`] || container[`w${i}`]);
@@ -1257,7 +1413,7 @@
     state.expense.push({
       name: 'Versamento Salvadanaio Vacanze',
       amount: amount,
-      date: today()
+      date: defaultDateForSelectedMonth()
     });
     
     await setDoc(ref, { 
@@ -1283,7 +1439,7 @@
 
   async function svuotaSalvadanaio() {
     if (!auth.currentUser || !ref) return;
-    if (!confirm("Sei sicuro di voler azzerare il salvadanaio vacanze?")) return;
+    if (!confirm("Sei sicuro di voler azzerare il salvadanaio vacanze per questo mese?")) return;
     
     const target = 120;
     await setDoc(ref, { vacanzaAccantonato: 0, vacanzaTarget: target, updatedAt: Date.now() }, { merge: true });
@@ -1312,6 +1468,8 @@
       $('app').style.display = 'none';
       $('topLogin').style.display = 'inline-flex';
       $('topUserProfile').style.display = 'none';
+      if (unsubBudget) { unsubBudget(); unsubBudget = null; }
+      if (unsubVacanze) { unsubVacanze(); unsubVacanze = null; }
       return;
     }
     $('login').style.display = 'none';
@@ -1326,34 +1484,8 @@
     $('topLogin').style.display = 'none';
     $('topUserProfile').style.display = 'flex';
     
-    ref = doc(db, 'users', user.uid, 'budgets', monthKey());
-    refVacanze = doc(db, 'users', user.uid, 'vacanze', monthKey());
-
-    // Listener principale Budget
-    onSnapshot(ref, s => {
-      if (editing) return;
-      const d = s.exists() ? s.data() : {};
-      lastBudgetDoc = d;
-      refreshAmpollaFromDocs();
-
-      state = {
-        income: Array.isArray(d.income) ? d.income : [],
-        expense: Array.isArray(d.expense) ? d.expense : []
-      };
-      allWeeks = d.spesaSettimanale?.weeks && typeof d.spesaSettimanale.weeks === 'object' ? d.spesaSettimanale.weeks : {};
-      syncWeeklyExpenses();
-      render('income');
-      render('expense');
-      renderSelectedWeek();
-      drawMonthly();
-      $('syncStatus').textContent = 'Cloud sincronizzato ✓';
-    }, e => $('syncStatus').textContent = 'Errore Database: ' + e.message);
-
-    // Listener sincronizzazione con la pagina Vacanze
-    onSnapshot(refVacanze, s => {
-      lastVacanzeDoc = s.exists() ? s.data() : {};
-      refreshAmpollaFromDocs();
-    }, () => {});
+    updateMonthHeader();
+    subscribeSelectedMonth();
   });
 
   /* Logica Calcolatrice Apple + Modal Popup */
@@ -1430,7 +1562,6 @@
     };
   }
 
-  // Simulazione/Integrazione accumulo orario live
   setInterval(() => {
     if (currentWatts > 0) {
       accumulatedKwh += (currentWatts * (5 / 3600)) / 1000;
