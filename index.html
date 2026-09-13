@@ -3,763 +3,1038 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AI-BUDGET | Personal Finance Dashboard</title>
-  <meta name="theme-color" content="#0b0f19">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <title>AI-BUDGET</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js"></script>
+
   <style>
-    body { background-color: #0b0f19; color: #f8fafc; font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
-    .glass { background: rgba(17, 24, 39, 0.75); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.07); }
-    .canvas-container { position: relative; width: 100%; height: 170px; overflow: hidden; border-radius: 1.25rem; }
-    canvas#waveCanvas { width: 100%; height: 100%; display: block; }
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
-    ::-webkit-scrollbar-track { background: #0f172a; }
+    :root {
+      --bg: #050811;
+      --card-bg: rgba(13, 20, 36, 0.72);
+      --border: rgba(255, 255, 255, 0.08);
+      --border-focus: #6366f1;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --primary-grad: linear-gradient(135deg, #6366f1 0%, #38bdf8 100%);
+      --accent-green: #10b981;
+      --accent-green-bg: rgba(16, 185, 129, 0.12);
+      --accent-red: #f43f5e;
+      --accent-red-bg: rgba(244, 63, 94, 0.12);
+      --radius: 20px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-color: var(--bg);
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(56, 189, 248, 0.12) 0, transparent 50%),
+        radial-gradient(at 50% 50%, rgba(15, 23, 42, 0.6) 0, transparent 100%);
+      background-attachment: fixed;
+      color: var(--text);
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    button, a, input { font: inherit; outline: none; }
+
+    .login {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(5, 8, 17, 0.85);
+      backdrop-filter: blur(25px);
+      z-index: 99;
+    }
+    .loginbox {
+      width: min(420px, 90%);
+      padding: 40px;
+      border: 1px solid var(--border);
+      border-radius: 28px;
+      background: var(--card-bg);
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+      text-align: center;
+    }
+    .loginbox h1 { font-size: 28px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 8px; }
+    .loginbox p { color: var(--muted); font-size: 14px; margin-bottom: 24px; }
+
+    .btn {
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px 18px;
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text);
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 14px;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .btn:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.18);
+      transform: translateY(-2px);
+    }
+    .btn.primary {
+      background: var(--primary-grad);
+      color: #fff;
+      border: none;
+      box-shadow: 0 4px 20px rgba(99, 102, 241, 0.35);
+    }
+    .btn.primary:hover {
+      box-shadow: 0 6px 28px rgba(99, 102, 241, 0.55);
+    }
+    .btn.danger {
+      background: var(--accent-red-bg);
+      color: var(--accent-red);
+      border-color: rgba(244, 63, 94, 0.3);
+    }
+    .btn.danger:hover {
+      background: var(--accent-red);
+      color: #fff;
+    }
+
+    .app { display: none; }
+    .shell {
+      display: grid;
+      grid-template-columns: 280px minmax(0, 1fr);
+      gap: 20px;
+      padding: 20px;
+      max-width: 1440px;
+      margin: 0 auto;
+    }
+
+    .side, .top, .card, .sum {
+      background: var(--card-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    }
+
+    .side {
+      position: sticky;
+      top: 20px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .side-brand {
+      font-size: 20px;
+      font-weight: 800;
+      background: var(--primary-grad);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .user-tag {
+      font-size: 12px;
+      color: var(--muted);
+      background: rgba(255, 255, 255, 0.03);
+      padding: 6px 12px;
+      border-radius: 100px;
+      border: 1px solid var(--border);
+      word-break: break-all;
+    }
+    .menu { display: flex; flex-direction: column; gap: 8px; }
+    .nav { width: 100%; justify-content: flex-start; padding: 12px 16px; border-radius: 12px; }
+
+    /* Calcolatrice */
+    .apple-calculator-card { width: 100%; }
+    .apple-calculator {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 20px;
+      padding: 12px;
+    }
+    .apple-calc-display {
+      height: 48px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: flex-end;
+      color: #fff;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 24px;
+      padding: 0 6px 4px;
+      overflow: hidden;
+    }
+    .apple-calc-buttons {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+    }
+    .calc-btn {
+      aspect-ratio: 1;
+      border: 0;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.15s;
+    }
+    .calc-btn:active { opacity: 0.6; }
+    .calc-number { background: rgba(255, 255, 255, 0.08); color: #fff; }
+    .calc-function { background: rgba(255, 255, 255, 0.18); color: #fff; }
+    .calc-operator { background: #f59e0b; color: #fff; font-size: 18px; }
+    .calc-special { background: rgba(255, 255, 255, 0.08); color: var(--muted); }
+
+    /* Dashboard Main */
+    .main { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+    .top {
+      padding: 18px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .top h3 { font-size: 18px; font-weight: 700; }
+    .top .muted { font-size: 13px; margin-top: 2px; }
+
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+    .sum { padding: 20px; }
+    .label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--muted);
+      font-weight: 700;
+    }
+    .value {
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      margin-top: 6px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .positive { color: var(--accent-green); }
+    .negative { color: var(--accent-red); }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      align-items: start;
+    }
+    .card { padding: 22px; }
+    .section-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .section-title h2 { font-size: 16px; font-weight: 700; }
+    .section-toggle {
+      width: 30px;
+      height: 30px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.05);
+      color: #fff;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .entry {
+      display: grid;
+      grid-template-columns: 1fr 110px 135px 36px;
+      gap: 8px;
+      margin-bottom: 10px;
+      align-items: center;
+    }
+    .entry input {
+      padding: 10px 14px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: rgba(5, 8, 17, 0.4);
+      color: #fff;
+      font-size: 13px;
+    }
+    .entry input:focus {
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+    }
+    .smallbtn {
+      width: 36px;
+      height: 36px;
+      border: none;
+      border-radius: 10px;
+      background: var(--accent-red-bg);
+      color: var(--accent-red);
+      font-weight: bold;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .add { width: 100%; border-radius: 12px; margin-top: 6px; }
+
+    .collapsed #incomeList, .collapsed #expenseList, .collapsed .add { display: none; }
+
+    .linkcard { text-decoration: none; color: inherit; display: block; margin-bottom: 14px; }
+    .linkcard strong { font-size: 16px; display: inline-flex; align-items: center; gap: 6px; }
+    .weekbox {
+      background: rgba(0, 0, 0, 0.25);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px;
+    }
+    .week-selector {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .week-selector button {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.05);
+      color: #fff;
+      cursor: pointer;
+    }
+    .weekrow {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      font-size: 13px;
+    }
+    .weekamount { font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+    .chartwrap { height: 260px; margin-top: 14px; }
+
+    /* Ampolla Wave Rigorosamente Centrata */
+    .ampolla-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 32px;
+      padding: 24px;
+    }
+    .ampolla-container {
+      position: relative;
+      width: 150px;
+      height: 200px;
+      flex-shrink: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .ampolla-flask {
+      position: relative;
+      width: 130px;
+      height: 180px;
+      border-radius: 65px 65px 35px 35px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 2px solid rgba(255, 255, 255, 0.18);
+      box-shadow: 
+        0 15px 35px rgba(0, 0, 0, 0.5),
+        inset 0 0 20px rgba(255, 255, 255, 0.05),
+        inset 2px 2px 5px rgba(255, 255, 255, 0.2);
+      overflow: hidden;
+      backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .ampolla-flask::after {
+      content: '';
+      position: absolute;
+      top: 15px;
+      right: 12px;
+      width: 6px;
+      height: 60px;
+      background: linear-gradient(to bottom, rgba(255, 255, 255, 0.35), transparent);
+      border-radius: 10px;
+      z-index: 4;
+      pointer-events: none;
+    }
+    #waveCanvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+    }
+    .ampolla-center-text {
+      position: absolute;
+      inset: 0;
+      margin: auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 6;
+      pointer-events: none;
+      width: 100%;
+      padding: 0 6px;
+    }
+    .ampolla-center-text strong {
+      font-size: 16px;
+      font-weight: 800;
+      color: #fff;
+      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9);
+      font-family: 'JetBrains Mono', monospace;
+      white-space: nowrap;
+    }
+    .ampolla-center-text span {
+      font-size: 12px;
+      font-weight: 700;
+      color: #6ee7b7;
+      text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9);
+      margin-top: 3px;
+    }
+    .ampolla-info { flex: 1; }
+    .ampolla-title { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+    .ampolla-euro { font-size: 32px; font-weight: 800; color: var(--accent-green); font-family: 'JetBrains Mono', monospace; }
+    .ampolla-percent { font-size: 13px; color: var(--muted); margin-bottom: 16px; }
+    .ampolla-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+    .deposit-input {
+      padding: 10px 14px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: rgba(5, 8, 17, 0.4);
+      color: #fff;
+      font-size: 13px;
+      width: 130px;
+    }
+
+    .status { font-size: 12px; color: var(--muted); text-align: right; padding: 4px 10px; }
+
+    @media (max-width: 860px) {
+      .shell { grid-template-columns: 1fr; padding: 12px; }
+      .side { position: relative; top: 0; }
+      .summary, .grid { grid-template-columns: 1fr; }
+      .entry { grid-template-columns: 1fr 1fr; }
+      .ampolla-card { flex-direction: column; text-align: center; }
+      .ampolla-actions { justify-content: center; }
+    }
   </style>
 </head>
-<body class="flex flex-col md:flex-row min-h-screen bg-[#0b0f19]">
+<body>
 
-  <!-- ================= SIDEBAR SINISTRA ORIGINALE ================= -->
-  <aside class="w-full md:w-72 glass md:h-screen sticky top-0 flex flex-col justify-between p-5 border-r border-slate-800 z-40 overflow-y-auto">
-    <div class="space-y-6">
+<div id="login" class="login">
+  <div class="loginbox">
+    <h1>💰 AI-BUDGET</h1>
+    <p>Accedi con Google per sincronizzare i tuoi dati in tempo reale.</p>
+    <button id="loginScreenBtn" class="btn primary" style="width: 100%;">Accedi con Google</button>
+    <div id="loginError" class="status" style="margin-top: 14px; text-align: center;"></div>
+  </div>
+</div>
+
+<div id="app" class="app">
+  <div class="shell">
+    <aside class="side">
+      <div class="side-brand">💰 AI-BUDGET</div>
+      <div id="userInfo" class="user-tag"></div>
       
-      <!-- Brand & Header -->
-      <div class="flex items-center justify-between">
-        <div class="flex items-center gap-3">
-          <div class="h-10 w-10 rounded-2xl bg-indigo-600 flex items-center justify-center font-black text-white shadow-lg shadow-indigo-500/30">AI</div>
-          <div>
-            <h1 class="font-extrabold text-base tracking-tight leading-tight">AI-BUDGET</h1>
-            <span class="text-[11px] text-slate-400">Finance & Domotica</span>
-          </div>
-        </div>
+      <div class="menu">
+        <button class="btn nav" onclick="location.href='risparmi.html'">📊 Risparmi</button>
+        <button class="btn nav" onclick="location.href='vacanze.html'">🏖️ Vacanze</button>
+        <button class="btn nav" onclick="location.href='comparatori.html'">🛒 Comparatori</button>
+        <button class="btn nav" onclick="location.href='spesa-settimanale.html'">🛒 Spesa settimanale</button>
+        <button id="logoutBtn" class="btn nav">🚪 Esci</button>
       </div>
 
-      <!-- Auth Profile Bar -->
-      <div id="authBox" class="p-3 rounded-2xl bg-slate-900/80 border border-slate-800">
-        <button id="loginBtn" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold py-2.5 px-3 rounded-xl transition flex items-center justify-center gap-2">
-          <i class="fa-brands fa-google"></i> Accedi con Google
-        </button>
-        <div id="userProfile" class="hidden flex items-center justify-between">
-          <div class="flex items-center gap-2.5 overflow-hidden">
-            <img id="userAvatar" class="w-8 h-8 rounded-full border border-indigo-500/40" alt="Avatar">
-            <div class="truncate">
-              <p id="userName" class="text-xs font-semibold text-slate-200 truncate">Utente</p>
-              <span class="text-[10px] text-emerald-400 flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Online</span>
-            </div>
-          </div>
-          <button id="logoutBtn" class="text-slate-400 hover:text-red-400 p-1.5 text-xs transition" title="Disconnetti"><i class="fa-solid fa-arrow-right-from-bracket"></i></button>
-        </div>
-      </div>
-
-      <!-- Navigation Links -->
-      <nav class="space-y-1 text-xs font-medium">
-        <a href="#section-kpi" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-300 hover:bg-slate-800/80 transition">
-          <i class="fa-solid fa-chart-pie w-4 text-indigo-400"></i> Panoramica & Saldi
-        </a>
-        <a href="#section-weekly" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-300 hover:bg-slate-800/80 transition">
-          <i class="fa-solid fa-basket-shopping w-4 text-emerald-400"></i> Spese Alimentari & Animali
-        </a>
-        <a href="#section-savings" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-300 hover:bg-slate-800/80 transition">
-          <i class="fa-solid fa-piggy-bank w-4 text-cyan-400"></i> Salvadanaio Vacanze
-        </a>
-        <a href="#section-transactions" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-300 hover:bg-slate-800/80 transition">
-          <i class="fa-solid fa-receipt w-4 text-rose-400"></i> Movimenti & Spese
-        </a>
-        <a href="#section-energy" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-300 hover:bg-slate-800/80 transition">
-          <i class="fa-solid fa-bolt w-4 text-amber-400"></i> Smart Plug Clima
-        </a>
-      </nav>
-
-      <!-- Calcolatrice Integrata Sidebar (Apple Style) -->
-      <div class="pt-2 border-t border-slate-800/80">
-        <span class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2 block">Calcolatrice Rapida</span>
-        <div class="bg-slate-900/90 p-2.5 rounded-2xl border border-slate-800 space-y-2">
-          <input type="text" id="calcScreen" readonly class="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-right font-mono text-base text-white focus:outline-none" value="0">
-          <div class="grid grid-cols-4 gap-1.5 text-xs font-semibold">
-            <button class="calc-btn p-2 rounded-lg bg-slate-800 hover:bg-slate-700" data-val="C">C</button>
-            <button class="calc-btn p-2 rounded-lg bg-slate-800 hover:bg-slate-700" data-val="/">÷</button>
-            <button class="calc-btn p-2 rounded-lg bg-slate-800 hover:bg-slate-700" data-val="*">×</button>
-            <button class="calc-btn p-2 rounded-lg bg-indigo-600 hover:bg-indigo-500" data-val="-">-</button>
+      <section class="apple-calculator-card">
+        <div class="apple-calculator">
+          <div class="apple-calc-display" id="appleCalcDisplay">0</div>
+          <div class="apple-calc-buttons">
+            <button class="calc-btn calc-function" onclick="appleCalcClear()">AC</button>
+            <button class="calc-btn calc-function" onclick="appleCalcPlusMinus()">+/-</button>
+            <button class="calc-btn calc-function" onclick="appleCalcPercent()">%</button>
+            <button class="calc-btn calc-operator" onclick="appleCalcOperator('÷')">÷</button>
             
-            <button class="calc-btn p-2 rounded-lg bg-slate-800/50 hover:bg-slate-800" data-val="7">7</button>
-            <button class="calc-btn p-2 rounded-lg bg-slate-800/50 hover:bg-slate-800" data-val="8">8</button>
-            <button class="calc-btn p-2 rounded-lg bg-slate-800/50 hover:bg-slate-800" data-val="9">9</button>
-            <button class="calc-btn p-2 rounded-lg bg-indigo-600 hover:bg-indigo-500" data-val="+">+</button>
-
-            <button class="calc-btn p-2 rounded-lg bg-slate-800/50 hover:bg-slate-800" data-val="4">4</button>
-            <button class="calc-btn p-2 rounded-lg bg-slate-800/50 hover:bg-slate-800" data-val="5">5</button>
-            <button class="calc-btn p-2 rounded-lg bg-slate-800/50 hover:bg-slate-800" data-val="6">6</button>
-            <button class="calc-btn row-span-2 p-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 flex items-center justify-center font-bold" data-val="=">=</button>
-
-            <button class="calc-btn p-2 rounded-lg bg-slate-800/50 hover:bg-slate-800" data-val="1">1</button>
-            <button class="calc-btn p-2 rounded-lg bg-slate-800/50 hover:bg-slate-800" data-val="2">2</button>
-            <button class="calc-btn p-2 rounded-lg bg-slate-800/50 hover:bg-slate-800" data-val="3">3</button>
-
-            <button class="calc-btn col-span-2 p-2 rounded-lg bg-slate-800/50 hover:bg-slate-800" data-val="0">0</button>
-            <button class="calc-btn p-2 rounded-lg bg-slate-800/50 hover:bg-slate-800" data-val=".">.</button>
+            <button class="calc-btn calc-number" onclick="appleCalcNumber('7')">7</button>
+            <button class="calc-btn calc-number" onclick="appleCalcNumber('8')">8</button>
+            <button class="calc-btn calc-number" onclick="appleCalcNumber('9')">9</button>
+            <button class="calc-btn calc-operator" onclick="appleCalcOperator('×')">×</button>
+            
+            <button class="calc-btn calc-number" onclick="appleCalcNumber('4')">4</button>
+            <button class="calc-btn calc-number" onclick="appleCalcNumber('5')">5</button>
+            <button class="calc-btn calc-number" onclick="appleCalcNumber('6')">6</button>
+            <button class="calc-btn calc-operator" onclick="appleCalcOperator('-')">−</button>
+            
+            <button class="calc-btn calc-number" onclick="appleCalcNumber('1')">1</button>
+            <button class="calc-btn calc-number" onclick="appleCalcNumber('2')">2</button>
+            <button class="calc-btn calc-number" onclick="appleCalcNumber('3')">3</button>
+            <button class="calc-btn calc-operator" onclick="appleCalcOperator('+')">+</button>
+            
+            <button class="calc-btn calc-special" onclick="appleCalcClear()">▦</button>
+            <button class="calc-btn calc-number" onclick="appleCalcNumber('0')">0</button>
+            <button class="calc-btn calc-number" onclick="appleCalcDecimal()">,</button>
+            <button class="calc-btn calc-operator" onclick="appleCalcEquals()">=</button>
           </div>
+        </div>
+      </section>
+    </aside>
+
+    <main class="main">
+      <div class="top">
+        <div>
+          <h3>Dashboard Mensile</h3>
+          <div class="muted">Gestione flussi di cassa e risparmi</div>
+        </div>
+        <button id="topLogin" class="btn primary">Accedi</button>
+      </div>
+
+      <div class="summary">
+        <div class="sum">
+          <div class="label">Entrate</div>
+          <div id="incomeTotal" class="value positive">€ 0,00</div>
+        </div>
+        <div class="sum">
+          <div class="label">Spese</div>
+          <div id="expenseTotal" class="value negative">€ 0,00</div>
+        </div>
+        <div class="sum">
+          <div class="label">Risparmio Netto</div>
+          <div id="balanceTotal" class="value">€ 0,00</div>
         </div>
       </div>
 
-    </div>
+      <div class="grid">
+        <section id="incomeCard" class="card collapsed">
+          <div class="section-title">
+            <h2>📥 Entrate Fisse & Extra</h2>
+            <button class="section-toggle" type="button" onclick="toggleCollapse('incomeCard',this)">+</button>
+          </div>
+          <div id="incomeList"></div>
+          <button class="btn primary add" onclick="addRow('income')">+ Aggiungi Entrata</button>
+        </section>
 
-    <div class="text-[10px] text-slate-500 text-center pt-4 border-t border-slate-800/60">
-      AI-BUDGET Cloud • Firebase
-    </div>
-  </aside>
+        <section id="expenseCard" class="card collapsed">
+          <div class="section-title">
+            <h2>📤 Uscite Programmate</h2>
+            <button class="section-toggle" type="button" onclick="toggleCollapse('expenseCard',this)">+</button>
+          </div>
+          <div id="expenseList"></div>
+          <button class="btn primary add" onclick="addRow('expense')">+ Aggiungi Spesa</button>
+        </section>
+      </div>
 
-  <!-- ================= CONTENUTO PRINCIPALE ================= -->
-  <main class="flex-1 p-4 md:p-8 space-y-6 max-w-7xl">
+      <section class="card">
+        <a class="linkcard" href="spesa-settimanale.html">
+          <strong>🛒 Monitoraggio Spese Settimanali →</strong>
+          <p class="muted">Sincronizzazione automatica alimentari e cura animali.</p>
+        </a>
+        <div class="weekbox">
+          <div class="week-selector">
+            <button type="button" onclick="changeWeek(-1)">‹</button>
+            <strong id="selectedWeekLabel">Settimana corrente</strong>
+            <button type="button" onclick="changeWeek(1)">›</button>
+          </div>
+          <div class="weekrow">
+            <span>🥗 Spese alimentari Luca e Lisa</span>
+            <span class="weekamount" id="weekFood">€ 0,00</span>
+          </div>
+          <div class="weekrow">
+            <span>🐈 Spese cura animali</span>
+            <span class="weekamount" id="weekPets">€ 0,00</span>
+          </div>
+          <div class="weekrow" style="margin-top: 4px; border-top: 1px solid var(--border);">
+            <strong style="color: var(--text);">📅 Totale settimana</strong>
+            <strong class="weekamount" style="color: var(--accent-green);" id="weekTotal">€ 0,00</strong>
+          </div>
+          <div class="muted" id="weekRange" style="margin-top: 8px; font-size: 11px;">Settimana corrente</div>
+          <div class="chartwrap"><canvas id="monthlyChart"></canvas></div>
+        </div>
+      </section>
 
-    <!-- KPI CARDS -->
-    <section id="section-kpi" class="grid grid-cols-2 md:grid-cols-4 gap-4">
-      <div class="glass p-4 rounded-2xl">
-        <p class="text-xs font-medium text-slate-400">Liquidità Disponibile</p>
-        <h3 id="netBalance" class="text-xl md:text-2xl font-black mt-1 text-emerald-400">€ 0.00</h3>
-        <span class="text-[10px] text-slate-500">Entrate - tutte le spese e versamenti</span>
-      </div>
-      <div class="glass p-4 rounded-2xl">
-        <p class="text-xs font-medium text-slate-400">Salvadanaio Vacanze</p>
-        <h3 id="savingsTotal" class="text-xl md:text-2xl font-black mt-1 text-cyan-400">€ 0.00</h3>
-        <span class="text-[10px] text-slate-500">Capitale accantonato nel fondo</span>
-      </div>
-      <div class="glass p-4 rounded-2xl">
-        <p class="text-xs font-medium text-slate-400">Totale Spese Mensili</p>
-        <h3 id="totalExpensesCard" class="text-xl md:text-2xl font-black mt-1 text-rose-400">€ 0.00</h3>
-        <span class="text-[10px] text-slate-500">Alimentari + Animali + Varie</span>
-      </div>
-      <div class="glass p-4 rounded-2xl">
-        <p class="text-xs font-medium text-slate-400">Consumo Clima Presa</p>
-        <h3 id="energyCostCard" class="text-xl md:text-2xl font-black mt-1 text-amber-400">€ 0.00</h3>
-        <span id="energyKwhCard" class="text-[10px] text-slate-500">0.00 kWh stimati</span>
-      </div>
-    </section>
+      <section class="card ampolla-card">
+        <div class="ampolla-container">
+          <div class="ampolla-flask">
+            <canvas id="waveCanvas" width="130" height="180"></canvas>
+            <div class="ampolla-center-text">
+              <strong id="ampollaInside">€ 0,00</strong>
+              <span id="ampollaPercentBadge">0%</span>
+            </div>
+          </div>
+        </div>
 
-    <!-- SPESE ALIMENTARI & ANIMALI (LAYOUT ORIGINALE) -->
-    <section id="section-weekly" class="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div class="ampolla-info">
+          <div class="ampolla-title">🏖️ Salvadanaio Vacanze</div>
+          <div id="ampollaEuro" class="ampolla-euro">€ 0,00</div>
+          <div id="ampollaPercent" class="ampolla-percent">0% dell'obiettivo di € 1.000</div>
+          <div class="ampolla-actions">
+            <input id="depositAmount" class="deposit-input" type="number" min="0.01" step="0.01" placeholder="Importo €">
+            <button class="btn primary" id="addVacanza">Versa +</button>
+            <button class="btn danger" id="resetVacanza">Svuota</button>
+            <button class="btn" id="openVacanze">Dettagli</button>
+          </div>
+        </div>
+      </section>
+
+      <div id="syncStatus" class="status">In attesa di autenticazione...</div>
+    </main>
+  </div>
+</div>
+
+<script type="module">
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js';
+  import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js';
+  import { getFirestore, doc, onSnapshot, setDoc, getDoc } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js';
+
+  const firebaseConfig = {
+    apiKey: 'AIzaSyAdZbBv6JYbYnl6CxuFVfHhSftvIxwf2DY',
+    authDomain: 'budget-luca.firebaseapp.com',
+    projectId: 'budget-luca',
+    storageBucket: 'budget-luca.firebasestorage.app',
+    messagingSenderId: '67496424698',
+    appId: '1:67496424698:web:efc07408543',
+    measurementId: 'G-7LEYRZE9QN'
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+  const provider = new GoogleAuthProvider();
+
+  let ref = null, state = { income: [], expense: [] }, saveTimer = null, editing = false, monthlyChart = null, allWeeks = {}, selectedWeekOffset = 0;
+  
+  const $ = id => document.getElementById(id);
+  const money = n => new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(Number(n) || 0);
+  const today = () => new Date().toISOString().slice(0, 10);
+  const monthKey = () => new Date().toISOString().slice(0, 7);
+
+  function num(v) { return Number(String(v ?? '').replace(',', '.')) || 0; }
+
+  function monday(d) {
+    const x = new Date(d);
+    x.setHours(0, 0, 0, 0);
+    const day = x.getDay() || 7;
+    x.setDate(x.getDate() - day + 1);
+    return x;
+  }
+
+  function weekKey(offset = 0) {
+    const d = monday(new Date());
+    d.setDate(d.getDate() + offset * 7);
+    return d.toISOString().slice(0, 10);
+  }
+
+  function weekValues(k) {
+    const w = allWeeks[k] || {};
+    return { food: num(w.food1) + num(w.food2), pets: num(w.pet1) + num(w.pet2) };
+  }
+
+  function allWeeklyTotal() {
+    return Object.keys(allWeeks).reduce((s, k) => s + weekValues(k).food + weekValues(k).pets, 0);
+  }
+
+  function renderSelectedWeek() {
+    const k = weekKey(selectedWeekOffset), v = weekValues(k);
+    $('weekFood').textContent = money(v.food);
+    $('weekPets').textContent = money(v.pets);
+    $('weekTotal').textContent = money(v.food + v.pets);
+    $('weekRange').textContent = 'Settimana ' + k;
+    $('selectedWeekLabel').textContent = selectedWeekOffset === 0 ? 'Settimana corrente' : ('Settimana ' + k);
+  }
+
+  window.changeWeek = delta => {
+    selectedWeekOffset += delta;
+    renderSelectedWeek();
+  };
+
+  function syncWeeklyExpenses() {
+    const food = weekValues(weekKey()).food, pets = weekValues(weekKey()).pets;
+    const manual = state.expense.filter(x => {
+      const n = (x.name || '').trim().toLowerCase();
+      return n !== 'spese alimentari luca e lisa' && n !== 'spese animali';
+    });
+    state.expense = [
+      ...manual,
+      { name: 'Spese alimentari Luca e Lisa', amount: food, date: today() },
+      { name: 'Spese animali', amount: pets, date: today() }
+    ];
+  }
+
+  function render(type) {
+    const el = $(type === 'income' ? 'incomeList' : 'expenseList');
+    el.innerHTML = '';
+    state[type].forEach((x, i) => {
+      const d = document.createElement('div');
+      d.className = 'entry';
       
-      <!-- Box Spese Alimentari Luca e Lisa -->
-      <div class="glass p-5 rounded-3xl border border-slate-800 space-y-4">
-        <div class="flex items-center justify-between">
-          <div>
-            <h2 class="text-sm md:text-base font-bold flex items-center gap-2">
-              <i class="fa-solid fa-basket-shopping text-emerald-400"></i> Spese Alimentari Luca e Lisa
-            </h2>
-            <p class="text-[11px] text-slate-400">Spesa per la casa suddivisa su 4 settimane</p>
-          </div>
-          <span id="totalFood" class="text-xs font-bold text-emerald-400 bg-emerald-950/60 px-3 py-1 rounded-full border border-emerald-800">€ 0.00</span>
-        </div>
+      const name = document.createElement('input');
+      name.placeholder = 'Descrizione';
+      name.value = x.name || '';
+      
+      const amount = document.createElement('input');
+      amount.type = 'number';
+      amount.step = '0.01';
+      amount.placeholder = '€';
+      amount.value = x.amount ?? '';
+      
+      const date = document.createElement('input');
+      date.type = 'date';
+      date.value = x.date || today();
+      
+      const del = document.createElement('button');
+      del.className = 'smallbtn';
+      del.textContent = '✕';
+      
+      name.oninput = () => { state[type][i].name = name.value; updateTotals(); };
+      amount.oninput = () => { state[type][i].amount = amount.value; updateTotals(); };
+      date.onchange = () => { state[type][i].date = date.value; drawMonthly(); };
+      
+      [name, amount, date].forEach(v => v.onblur = finishEdit);
+      del.onclick = () => {
+        state[type].splice(i, 1);
+        render(type);
+        saveNow();
+      };
+      
+      d.append(name, amount, date, del);
+      el.appendChild(d);
+    });
+    updateTotals();
+    drawMonthly();
+  }
 
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-          <div class="bg-slate-900/60 p-2.5 rounded-xl border border-slate-800">
-            <label class="text-[10px] text-slate-400 block mb-1">Settimana 1</label>
-            <div class="relative">
-              <span class="absolute left-2.5 top-1.5 text-xs text-slate-500">€</span>
-              <input type="number" id="food1" step="0.50" value="0" class="budget-input w-full bg-slate-950 border border-slate-700 rounded-lg pl-6 pr-2 py-1 text-xs text-slate-100 font-semibold focus:border-emerald-500 focus:outline-none">
-            </div>
-          </div>
-          <div class="bg-slate-900/60 p-2.5 rounded-xl border border-slate-800">
-            <label class="text-[10px] text-slate-400 block mb-1">Settimana 2</label>
-            <div class="relative">
-              <span class="absolute left-2.5 top-1.5 text-xs text-slate-500">€</span>
-              <input type="number" id="food2" step="0.50" value="0" class="budget-input w-full bg-slate-950 border border-slate-700 rounded-lg pl-6 pr-2 py-1 text-xs text-slate-100 font-semibold focus:border-emerald-500 focus:outline-none">
-            </div>
-          </div>
-          <div class="bg-slate-900/60 p-2.5 rounded-xl border border-slate-800">
-            <label class="text-[10px] text-slate-400 block mb-1">Settimana 3</label>
-            <div class="relative">
-              <span class="absolute left-2.5 top-1.5 text-xs text-slate-500">€</span>
-              <input type="number" id="food3" step="0.50" value="0" class="budget-input w-full bg-slate-950 border border-slate-700 rounded-lg pl-6 pr-2 py-1 text-xs text-slate-100 font-semibold focus:border-emerald-500 focus:outline-none">
-            </div>
-          </div>
-          <div class="bg-slate-900/60 p-2.5 rounded-xl border border-slate-800">
-            <label class="text-[10px] text-slate-400 block mb-1">Settimana 4</label>
-            <div class="relative">
-              <span class="absolute left-2.5 top-1.5 text-xs text-slate-500">€</span>
-              <input type="number" id="food4" step="0.50" value="0" class="budget-input w-full bg-slate-950 border border-slate-700 rounded-lg pl-6 pr-2 py-1 text-xs text-slate-100 font-semibold focus:border-emerald-500 focus:outline-none">
-            </div>
-          </div>
-        </div>
-        <p class="text-[10px] text-slate-500 italic">I valori modificati si salvano istantaneamente sul cloud.</p>
-      </div>
+  function finishEdit() {
+    editing = false;
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(saveNow, 250);
+  }
 
-      <!-- Box Spese Animali -->
-      <div class="glass p-5 rounded-3xl border border-slate-800 space-y-4">
-        <div class="flex items-center justify-between">
-          <div>
-            <h2 class="text-sm md:text-base font-bold flex items-center gap-2">
-              <i class="fa-solid fa-paw text-amber-400"></i> Spese Animali
-            </h2>
-            <p class="text-[11px] text-slate-400">Cibo, veterinario e cure per gli animali</p>
-          </div>
-          <span id="totalPets" class="text-xs font-bold text-amber-400 bg-amber-950/60 px-3 py-1 rounded-full border border-amber-800">€ 0.00</span>
-        </div>
+  function updateTotals() {
+    const inc = state.income.reduce((s, x) => s + num(x.amount), 0);
+    const manual = state.expense.filter(x => {
+      const n = (x.name || '').trim().toLowerCase();
+      return n !== 'spese alimentari luca e lisa' && n !== 'spese animali';
+    }).reduce((s, x) => s + num(x.amount), 0);
+    const exp = manual + allWeeklyTotal();
+    
+    $('incomeTotal').textContent = money(inc);
+    $('expenseTotal').textContent = money(exp);
+    $('balanceTotal').textContent = money(inc - exp);
+  }
 
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-          <div class="bg-slate-900/60 p-2.5 rounded-xl border border-slate-800">
-            <label class="text-[10px] text-slate-400 block mb-1">Settimana 1</label>
-            <div class="relative">
-              <span class="absolute left-2.5 top-1.5 text-xs text-slate-500">€</span>
-              <input type="number" id="pet1" step="0.50" value="0" class="budget-input w-full bg-slate-950 border border-slate-700 rounded-lg pl-6 pr-2 py-1 text-xs text-slate-100 font-semibold focus:border-amber-500 focus:outline-none">
-            </div>
-          </div>
-          <div class="bg-slate-900/60 p-2.5 rounded-xl border border-slate-800">
-            <label class="text-[10px] text-slate-400 block mb-1">Settimana 2</label>
-            <div class="relative">
-              <span class="absolute left-2.5 top-1.5 text-xs text-slate-500">€</span>
-              <input type="number" id="pet2" step="0.50" value="0" class="budget-input w-full bg-slate-950 border border-slate-700 rounded-lg pl-6 pr-2 py-1 text-xs text-slate-100 font-semibold focus:border-amber-500 focus:outline-none">
-            </div>
-          </div>
-          <div class="bg-slate-900/60 p-2.5 rounded-xl border border-slate-800">
-            <label class="text-[10px] text-slate-400 block mb-1">Settimana 3</label>
-            <div class="relative">
-              <span class="absolute left-2.5 top-1.5 text-xs text-slate-500">€</span>
-              <input type="number" id="pet3" step="0.50" value="0" class="budget-input w-full bg-slate-950 border border-slate-700 rounded-lg pl-6 pr-2 py-1 text-xs text-slate-100 font-semibold focus:border-amber-500 focus:outline-none">
-            </div>
-          </div>
-          <div class="bg-slate-900/60 p-2.5 rounded-xl border border-slate-800">
-            <label class="text-[10px] text-slate-400 block mb-1">Settimana 4</label>
-            <div class="relative">
-              <span class="absolute left-2.5 top-1.5 text-xs text-slate-500">€</span>
-              <input type="number" id="pet4" step="0.50" value="0" class="budget-input w-full bg-slate-950 border border-slate-700 rounded-lg pl-6 pr-2 py-1 text-xs text-slate-100 font-semibold focus:border-amber-500 focus:outline-none">
-            </div>
-          </div>
-        </div>
-        <p class="text-[10px] text-slate-500 italic">I valori modificati si salvano istantaneamente sul cloud.</p>
-      </div>
+  window.addRow = type => {
+    state[type].push({ name: '', amount: '', date: today() });
+    render(type);
+    setTimeout(() => $(type === 'income' ? 'incomeList' : 'expenseList').lastElementChild?.querySelector('input')?.focus(), 50);
+  };
 
-    </section>
+  window.toggleCollapse = (id, btn) => {
+    const card = $(id);
+    card.classList.toggle('collapsed');
+    if (btn) btn.textContent = card.classList.contains('collapsed') ? '+' : '−';
+  };
 
-    <!-- WORKSPACE CENTRALE: SALVADANAIO, INSERIMENTO SPESE & SMART PLUG -->
-    <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+  async function saveNow() {
+    if (!ref) return;
+    try {
+      await setDoc(ref, { income: state.income, expense: state.expense, updatedAt: Date.now() }, { merge: true });
+      $('syncStatus').textContent = 'Cloud sincronizzato ✓';
+    } catch (e) {
+      $('syncStatus').textContent = 'Errore di sincronizzazione: ' + e.message;
+    }
+  }
 
-      <!-- Colonna Sinistra (Salvadanaio Vacanze a onde) -->
-      <div id="section-savings" class="lg:col-span-1 space-y-6">
-        <div class="glass p-5 rounded-3xl relative overflow-hidden">
-          <div class="flex justify-between items-center mb-3">
-            <div>
-              <h2 class="text-base font-bold">Salvadanaio Vacanze</h2>
-              <p class="text-xs text-slate-400">Target: <span id="targetDisplay">€ 1.500</span></p>
-            </div>
-            <span id="savingsPercentage" class="text-xs font-bold text-cyan-400 bg-cyan-950/70 px-2.5 py-1 rounded-full border border-cyan-800">0%</span>
-          </div>
+  function drawMonthly() {
+    const now = new Date(), y = now.getFullYear(), m = now.getMonth();
+    const days = new Date(y, m + 1, 0).getDate();
+    const labels = Array.from({ length: days }, (_, i) => String(i + 1).padStart(2, '0'));
+    const inc = Array(days).fill(0), exp = Array(days).fill(0);
 
-          <div class="canvas-container bg-slate-900/90 border border-slate-800 shadow-inner">
-            <canvas id="waveCanvas"></canvas>
-            <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-              <span id="canvasAmountDisplay" class="text-3xl font-black tracking-tight text-white drop-shadow-md">€ 0.00</span>
-              <span class="text-[11px] text-cyan-200 font-medium drop-shadow">risparmi accumulati</span>
-            </div>
-          </div>
-
-          <form id="savingsForm" class="mt-4 flex gap-2">
-            <input type="number" id="savingsInput" step="1" min="1" placeholder="Importo versamento (€)" required class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-cyan-500">
-            <button type="submit" class="bg-cyan-600 hover:bg-cyan-500 text-white font-semibold text-xs px-3.5 rounded-xl transition flex items-center gap-1.5 shadow-lg shadow-cyan-600/30">
-              <i class="fa-solid fa-piggy-bank"></i> Versa
-            </button>
-          </form>
-        </div>
-
-        <!-- Smart Plug Clima Monitor -->
-        <div id="section-energy" class="glass p-5 rounded-3xl space-y-4">
-          <div class="flex items-center justify-between">
-            <h2 class="text-sm font-bold flex items-center gap-2">
-              <i class="fa-solid fa-bolt text-amber-400"></i> Smart Plug Clima
-            </h2>
-            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-400 border border-emerald-800">ATTIVA</span>
-          </div>
-
-          <div class="bg-slate-900/80 p-3.5 rounded-2xl border border-slate-800 space-y-2 text-xs">
-            <div class="flex justify-between items-center">
-              <span class="text-slate-400">Potenza Attuale:</span>
-              <span id="liveWatts" class="font-bold text-slate-100">0 W</span>
-            </div>
-            <div class="flex justify-between items-center">
-              <span class="text-slate-400">Costo Energia:</span>
-              <div class="flex items-center gap-1">
-                <input type="number" id="kwhRate" value="0.28" step="0.01" class="w-16 bg-slate-800 text-right px-1.5 py-0.5 rounded text-xs text-slate-100 border border-slate-700">
-                <span class="text-slate-400">€/kWh</span>
-              </div>
-            </div>
-            <div class="pt-2 border-t border-slate-800 flex justify-between items-center">
-              <span class="text-slate-400">Energia calcolata:</span>
-              <span id="calculatedEnergyKwh" class="font-semibold text-amber-400">0.00 kWh</span>
-            </div>
-          </div>
-
-          <div class="flex gap-2">
-            <input type="number" id="plugPowerInput" placeholder="Simula Watt (es. 900)" class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-slate-100">
-            <button id="updatePlugBtn" class="bg-amber-600 hover:bg-amber-500 text-white font-medium text-xs px-3 rounded-xl transition">Imposta</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Colonna Destra (Aggiunta Entrate/Uscite, Grafico & Movimenti) -->
-      <div class="lg:col-span-2 space-y-6">
-
-        <!-- Form Aggiungi Spesa / Entrata -->
-        <div id="section-transactions" class="glass p-5 rounded-3xl space-y-4">
-          <div class="flex items-center justify-between">
-            <h2 class="text-base font-bold flex items-center gap-2">
-              <i class="fa-solid fa-plus-circle text-indigo-400"></i> Aggiungi Entrata o Spesa
-            </h2>
-            <span class="text-[11px] text-slate-400">Stipendi, bonifici, bollette o uscite extra</span>
-          </div>
-
-          <form id="txForm" class="grid grid-cols-1 sm:grid-cols-12 gap-3">
-            <div class="sm:col-span-5">
-              <label class="text-[10px] text-slate-400 block mb-1">Descrizione</label>
-              <input type="text" id="txDesc" placeholder="Es. Stipendio, Ristorante, Benzina..." required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-indigo-500">
-            </div>
-            <div class="sm:col-span-3">
-              <label class="text-[10px] text-slate-400 block mb-1">Importo (€)</label>
-              <input type="number" id="txAmount" step="0.01" min="0.01" placeholder="0.00" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-indigo-500">
-            </div>
-            <div class="sm:col-span-4">
-              <label class="text-[10px] text-slate-400 block mb-1">Tipologia</label>
-              <select id="txType" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-indigo-500">
-                <option value="expense">Uscita / Spesa Extra</option>
-                <option value="income">Entrata / Guadagno</option>
-              </select>
-            </div>
-            <div class="sm:col-span-12">
-              <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs py-2.5 rounded-xl transition shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2">
-                <i class="fa-solid fa-check"></i> Registra Movimento
-              </button>
-            </div>
-          </form>
-        </div>
-
-        <!-- Grafico + Lista Movimenti -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-          
-          <!-- Grafico Uscite -->
-          <div class="glass p-5 rounded-3xl flex flex-col justify-between">
-            <h2 class="text-sm font-bold mb-2">Ripartizione Totale</h2>
-            <div class="relative h-48">
-              <canvas id="expenseChart"></canvas>
-            </div>
-          </div>
-
-          <!-- Tabella Movimenti Registrati con Tasto Elimina -->
-          <div class="glass p-5 rounded-3xl space-y-3">
-            <div class="flex items-center justify-between">
-              <h2 class="text-sm font-bold">Ultimi Movimenti</h2>
-              <span id="txCountBadge" class="text-[10px] text-slate-400 font-semibold">0 registrati</span>
-            </div>
-            <div id="txList" class="space-y-2 max-h-52 overflow-y-auto pr-1 text-xs">
-              <p class="text-xs text-slate-500 text-center py-6">Nessuna spesa o entrata presente.</p>
-            </div>
-          </div>
-
-        </div>
-
-      </div>
-
-    </section>
-
-  </main>
-
-  <!-- ================= SCRIPT FIREBASE COMPLETO ================= -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-    import { 
-      getFirestore, enableIndexedDbPersistence, collection, doc, setDoc, addDoc, deleteDoc, onSnapshot, query, orderBy, serverTimestamp 
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-    // Configurazione del tuo progetto budget-luca
-    const firebaseConfig = {
-      apiKey: "AIzaSyAdZbBv6JYbYnl6CxuFVfHhSftvIxwf2DY",
-      authDomain: "budget-luca.firebaseapp.com",
-      projectId: "budget-luca",
-      storageBucket: "budget-luca.appspot.com",
-      messagingSenderId: "67496424698",
-      appId: "1:67496424698:web:efc07408543"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
-
-    // Provider Google istanziato globalmente
-    const provider = new GoogleAuthProvider();
-    provider.setCustomParameters({ prompt: 'select_account' });
-
-    // Cache offline
-    enableIndexedDbPersistence(db).catch((err) => {
-      console.warn("IndexedDB offline non supportata:", err.code);
+    state.income.forEach(x => {
+      const d = new Date((x.date || today()) + 'T00:00:00');
+      if (d.getFullYear() === y && d.getMonth() === m) inc[d.getDate() - 1] += num(x.amount);
     });
 
-    let currentUser = null;
-    let unsubs = [];
-    let savingsTarget = 1500;
-    let currentSavings = 0;
-    let transactionsData = [];
-    let budgetData = {
-      food1: 0, food2: 0, food3: 0, food4: 0,
-      pet1: 0, pet2: 0, pet3: 0, pet4: 0
-    };
-
-    // UI Auth Elements
-    const loginBtn = document.getElementById('loginBtn');
-    const logoutBtn = document.getElementById('logoutBtn');
-    const userProfile = document.getElementById('userProfile');
-    const userAvatar = document.getElementById('userAvatar');
-    const userName = document.getElementById('userName');
-
-    loginBtn.addEventListener('click', () => {
-      signInWithPopup(auth, provider)
-        .then(res => console.log("Login avvenuto per:", res.user.displayName))
-        .catch(err => {
-          if (err.code !== 'auth/popup-closed-by-user') {
-            alert("Errore Login: " + err.message);
-          }
-        });
+    const auto = ['spese alimentari luca e lisa', 'spese animali'];
+    state.expense.forEach(x => {
+      if (auto.includes((x.name || '').trim().toLowerCase())) return;
+      const d = new Date((x.date || today()) + 'T00:00:00');
+      if (d.getFullYear() === y && d.getMonth() === m) exp[d.getDate() - 1] += num(x.amount);
     });
 
-    logoutBtn.addEventListener('click', () => signOut(auth));
-
-    onAuthStateChanged(auth, (user) => {
-      currentUser = user;
-      if (user) {
-        loginBtn.classList.add('hidden');
-        userProfile.classList.remove('hidden');
-        userAvatar.src = user.photoURL || 'https://via.placeholder.com/32';
-        userName.innerText = user.displayName || 'Utente';
-        initListeners(user.uid);
-      } else {
-        loginBtn.classList.remove('hidden');
-        userProfile.classList.add('hidden');
-        clearData();
-      }
+    Object.entries(allWeeks).forEach(([k]) => {
+      const d = new Date(k + 'T00:00:00');
+      if (d.getFullYear() === y && d.getMonth() === m) exp[d.getDate() - 1] += weekValues(k).food + weekValues(k).pets;
     });
 
-    // Chart.js Ripartizione
-    const ctxChart = document.getElementById('expenseChart').getContext('2d');
-    const expenseChart = new Chart(ctxChart, {
-      type: 'doughnut',
+    if (monthlyChart) monthlyChart.destroy();
+    monthlyChart = new Chart($('monthlyChart'), {
+      type: 'line',
       data: {
-        labels: ['Alimentari', 'Animali', 'Spese Varie', 'Salvadanaio'],
-        datasets: [{
-          data: [0, 0, 0, 0],
-          backgroundColor: ['#10b981', '#f59e0b', '#f43f5e', '#06b6d4'],
-          borderWidth: 0
-        }]
+        labels,
+        datasets: [
+          {
+            label: 'Entrate',
+            data: inc,
+            tension: 0.35,
+            borderColor: '#10b981',
+            backgroundColor: 'rgba(16, 185, 129, 0.05)',
+            borderWidth: 2,
+            pointRadius: 0,
+            pointHoverRadius: 5,
+            fill: true
+          },
+          {
+            label: 'Spese',
+            data: exp,
+            tension: 0.35,
+            borderColor: '#f43f5e',
+            backgroundColor: 'rgba(244, 63, 94, 0.05)',
+            borderWidth: 2,
+            pointRadius: 0,
+            pointHoverRadius: 5,
+            fill: true
+          }
+        ]
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8', font: { size: 10 } } } },
-        cutout: '68%'
-      }
-    });
-
-    // Canvas Onde Fluide (Ottimizzato)
-    const canvas = document.getElementById('waveCanvas');
-    const ctx = canvas.getContext('2d');
-    let animationFrameId = null;
-    let waveStep = 0;
-
-    function resizeCanvas() {
-      const dpr = window.devicePixelRatio || 1;
-      const rect = canvas.getBoundingClientRect();
-      canvas.width = rect.width * dpr;
-      canvas.height = rect.height * dpr;
-      ctx.scale(dpr, dpr);
-    }
-    window.addEventListener('resize', resizeCanvas);
-    resizeCanvas();
-
-    function drawWave() {
-      const rect = canvas.getBoundingClientRect();
-      const w = rect.width;
-      const h = rect.height;
-      const ratio = Math.min(Math.max(currentSavings / savingsTarget, 0), 1);
-      const fillHeight = h * (1 - ratio);
-
-      ctx.clearRect(0, 0, w, h);
-
-      // Onda Secondaria
-      ctx.fillStyle = 'rgba(6, 182, 212, 0.22)';
-      ctx.beginPath();
-      ctx.moveTo(0, h);
-      for (let x = 0; x <= w; x += 10) {
-        ctx.lineTo(x, Math.sin((x * 0.015) + (waveStep * 0.8)) * 6 + fillHeight);
-      }
-      ctx.lineTo(w, h);
-      ctx.closePath();
-      ctx.fill();
-
-      // Onda Primaria
-      ctx.fillStyle = 'rgba(6, 182, 212, 0.55)';
-      ctx.beginPath();
-      ctx.moveTo(0, h);
-      for (let x = 0; x <= w; x += 10) {
-        ctx.lineTo(x, Math.sin((x * 0.02) + waveStep) * 8 + fillHeight);
-      }
-      ctx.lineTo(w, h);
-      ctx.closePath();
-      ctx.fill();
-
-      waveStep += 0.04;
-      animationFrameId = requestAnimationFrame(drawWave);
-    }
-
-    document.addEventListener("visibilitychange", () => {
-      if (document.hidden) cancelAnimationFrame(animationFrameId);
-      else drawWave();
-    });
-    drawWave();
-
-    // -------------------------------------------------------------
-    // RECUPERO DATI E SINCRONIZZAZIONE (VECCHIO SITO + NUOVO)
-    // -------------------------------------------------------------
-    function clearData() {
-      unsubs.forEach(u => u());
-      unsubs = [];
-      transactionsData = [];
-      budgetData = { food1: 0, food2: 0, food3: 0, food4: 0, pet1: 0, pet2: 0, pet3: 0, pet4: 0 };
-      currentSavings = 0;
-      ['food1','food2','food3','food4','pet1','pet2','pet3','pet4'].forEach(k => {
-        const el = document.getElementById(k);
-        if (el) el.value = 0;
-      });
-      updateAllTotals();
-    }
-
-    function initListeners(uid) {
-      clearData();
-
-      // 1. Spese Alimentari & Animali (legge sia budgetData/uid che budgetData/main)
-      const handleBudgetDoc = (snap) => {
-        if (snap.exists()) {
-          const d = snap.data();
-          ['food1','food2','food3','food4','pet1','pet2','pet3','pet4'].forEach(k => {
-            if (d[k] !== undefined) {
-              budgetData[k] = parseFloat(d[k]) || 0;
-              const inputEl = document.getElementById(k);
-              if (inputEl) inputEl.value = budgetData[k];
-            }
-          });
-          updateAllTotals();
-        }
-      };
-
-      unsubs.push(onSnapshot(doc(db, 'budgetData', uid), handleBudgetDoc));
-      unsubs.push(onSnapshot(doc(db, 'budgetData', 'main'), handleBudgetDoc));
-
-      // 2. Salvadanaio
-      const handleSavings = (snap) => {
-        if (snap.exists()) {
-          const d = snap.data();
-          currentSavings = d.amount || 0;
-          savingsTarget = d.target || 1500;
-          updatePiggyUI();
-          updateAllTotals();
-        }
-      };
-      unsubs.push(onSnapshot(doc(db, `users/${uid}/savings/vacation`), handleSavings));
-      unsubs.push(onSnapshot(doc(db, 'savings', 'vacation'), handleSavings));
-
-      // 3. Transazioni (Uscite & Entrate)
-      const listenTx = (colRef) => {
-        return onSnapshot(colRef, (snap) => {
-          transactionsData = [];
-          snap.forEach(d => {
-            transactionsData.push({ id: d.id, path: d.ref.path, ...d.data() });
-          });
-          renderTransactions();
-          updateAllTotals();
-        }, (err) => console.log("Info query:", err.message));
-      };
-
-      // Carica dalla collezione originale 'transactions'
-      unsubs.push(listenTx(query(collection(db, 'transactions'), orderBy('createdAt', 'desc'))));
-      // Carica dalla collezione per utente
-      unsubs.push(listenTx(query(collection(db, `users/${uid}/transactions`), orderBy('createdAt', 'desc'))));
-    }
-
-    function renderTransactions() {
-      const txList = document.getElementById('txList');
-      txList.innerHTML = '';
-      document.getElementById('txCountBadge').innerText = `${transactionsData.length} registrati`;
-
-      if (transactionsData.length === 0) {
-        txList.innerHTML = '<p class="text-xs text-slate-500 text-center py-6">Nessuna spesa o entrata presente.</p>';
-        return;
-      }
-
-      transactionsData.forEach((tx) => {
-        const row = document.createElement('div');
-        row.className = 'flex items-center justify-between p-2.5 rounded-xl bg-slate-900/70 border border-slate-800/80';
-        row.innerHTML = `
-          <div class="flex items-center gap-2.5 overflow-hidden">
-            <span class="w-6 h-6 rounded-md flex items-center justify-center shrink-0 ${tx.type === 'income' ? 'bg-emerald-950 text-emerald-400' : 'bg-rose-950 text-rose-400'}">
-              <i class="fa-solid ${tx.type === 'income' ? 'fa-arrow-down' : 'fa-arrow-up'} text-[10px]"></i>
-            </span>
-            <div class="truncate">
-              <p class="font-medium text-slate-200 truncate">${tx.desc || 'Voce'}</p>
-              <span class="text-[9px] text-slate-500 capitalize">${tx.type === 'income' ? 'Entrata' : 'Spesa Extra'}</span>
-            </div>
-          </div>
-          <div class="flex items-center gap-3">
-            <span class="font-bold ${tx.type === 'income' ? 'text-emerald-400' : 'text-slate-200'}">
-              ${tx.type === 'income' ? '+' : '-'}€ ${(parseFloat(tx.amount) || 0).toFixed(2)}
-            </span>
-            <button class="delete-tx-btn text-slate-500 hover:text-rose-400 p-1" data-path="${tx.path || ''}" data-id="${tx.id}">
-              <i class="fa-regular fa-trash-can text-xs"></i>
-            </button>
-          </div>
-        `;
-        txList.appendChild(row);
-      });
-
-      // Tasto Elimina Spesa/Entrata
-      txList.querySelectorAll('.delete-tx-btn').forEach(btn => {
-        btn.addEventListener('click', async () => {
-          if (!confirm("Vuoi eliminare questa voce?")) return;
-          const id = btn.getAttribute('data-id');
-          try {
-            await deleteDoc(doc(db, 'transactions', id));
-            if (currentUser) await deleteDoc(doc(db, `users/${currentUser.uid}/transactions`, id));
-          } catch (e) {
-            console.error("Errore cancellazione:", e);
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: {
+            display: true,
+            position: 'top',
+            labels: { color: '#94a3b8', font: { family: 'Plus Jakarta Sans', size: 12 }, boxWidth: 8, usePointStyle: true }
+          },
+          tooltip: {
+            backgroundColor: 'rgba(13, 20, 36, 0.95)',
+            borderColor: 'rgba(255, 255, 255, 0.1)',
+            borderWidth: 1,
+            padding: 10,
+            callbacks: { label: c => ` ${c.dataset.label}: ${money(c.raw)}` }
           }
-        });
-      });
-    }
-
-    function updatePiggyUI() {
-      document.getElementById('savingsTotal').innerText = `€ ${currentSavings.toFixed(2)}`;
-      document.getElementById('canvasAmountDisplay').innerText = `€ ${currentSavings.toFixed(2)}`;
-      document.getElementById('targetDisplay').innerText = `€ ${savingsTarget.toLocaleString('it-IT')}`;
-      const pct = Math.min(Math.round((currentSavings / savingsTarget) * 100), 100);
-      document.getElementById('savingsPercentage').innerText = `${pct}%`;
-    }
-
-    function updateAllTotals() {
-      const totFood = (budgetData.food1 + budgetData.food2 + budgetData.food3 + budgetData.food4);
-      const totPets = (budgetData.pet1 + budgetData.pet2 + budgetData.pet3 + budgetData.pet4);
-
-      document.getElementById('totalFood').innerText = `€ ${totFood.toFixed(2)}`;
-      document.getElementById('totalPets').innerText = `€ ${totPets.toFixed(2)}`;
-
-      let txIncome = 0;
-      let txExpenses = 0;
-      transactionsData.forEach(t => {
-        const amt = parseFloat(t.amount) || 0;
-        if (t.type === 'income') txIncome += amt;
-        else txExpenses += amt;
-      });
-
-      const grandExpenses = totFood + totPets + txExpenses;
-      const net = txIncome - grandExpenses - currentSavings;
-
-      document.getElementById('totalExpensesCard').innerText = `€ ${grandExpenses.toFixed(2)}`;
-      document.getElementById('netBalance').innerText = `€ ${net.toFixed(2)}`;
-
-      expenseChart.data.datasets[0].data = [totFood, totPets, txExpenses, currentSavings];
-      expenseChart.update();
-    }
-
-    // Salvataggio Spese Alimentari & Animali
-    document.querySelectorAll('.budget-input').forEach(input => {
-      input.addEventListener('change', async (e) => {
-        if (!currentUser) return alert("Accedi con Google per salvare le modifiche.");
-        const key = e.target.id;
-        const val = parseFloat(e.target.value) || 0;
-        budgetData[key] = val;
-
-        const updateObj = {};
-        updateObj[key] = val;
-
-        try {
-          await setDoc(doc(db, 'budgetData', currentUser.uid), updateObj, { merge: true });
-          await setDoc(doc(db, 'budgetData', 'main'), updateObj, { merge: true });
-          updateAllTotals();
-        } catch (err) {
-          console.error("Errore salvataggio alimentari/animali:", err);
+        },
+        scales: {
+          x: {
+            ticks: { color: '#64748b', maxTicksLimit: 10 },
+            grid: { color: 'rgba(255, 255, 255, 0.03)' }
+          },
+          y: {
+            beginAtZero: true,
+            ticks: { color: '#64748b' },
+            grid: { color: 'rgba(255, 255, 255, 0.03)' }
+          }
         }
-      });
-    });
-
-    // Aggiungi Movimento Spesa/Entrata
-    document.getElementById('txForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      if (!currentUser) return alert("Accedi prima di registrare una transazione.");
-
-      const desc = document.getElementById('txDesc').value.trim();
-      const amount = parseFloat(document.getElementById('txAmount').value);
-      const type = document.getElementById('txType').value;
-
-      try {
-        const newDoc = { desc, amount, type, createdAt: serverTimestamp(), uid: currentUser.uid };
-        await addDoc(collection(db, 'transactions'), newDoc);
-        await addDoc(collection(db, `users/${currentUser.uid}/transactions`), newDoc);
-        document.getElementById('txDesc').value = '';
-        document.getElementById('txAmount').value = '';
-      } catch (err) {
-        console.error("Errore inserimento:", err);
       }
     });
+  }
 
-    // Versamento Salvadanaio
-    document.getElementById('savingsForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      if (!currentUser) return alert("Accedi prima di aggiornare il salvadanaio.");
+  /* --- ONDE LIQUIDE CANVAS --- */
+  const canvas = $('waveCanvas');
+  const ctx = canvas ? canvas.getContext('2d') : null;
 
-      const deposit = parseFloat(document.getElementById('savingsInput').value);
-      if (deposit <= 0) return;
+  let targetFillLevel = 0.05;
+  let currentFillLevel = 0.05;
+  let waveStep = 0;
 
-      const newTotal = currentSavings + deposit;
-      try {
-        await setDoc(doc(db, `users/${currentUser.uid}/savings/vacation`), { amount: newTotal, target: savingsTarget }, { merge: true });
-        await setDoc(doc(db, 'savings', 'vacation'), { amount: newTotal, target: savingsTarget }, { merge: true });
-        document.getElementById('savingsInput').value = '';
-      } catch (err) {
-        console.error("Errore versamento:", err);
-      }
+  function drawWave() {
+    if (!ctx) return;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    currentFillLevel += (targetFillLevel - currentFillLevel) * 0.04;
+
+    const w = canvas.width;
+    const h = canvas.height;
+    const baseHeight = h - (h * Math.max(0.04, Math.min(0.96, currentFillLevel)));
+
+    // Onda secondaria
+    ctx.fillStyle = 'rgba(56, 189, 248, 0.35)';
+    ctx.beginPath();
+    ctx.moveTo(0, h);
+    for (let x = 0; x <= w; x++) {
+      const y = Math.sin((x / 18) + (waveStep * 0.04)) * 4 + baseHeight;
+      ctx.lineTo(x, y);
+    }
+    ctx.lineTo(w, h);
+    ctx.closePath();
+    ctx.fill();
+
+    // Onda frontale principale
+    const grad = ctx.createLinearGradient(0, baseHeight - 10, 0, h);
+    grad.addColorStop(0, '#10b981');
+    grad.addColorStop(1, '#064e3b');
+    
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.moveTo(0, h);
+    for (let x = 0; x <= w; x++) {
+      const y = Math.cos((x / 22) - (waveStep * 0.05)) * 5 + (baseHeight + 3);
+      ctx.lineTo(x, y);
+    }
+    ctx.lineTo(w, h);
+    ctx.closePath();
+    ctx.fill();
+
+    waveStep++;
+    requestAnimationFrame(drawWave);
+  }
+  drawWave();
+
+  function updateAmpolla(d) {
+    const saved = num(d?.vacanzaAccantonato), target = num(d?.vacanzaTarget) || 1000;
+    const pct = Math.min(100, (saved / target) * 100);
+    
+    $('ampollaEuro').textContent = money(saved);
+    $('ampollaInside').textContent = money(saved);
+    $('ampollaPercent').textContent = Math.round(pct) + '% dell\'obiettivo di ' + money(target);
+    
+    const badge = $('ampollaPercentBadge');
+    if (badge) badge.textContent = Math.round(pct) + '%';
+
+    targetFillLevel = Math.max(0.04, Math.min(1, saved / target));
+  }
+
+  async function versaImporto() {
+    if (!auth.currentUser || !ref) return;
+    const amount = num($('depositAmount').value);
+    if (!amount || amount <= 0) return;
+    
+    const snap = await getDoc(ref), d = snap.exists() ? snap.data() : {};
+    const saved = num(d.vacanzaAccantonato) + amount, target = num(d.vacanzaTarget) || 1000;
+    
+    // Inserisci automaticamente il versamento tra le SPESE
+    state.expense.push({
+      name: 'Versamento Salvadanaio Vacanze',
+      amount: amount,
+      date: today()
     });
+    
+    await setDoc(ref, { 
+      vacanzaAccantonato: saved, 
+      vacanzaTarget: target, 
+      expense: state.expense,
+      updatedAt: Date.now() 
+    }, { merge: true });
+    
+    $('depositAmount').value = '';
+    render('expense');
+    updateAmpolla({ vacanzaAccantonato: saved, vacanzaTarget: target });
+  }
 
-    // Simulazione Presa Smart Clima
-    let currentWatts = 0;
-    let accumulatedKwh = 0;
-    document.getElementById('updatePlugBtn').addEventListener('click', () => {
-      const wVal = parseFloat(document.getElementById('plugPowerInput').value);
-      if (!isNaN(wVal) && wVal >= 0) {
-        currentWatts = wVal;
-        document.getElementById('liveWatts').innerText = `${currentWatts} W`;
-        document.getElementById('plugPowerInput').value = '';
-      }
-    });
+  async function svuotaSalvadanaio() {
+    if (!auth.currentUser || !ref) return;
+    if (!confirm("Sei sicuro di voler azzerare il salvadanaio vacanze?")) return;
+    
+    const snap = await getDoc(ref), d = snap.exists() ? snap.data() : {};
+    const target = num(d.vacanzaTarget) || 1000;
+    
+    await setDoc(ref, { vacanzaAccantonato: 0, vacanzaTarget: target, updatedAt: Date.now() }, { merge: true });
+    updateAmpolla({ vacanzaAccantonato: 0, vacanzaTarget: target });
+  }
 
-    setInterval(() => {
-      if (currentWatts > 0) {
-        accumulatedKwh += (currentWatts * (10 / 3600)) / 1000;
-        const rate = parseFloat(document.getElementById('kwhRate').value) || 0.28;
-        document.getElementById('calculatedEnergyKwh').innerText = `${accumulatedKwh.toFixed(3)} kWh`;
-        document.getElementById('energyKwhCard').innerText = `${accumulatedKwh.toFixed(2)} kWh stimati`;
-        document.getElementById('energyCostCard').innerText = `€ ${(accumulatedKwh * rate).toFixed(2)}`;
-      }
-    }, 10000);
+  $('openVacanze').onclick = () => location.href = 'vacanze.html';
+  $('addVacanza').onclick = versaImporto;
+  $('resetVacanza').onclick = svuotaSalvadanaio;
+  $('depositAmount').addEventListener('keydown', e => { if (e.key === 'Enter') versaImporto(); });
 
-    // Calcolatrice Apple Sidebar
-    const calcScreen = document.getElementById('calcScreen');
-    document.querySelectorAll('.calc-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const val = btn.getAttribute('data-val');
-        if (val === 'C') calcScreen.value = '0';
-        else if (val === '=') {
-          try { calcScreen.value = eval(calcScreen.value.replace(/×/g, '*').replace(/÷/g, '/')) || '0'; }
-          catch { calcScreen.value = 'Errore'; }
-        } else {
-          if (calcScreen.value === '0' && val !== '.') calcScreen.value = val;
-          else calcScreen.value += val;
-        }
-      });
-    });
-  </script>
+  $('loginScreenBtn').onclick = async () => {
+    try { await signInWithPopup(auth, provider); }
+    catch (e) { $('loginError').textContent = 'Accesso non riuscito: ' + (e.code || e.message); }
+  };
+  $('topLogin').onclick = () => $('loginScreenBtn').click();
+  $('logoutBtn').onclick = () => signOut(auth);
+
+  onAuthStateChanged(auth, user => {
+    if (!user) {
+      $('login').style.display = 'flex';
+      $('app').style.display = 'none';
+      return;
+    }
+    $('login').style.display = 'none';
+    $('app').style.display = 'block';
+    $('userInfo').textContent = user.email || '';
+    
+    ref = doc(db, 'users', user.uid, 'budgets', monthKey());
+    onSnapshot(ref, s => {
+      if (editing) return;
+      const d = s.exists() ? s.data() : {};
+      updateAmpolla(d);
+      state = {
+        income: Array.isArray(d.income) ? d.income : [],
+        expense: Array.isArray(d.expense) ? d.expense : []
+      };
+      allWeeks = d.spesaSettimanale?.weeks && typeof d.spesaSettimanale.weeks === 'object' ? d.spesaSettimanale.weeks : {};
+      syncWeeklyExpenses();
+      render('income');
+      render('expense');
+      renderSelectedWeek();
+      drawMonthly();
+      $('syncStatus').textContent = 'Cloud sincronizzato ✓';
+    }, e => $('syncStatus').textContent = 'Errore Database: ' + e.message);
+  });
+
+  /* Logica Calcolatrice */
+  let appleCalcCurrent = '0', appleCalcPrevious = null, appleCalcOperatorValue = null, appleCalcWaitingForNewNumber = false;
+  
+  function appleCalcUpdateDisplay() {
+    const d = $('appleCalcDisplay');
+    if (d) d.textContent = appleCalcCurrent.length > 9 ? Number(appleCalcCurrent).toLocaleString('it-IT', { maximumFractionDigits: 6 }) : appleCalcCurrent;
+  }
+  window.appleCalcNumber = n => {
+    if (appleCalcCurrent === '0' || appleCalcWaitingForNewNumber) {
+      appleCalcCurrent = n;
+      appleCalcWaitingForNewNumber = false;
+    } else appleCalcCurrent += n;
+    appleCalcUpdateDisplay();
+  };
+  window.appleCalcDecimal = () => {
+    if (appleCalcWaitingForNewNumber) {
+      appleCalcCurrent = '0.';
+      appleCalcWaitingForNewNumber = false;
+    } else if (!appleCalcCurrent.includes('.')) appleCalcCurrent += '.';
+    appleCalcUpdateDisplay();
+  };
+  window.appleCalcClear = () => {
+    appleCalcCurrent = '0'; appleCalcPrevious = null; appleCalcOperatorValue = null; appleCalcWaitingForNewNumber = false;
+    appleCalcUpdateDisplay();
+  };
+  window.appleCalcPlusMinus = () => {
+    if (appleCalcCurrent !== '0') appleCalcCurrent = String(Number(appleCalcCurrent) * -1);
+    appleCalcUpdateDisplay();
+  };
+  window.appleCalcPercent = () => {
+    appleCalcCurrent = String(Number(appleCalcCurrent) / 100);
+    appleCalcUpdateDisplay();
+  };
+  window.appleCalcOperator = op => {
+    if (appleCalcOperatorValue && !appleCalcWaitingForNewNumber) window.appleCalcEquals();
+    appleCalcPrevious = Number(appleCalcCurrent);
+    appleCalcOperatorValue = op;
+    appleCalcWaitingForNewNumber = true;
+  };
+  window.appleCalcEquals = () => {
+    if (appleCalcPrevious === null || !appleCalcOperatorValue) return;
+    const c = Number(appleCalcCurrent);
+    let r = 0;
+    if (appleCalcOperatorValue === '+') r = appleCalcPrevious + c;
+    if (appleCalcOperatorValue === '-') r = appleCalcPrevious - c;
+    if (appleCalcOperatorValue === '×') r = appleCalcPrevious * c;
+    if (appleCalcOperatorValue === '÷') r = c === 0 ? 0 : appleCalcPrevious / c;
+    appleCalcCurrent = String(Number(r.toFixed(8)));
+    appleCalcPrevious = null;
+    appleCalcOperatorValue = null;
+    appleCalcWaitingForNewNumber = true;
+    appleCalcUpdateDisplay();
+  };
+</script>
 </body>
 </html>
