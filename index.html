@@ -4,13 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AI-BUDGET | Smart Finance & Energy</title>
-  <meta name="theme-color" content="#0f172a">
+  <meta name="theme-color" content="#0b0f19">
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     body { background-color: #0b0f19; color: #f8fafc; font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
-    .glass { background: rgba(17, 24, 39, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); }
+    .glass { background: rgba(17, 24, 39, 0.75); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); }
     .canvas-container { position: relative; width: 100%; height: 180px; overflow: hidden; border-radius: 1rem; }
     canvas#waveCanvas { width: 100%; height: 100%; display: block; }
   </style>
@@ -24,7 +24,7 @@
       <h1 class="font-bold text-lg tracking-tight">AI-BUDGET <span class="text-xs font-normal text-indigo-400 bg-indigo-950/60 px-2 py-0.5 rounded-full border border-indigo-800">v2.1</span></h1>
     </div>
     <div id="authContainer" class="flex items-center gap-3">
-      <button id="calcToggleBtn" class="p-2 text-slate-400 hover:text-white rounded-lg glass transition">
+      <button id="calcToggleBtn" class="p-2 text-slate-400 hover:text-white rounded-lg glass transition" title="Calcolatrice">
         <i class="fa-solid fa-calculator text-base"></i>
       </button>
       <button id="loginBtn" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium px-3.5 py-2 rounded-lg transition flex items-center gap-2">
@@ -32,7 +32,7 @@
       </button>
       <div id="userProfile" class="hidden flex items-center gap-2">
         <img id="userAvatar" class="w-8 h-8 rounded-full border border-slate-700" alt="Avatar">
-        <button id="logoutBtn" class="text-xs text-slate-400 hover:text-red-400 p-1.5"><i class="fa-solid fa-arrow-right-from-bracket"></i></button>
+        <button id="logoutBtn" class="text-xs text-slate-400 hover:text-red-400 p-1.5" title="Esci"><i class="fa-solid fa-arrow-right-from-bracket"></i></button>
       </div>
     </div>
   </header>
@@ -49,7 +49,7 @@
       <div class="glass p-4 rounded-2xl">
         <p class="text-xs font-medium text-slate-400">Salvadanaio Vacanze</p>
         <h3 id="savingsTotal" class="text-xl font-bold mt-1 text-cyan-400">€ 0.00</h3>
-        <span class="text-[10px] text-slate-500">Accantonati nel fondo</span>
+        <span class="text-[10px] text-slate-500">Fondo accantonato</span>
       </div>
       <div class="glass p-4 rounded-2xl">
         <p class="text-xs font-medium text-slate-400">Patrimonio Totale</p>
@@ -63,13 +63,13 @@
       </div>
     </section>
 
-    <!-- Main Workspace Grid -->
+    <!-- Workspace Grid -->
     <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-      <!-- Left / Mid: Forms & Piggy Bank -->
+      <!-- Colonna Sinistra/Centrale -->
       <div class="lg:col-span-2 space-y-6">
         
-        <!-- Piggy Bank (Canvas Ondoso) -->
+        <!-- Salvadanaio Vacanze (Onde Fluide) -->
         <div class="glass p-5 rounded-3xl relative overflow-hidden">
           <div class="flex justify-between items-center mb-3">
             <div>
@@ -95,7 +95,7 @@
           </form>
         </div>
 
-        <!-- Add Transaction Form -->
+        <!-- Nuova Registrazione -->
         <div class="glass p-5 rounded-3xl">
           <h2 class="text-base font-semibold mb-3">Nuova Registrazione</h2>
           <form id="txForm" class="grid grid-cols-1 sm:grid-cols-4 gap-2.5">
@@ -111,7 +111,7 @@
           </form>
         </div>
 
-        <!-- Transaction List -->
+        <!-- Lista Transazioni -->
         <div class="glass p-5 rounded-3xl">
           <h2 class="text-base font-semibold mb-3">Movimenti Recenti</h2>
           <div id="txList" class="space-y-2 max-h-72 overflow-y-auto pr-1">
@@ -121,10 +121,10 @@
 
       </div>
 
-      <!-- Right Column: Smart Plug & Chart -->
+      <!-- Colonna Destra -->
       <div class="space-y-6">
 
-        <!-- Smart Plug Energy Monitor -->
+        <!-- Monitoraggio Clima Smart Plug -->
         <div class="glass p-5 rounded-3xl">
           <div class="flex items-center justify-between mb-3">
             <h2 class="text-base font-semibold flex items-center gap-2">
@@ -139,7 +139,7 @@
               <span id="liveWatts" class="font-bold text-slate-200">0 W</span>
             </div>
             <div class="flex justify-between items-center">
-              <span class="text-xs text-slate-400">Tariffa Media:</span>
+              <span class="text-xs text-slate-400">Tariffa Energia:</span>
               <div class="flex items-center gap-1">
                 <input type="number" id="kwhRate" value="0.28" step="0.01" class="w-16 bg-slate-800 text-right px-1.5 py-0.5 rounded text-xs text-slate-200 border border-slate-700">
                 <span class="text-xs text-slate-400">€/kWh</span>
@@ -157,7 +157,7 @@
           </div>
         </div>
 
-        <!-- Chart Section -->
+        <!-- Ripartizione Grafico Spese -->
         <div class="glass p-5 rounded-3xl">
           <h2 class="text-base font-semibold mb-2">Ripartizione Spese</h2>
           <div class="relative h-56">
@@ -170,7 +170,7 @@
     </section>
   </main>
 
-  <!-- Modale Calcolatrice Rapida (Off-Canvas/Modal) -->
+  <!-- Calcolatrice Modale -->
   <div id="calcModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
     <div class="glass max-w-xs w-full p-4 rounded-3xl border border-slate-700 shadow-2xl">
       <div class="flex justify-between items-center mb-3">
@@ -204,7 +204,7 @@
     </div>
   </div>
 
-  <!-- Firebase & App Script (ES6 Modules) -->
+  <!-- Firebase & App Logic -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
@@ -212,25 +212,27 @@
       getFirestore, enableIndexedDbPersistence, collection, doc, setDoc, addDoc, onSnapshot, query, orderBy, serverTimestamp 
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-    // -------------------------------------------------------------
-    // Configurazione Firebase (sostituisci con le tue chiavi se necessario)
-    // -------------------------------------------------------------
+    // Credenziali del tuo progetto budget-luca
     const firebaseConfig = {
-      apiKey: "AIzaSyYOUR_ACTUAL_API_KEY",
-      authDomain: "your-app.firebaseapp.com",
-      projectId: "your-app",
-      storageBucket: "your-app.appspot.com",
-      messagingSenderId: "123456789",
-      appId: "1:123456789:web:abcdef"
+      apiKey: "AIzaSyAdZbBv6JYbYnl6CxuFVfHhSftvIxwf2DY",
+      authDomain: "budget-luca.firebaseapp.com",
+      projectId: "budget-luca",
+      storageBucket: "budget-luca.appspot.com",
+      messagingSenderId: "67496424698",
+      appId: "1:67496424698:web:efc07408543"
     };
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    // Abilitazione persistenza offline
+    // Provider Google istanziato globalmente per evitare blocchi popup del browser
+    const provider = new GoogleAuthProvider();
+    provider.setCustomParameters({ prompt: 'select_account' });
+
+    // Persistenza offline (continua anche se non supportata)
     enableIndexedDbPersistence(db).catch((err) => {
-      console.warn("Persistenza offline non supportata in questo browser:", err.code);
+      console.warn("Persistenza offline non supportata:", err.code);
     });
 
     let currentUser = null;
@@ -239,24 +241,29 @@
     let savingsTarget = 1500;
     let currentSavings = 0;
 
-    // -------------------------------------------------------------
-    // Auth Handlers
-    // -------------------------------------------------------------
+    // Gestione Auth & Elementi UI
     const loginBtn = document.getElementById('loginBtn');
     const logoutBtn = document.getElementById('logoutBtn');
     const userProfile = document.getElementById('userProfile');
     const userAvatar = document.getElementById('userAvatar');
 
-    loginBtn.addEventListener('click', async () => {
-      const provider = new GoogleAuthProvider();
-      try {
-        await signInWithPopup(auth, provider);
-      } catch (err) {
-        console.error("Errore autenticazione:", err);
-      }
+    // Chiamata diretta a signInWithPopup scatenata dall'azione utente
+    loginBtn.addEventListener('click', () => {
+      signInWithPopup(auth, provider)
+        .then((result) => {
+          console.log("Login riuscito:", result.user.displayName);
+        })
+        .catch((error) => {
+          console.error("Dettagli errore autenticazione:", error);
+          if (error.code !== 'auth/popup-closed-by-user') {
+            alert("Errore Login (" + error.code + "): " + error.message);
+          }
+        });
     });
 
-    logoutBtn.addEventListener('click', () => signOut(auth));
+    logoutBtn.addEventListener('click', () => {
+      signOut(auth).catch((err) => console.error("Errore logout:", err));
+    });
 
     onAuthStateChanged(auth, (user) => {
       currentUser = user;
@@ -272,14 +279,12 @@
       }
     });
 
-    // -------------------------------------------------------------
-    // Setup Chart.js
-    // -------------------------------------------------------------
+    // Inizializzazione Grafico
     const ctxChart = document.getElementById('expenseChart').getContext('2d');
     const expenseChart = new Chart(ctxChart, {
       type: 'doughnut',
       data: {
-        labels: ['Spese Generali', 'Accantonamenti Vacanze'],
+        labels: ['Spese Registrate', 'Accantonamenti Vacanze'],
         datasets: [{
           data: [0, 0],
           backgroundColor: ['#6366f1', '#06b6d4'],
@@ -296,9 +301,7 @@
       }
     });
 
-    // -------------------------------------------------------------
-    // Canvas Onde Fluide Ottimizzato (Retina + VisibilityChange)
-    // -------------------------------------------------------------
+    // Canvas Onde Fluide (Ottimizzato Retina + Pausa in background)
     const canvas = document.getElementById('waveCanvas');
     const ctx = canvas.getContext('2d');
     let animationFrameId = null;
@@ -325,7 +328,7 @@
       ctx.clearRect(0, 0, w, h);
 
       // Onda Secondaria
-      ctx.fillStyle = 'rgba(6, 182, 212, 0.25)';
+      ctx.fillStyle = 'rgba(6, 182, 212, 0.22)';
       ctx.beginPath();
       ctx.moveTo(0, h);
       for (let x = 0; x <= w; x += 10) {
@@ -361,9 +364,7 @@
     });
     drawWave();
 
-    // -------------------------------------------------------------
-    // Sincronizzazione Dati Utente & Firestore
-    // -------------------------------------------------------------
+    // Sincronizzazione Dati per Utente
     function initUserListeners(uid) {
       if (unsubscribeTx) unsubscribeTx();
       if (unsubscribeSavings) unsubscribeSavings();
@@ -382,7 +383,7 @@
         updatePiggyBankUI();
       });
 
-      // Listener Transazioni
+      // Listener Movimenti
       const txQuery = query(collection(db, `users/${uid}/transactions`), orderBy('createdAt', 'desc'));
       unsubscribeTx = onSnapshot(txQuery, (snapshot) => {
         let totalIncome = 0;
@@ -391,7 +392,7 @@
         txList.innerHTML = '';
 
         if (snapshot.empty) {
-          txList.innerHTML = '<p class="text-xs text-slate-500 text-center py-6">Nessun movimento presente.</p>';
+          txList.innerHTML = '<p class="text-xs text-slate-500 text-center py-6">Nessun movimento registrato.</p>';
         }
 
         snapshot.forEach((docSnap) => {
@@ -415,7 +416,7 @@
           txList.appendChild(row);
         });
 
-        // Calcolo saldi corretti (Salvadanaio scorporato dalla liquidità ma incluso nel patrimonio lordo)
+        // Patrimonio e disponibilità
         const netAvailable = totalIncome - totalExpense - currentSavings;
         const grossWorth = netAvailable + currentSavings;
 
@@ -432,7 +433,7 @@
       updatePiggyBankUI();
       document.getElementById('netBalance').innerText = "€ 0.00";
       document.getElementById('grossWorth').innerText = "€ 0.00";
-      document.getElementById('txList').innerHTML = '<p class="text-xs text-slate-500 text-center py-6">Accedi con Google per sincronizzare i dati.</p>';
+      document.getElementById('txList').innerHTML = '<p class="text-xs text-slate-500 text-center py-6">Accedi con Google per caricare i tuoi dati.</p>';
       expenseChart.data.datasets[0].data = [0, 0];
       expenseChart.update();
     }
@@ -445,44 +446,49 @@
       document.getElementById('savingsPercentage').innerText = `${pct}%`;
     }
 
-    // -------------------------------------------------------------
-    // Inserimento Spese & Salvadanaio
-    // -------------------------------------------------------------
+    // Aggiunta Spesa / Entrata
     document.getElementById('txForm').addEventListener('submit', async (e) => {
       e.preventDefault();
-      if (!currentUser) return alert("Accedi prima di registrare una transazione.");
+      if (!currentUser) return alert("Effettua prima l'accesso con Google.");
 
       const desc = document.getElementById('txDesc').value.trim();
       const amount = parseFloat(document.getElementById('txAmount').value);
       const type = document.getElementById('txType').value;
 
-      await addDoc(collection(db, `users/${currentUser.uid}/transactions`), {
-        desc,
-        amount,
-        type,
-        createdAt: serverTimestamp()
-      });
-
-      e.target.reset();
+      try {
+        await addDoc(collection(db, `users/${currentUser.uid}/transactions`), {
+          desc,
+          amount,
+          type,
+          createdAt: serverTimestamp()
+        });
+        e.target.reset();
+      } catch (err) {
+        console.error("Errore salvataggio:", err);
+        alert("Impossibile salvare la transazione: " + err.message);
+      }
     });
 
+    // Versamento Salvadanaio
     document.getElementById('savingsForm').addEventListener('submit', async (e) => {
       e.preventDefault();
-      if (!currentUser) return alert("Accedi per aggiornare il salvadanaio.");
+      if (!currentUser) return alert("Effettua prima l'accesso con Google.");
 
       const deposit = parseFloat(document.getElementById('savingsInput').value);
       if (deposit <= 0) return;
 
-      const newTotal = currentSavings + deposit;
-      const savingsRef = doc(db, `users/${currentUser.uid}/savings/vacation`);
-      await setDoc(savingsRef, { amount: newTotal, target: savingsTarget }, { merge: true });
-
-      document.getElementById('savingsInput').value = '';
+      try {
+        const newTotal = currentSavings + deposit;
+        const savingsRef = doc(db, `users/${currentUser.uid}/savings/vacation`);
+        await setDoc(savingsRef, { amount: newTotal, target: savingsTarget }, { merge: true });
+        document.getElementById('savingsInput').value = '';
+      } catch (err) {
+        console.error("Errore versamento:", err);
+        alert("Impossibile aggiornare il salvadanaio: " + err.message);
+      }
     });
 
-    // -------------------------------------------------------------
-    // Smart Plug Monitor (Simulazione Locale + Costo Orario)
-    // -------------------------------------------------------------
+    // Smart Plug Clima
     let currentWatts = 0;
     let accumulatedKwh = 0;
 
@@ -494,10 +500,8 @@
       document.getElementById('plugPowerInput').value = '';
     });
 
-    // Accumulatore orario consumi (1 tick ogni 10 sec)
     setInterval(() => {
       if (currentWatts > 0) {
-        // kWh = (Watts * ore) / 1000. 10 secondi = 10 / 3600 ore
         const kwhAdded = (currentWatts * (10 / 3600)) / 1000;
         accumulatedKwh += kwhAdded;
 
@@ -510,9 +514,7 @@
       }
     }, 10000);
 
-    // -------------------------------------------------------------
-    // Calcolatrice a Cassetto
-    // -------------------------------------------------------------
+    // Calcolatrice
     const calcModal = document.getElementById('calcModal');
     const calcScreen = document.getElementById('calcScreen');
     document.getElementById('calcToggleBtn').addEventListener('click', () => calcModal.classList.remove('hidden'));
