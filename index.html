@@ -19,6 +19,7 @@
       --text: #f8fafc;
       --muted: #94a3b8;
       --primary-grad: linear-gradient(135deg, #6366f1 0%, #38bdf8 100%);
+      --ai-grad: linear-gradient(135deg, #a855f7 0%, #38bdf8 100%);
       --accent-green: #10b981;
       --accent-green-bg: rgba(16, 185, 129, 0.12);
       --accent-red: #f43f5e;
@@ -93,6 +94,15 @@
     }
     .btn.primary:hover {
       box-shadow: 0 6px 24px rgba(99, 102, 241, 0.5);
+    }
+    .btn.ai-btn {
+      background: var(--ai-grad);
+      color: #fff;
+      border: none;
+      box-shadow: 0 4px 18px rgba(168, 85, 247, 0.35);
+    }
+    .btn.ai-btn:hover {
+      box-shadow: 0 6px 24px rgba(168, 85, 247, 0.5);
     }
     .btn.danger {
       background: var(--accent-red-bg);
@@ -175,7 +185,7 @@
     .top h3 { font-size: 18px; font-weight: 800; letter-spacing: -0.3px; }
     .top .muted { font-size: 13px; margin-top: 2px; }
 
-    /* Navigatore Mesi accanto a Dashboard Mensile */
+    /* Navigatore Mesi */
     .month-navigator {
       display: inline-flex;
       align-items: center;
@@ -223,17 +233,17 @@
       text-decoration: underline;
     }
 
-    .top-actions { display: flex; align-items: center; gap: 12px; }
+    .top-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 
     .calc-toggle-btn {
-      width: 40px;
-      height: 40px;
+      width: 38px;
+      height: 38px;
       padding: 0;
       border-radius: 12px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 16px;
+      font-size: 15px;
       color: var(--muted);
     }
     .calc-toggle-btn:hover { color: #fff; }
@@ -248,8 +258,8 @@
       border-radius: 100px;
     }
     .profile-pill img {
-      width: 32px;
-      height: 32px;
+      width: 30px;
+      height: 30px;
       border-radius: 50%;
       border: 1.5px solid #6366f1;
     }
@@ -257,7 +267,7 @@
       font-size: 13px;
       font-weight: 600;
       color: var(--text);
-      max-width: 150px;
+      max-width: 140px;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -274,7 +284,7 @@
     }
     .logout-btn-top:hover { color: var(--accent-red); }
 
-    /* Calcolatrice Modal */
+    /* Modali (Calcolatrice & Impostazioni AI) */
     .calc-modal {
       position: fixed;
       inset: 0;
@@ -288,7 +298,7 @@
     }
     .calc-modal.open { display: flex; }
     .calc-popup-content {
-      width: min(330px, 95%);
+      width: min(340px, 95%);
       background: rgba(13, 20, 36, 0.95);
       border: 1px solid var(--border);
       border-radius: 28px;
@@ -367,6 +377,41 @@
     }
     .positive { color: var(--accent-green); }
     .negative { color: var(--accent-red); }
+
+    /* AI Coach Card Stile Fintech */
+    .ai-coach-card {
+      border: 1px solid rgba(168, 85, 247, 0.3);
+      background: linear-gradient(135deg, rgba(168, 85, 247, 0.06) 0%, rgba(56, 189, 248, 0.04) 100%), rgba(17, 24, 39, 0.85);
+      position: relative;
+      overflow: hidden;
+    }
+    .ai-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #c084fc;
+      background: rgba(168, 85, 247, 0.15);
+      border: 1px solid rgba(168, 85, 247, 0.3);
+      padding: 4px 10px;
+      border-radius: 100px;
+      letter-spacing: 0.5px;
+    }
+    .ai-output-box {
+      background: rgba(5, 8, 17, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 16px;
+      padding: 16px;
+      font-size: 13px;
+      line-height: 1.6;
+      color: #e2e8f0;
+      min-height: 70px;
+      margin-top: 14px;
+    }
+    .ai-output-box p { margin-bottom: 8px; }
+    .ai-output-box p:last-child { margin-bottom: 0; }
+    .ai-output-box strong { color: #38bdf8; font-weight: 700; }
 
     .grid {
       display: grid;
@@ -688,6 +733,26 @@
   </div>
 </div>
 
+<!-- Modal Configurazione Gemini API Key (Privata su Firebase) -->
+<div id="geminiModal" class="calc-modal">
+  <div class="calc-popup-content" style="width: min(420px, 95%);">
+    <div class="calc-popup-header">
+      <span><i class="fa-solid fa-wand-magic-sparkles text-purple-400"></i> Chiave Gemini API</span>
+      <button class="btn" id="closeGeminiModalBtn" style="padding: 4px 8px; border-radius: 8px;"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <p style="font-size: 12px; color: var(--muted); margin-bottom: 14px; line-height: 1.5;">
+      La chiave è gratuita al 100% da <a href="https://aistudio.google.com/" target="_blank" style="color: #38bdf8; text-decoration: underline;">Google AI Studio</a>. Verrà salvata in modo sicuro nel tuo profilo Firebase privato senza comparire su GitHub.
+    </p>
+    <div style="margin-bottom: 14px;">
+      <label style="font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; display: block; margin-bottom: 6px;">Gemini API Key</label>
+      <input type="password" id="geminiApiKeyInput" placeholder="AIzaSy..." style="width: 100%; padding: 10px 14px; border-radius: 12px; border: 1px solid var(--border); background: rgba(5, 8, 17, 0.6); color: #fff; font-size: 13px;">
+    </div>
+    <button class="btn ai-btn" id="saveGeminiKeyBtn" style="width: 100%;">
+      <i class="fa-solid fa-cloud-arrow-up"></i> Salva su Firebase
+    </button>
+  </div>
+</div>
+
 <!-- Cassetto Calcolatrice Apple Modale -->
 <div id="calcModal" class="calc-modal">
   <div class="calc-popup-content">
@@ -744,7 +809,7 @@
     <main class="main">
       <div class="top">
         <div>
-          <!-- NAVIGAZIONE MENSILE ACCANTO A DASHBOARD MENSILE -->
+          <!-- NAVIGAZIONE MENSILE -->
           <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
             <h3>Dashboard Mensile</h3>
             <div class="month-navigator">
@@ -757,6 +822,12 @@
         </div>
 
         <div class="top-actions">
+          <!-- Pulsante rapido Configurazione Gemini AI -->
+          <button id="openGeminiModalBtn" class="btn calc-toggle-btn" title="Impostazioni Gemini AI" style="color: #c084fc;">
+            <i class="fa-solid fa-wand-magic-sparkles"></i>
+          </button>
+
+          <!-- Calcolatrice -->
           <button id="calcToggleBtn" class="btn calc-toggle-btn" title="Apri Calcolatrice">
             <i class="fa-solid fa-calculator"></i>
           </button>
@@ -785,6 +856,26 @@
           <div id="balanceTotal" class="value">€ 0,00</div>
         </div>
       </div>
+
+      <!-- SEZIONE AI FINANCIAL COACH (GEMINI FLASH) -->
+      <section class="card ai-coach-card">
+        <div class="section-title" style="margin-bottom: 8px;">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <h2><i class="fa-solid fa-brain text-purple-400"></i> AI Financial Coach</h2>
+            <span class="ai-badge"><i class="fa-solid fa-bolt"></i> Gemini Flash</span>
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <button id="askAiCoachBtn" class="btn ai-btn" style="padding: 8px 14px; font-size: 12px;">
+              <i class="fa-solid fa-sparkles"></i> Analizza Mese con AI
+            </button>
+          </div>
+        </div>
+        <div id="aiCoachText" class="ai-output-box">
+          <span style="color: var(--muted); font-style: italic;">
+            Clicca su "Analizza Mese con AI" per ricevere un'analisi sintetica e consigli strategici su entrate, uscite e salvadanaio per questo mese.
+          </span>
+        </div>
+      </section>
 
       <div class="grid">
         <section id="incomeCard" class="card collapsed">
@@ -834,7 +925,7 @@
         </div>
       </section>
 
-      <!-- SEZIONE DIVISA A METÀ: CONSUMI LIVE (SINISTRA) & AMPOLLA (DESTRA) -->
+      <!-- SEZIONE DIVISA A METÀ: CONSUMI LIVE & AMPOLLA -->
       <div class="grid-halves">
         
         <!-- PARTE SINISTRA: Consumi Live Presa Smart Tuya -->
@@ -933,7 +1024,7 @@
 
   // GESTIONE DINAMICA DEL MESE SELEZIONATO
   let selectedDate = new Date();
-  selectedDate.setDate(1); // Previene overflow sui giorni a fine mese
+  selectedDate.setDate(1);
 
   function getMonthKey(d) {
     const y = d.getFullYear();
@@ -951,18 +1042,18 @@
     return `${selMKey}-01`;
   }
 
-  let ref = null, refVacanze = null;
+  let ref = null, refVacanze = null, refGemini = null;
   let unsubBudget = null, unsubVacanze = null;
   let state = { income: [], expense: [] };
   let saveTimer = null, editing = false, monthlyChart = null, allWeeks = {}, selectedWeekOffset = 0;
   let lastBudgetDoc = {}, lastVacanzeDoc = {};
+  let userGeminiApiKey = "";
 
   const $ = id => document.getElementById(id);
   const money = n => new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(Number(n) || 0);
 
   function num(v) { return Number(String(v ?? '').replace(',', '.')) || 0; }
 
-  // AGGIORNAMENTO TESTATA MESE
   function updateMonthHeader() {
     const monthNames = [
       'Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno',
@@ -980,11 +1071,9 @@
     }
   }
 
-  // NAVIGAZIONE MESI AVANTI / INDIETRO
   $('monthPrevBtn').onclick = () => changeMonth(-1);
   $('monthNextBtn').onclick = () => changeMonth(1);
 
-  // Cliccando sul nome del mese si torna al mese corrente
   $('currentMonthDisplay').onclick = () => {
     const now = new Date();
     if (getMonthKey(selectedDate) !== getMonthKey(now)) {
@@ -1002,7 +1091,6 @@
     subscribeSelectedMonth();
   }
 
-  // SINCRONIZZAZIONE LISTENER FIRESTORE PER IL MESE SELEZIONATO
   function subscribeSelectedMonth() {
     if (unsubBudget) unsubBudget();
     if (unsubVacanze) unsubVacanze();
@@ -1015,7 +1103,6 @@
 
     $('syncStatus').textContent = `Caricamento dati ${mKey}...`;
 
-    // Listener Budget
     unsubBudget = onSnapshot(ref, s => {
       if (editing) return;
       const d = s.exists() ? s.data() : {};
@@ -1035,7 +1122,6 @@
       $('syncStatus').textContent = `Cloud sincronizzato ✓ (${mKey})`;
     }, e => $('syncStatus').textContent = 'Errore Database: ' + e.message);
 
-    // Listener Vacanze
     unsubVacanze = onSnapshot(refVacanze, s => {
       lastVacanzeDoc = s.exists() ? s.data() : {};
       refreshAmpollaFromDocs();
@@ -1176,7 +1262,6 @@
     }
   }
 
-  // Disegna il grafico relativo ai giorni del MESE SELEZIONATO
   function drawMonthly() {
     const y = selectedDate.getFullYear();
     const m = selectedDate.getMonth();
@@ -1264,7 +1349,7 @@
     });
   }
 
-  /* --- ONDE LIQUIDE CANVAS OTTIMIZZATE (GPU / RETINA / VISIBILITY) --- */
+  /* --- ONDE LIQUIDE CANVAS OTTIMIZZATE --- */
   const canvas = $('waveCanvas');
   const ctx = canvas ? canvas.getContext('2d') : null;
 
@@ -1484,9 +1569,104 @@
     $('topLogin').style.display = 'none';
     $('topUserProfile').style.display = 'flex';
     
+    // Listener per la chiave Gemini salvata privatamente su Firestore
+    refGemini = doc(db, 'users', user.uid, 'settings', 'gemini');
+    onSnapshot(refGemini, s => {
+      if (s.exists()) {
+        userGeminiApiKey = s.data().apiKey || "";
+        $('geminiApiKeyInput').value = userGeminiApiKey;
+      }
+    });
+
     updateMonthHeader();
     subscribeSelectedMonth();
   });
+
+  // =========================================================================
+  // GESTIONE CHIAVE GEMINI MODAL
+  // =========================================================================
+  const geminiModal = $('geminiModal');
+  $('openGeminiModalBtn').onclick = () => geminiModal.classList.add('open');
+  $('closeGeminiModalBtn').onclick = () => geminiModal.classList.remove('open');
+  geminiModal.onclick = e => { if (e.target === geminiModal) geminiModal.classList.remove('open'); };
+
+  $('saveGeminiKeyBtn').onclick = async () => {
+    if (!auth.currentUser || !refGemini) return;
+    const k = $('geminiApiKeyInput').value.trim();
+    if (!k) return alert("Inserisci una chiave valida.");
+
+    try {
+      await setDoc(refGemini, { apiKey: k, updatedAt: Date.now() }, { merge: true });
+      userGeminiApiKey = k;
+      geminiModal.classList.remove('open');
+      alert("Chiave Gemini salvata in modo sicuro nel tuo cloud privato!");
+    } catch (e) {
+      alert("Errore salvataggio chiave: " + e.message);
+    }
+  };
+
+  // =========================================================================
+  // INTEGRAZIONE AI FINANCIAL COACH (GEMINI 1.5 FLASH GRATIS)
+  // =========================================================================
+  $('askAiCoachBtn').onclick = async () => {
+    if (!userGeminiApiKey) {
+      geminiModal.classList.add('open');
+      return alert("Inserisci prima la tua chiave gratuita di Gemini per attivare il Coach!");
+    }
+
+    const out = $('aiCoachText');
+    const mName = $('currentMonthDisplay').textContent;
+    out.innerHTML = `<div style="display: flex; align-items: center; gap: 8px; color: #38bdf8;">
+      <i class="fa-solid fa-spinner fa-spin"></i> Gemini sta analizzando i flussi di ${mName}...
+    </div>`;
+
+    // Costruzione contesto finanziario
+    const incTot = state.income.reduce((s, x) => s + num(x.amount), 0);
+    const expTot = state.expense.filter(x => {
+      const n = (x.name || '').trim().toLowerCase();
+      return n !== 'spese alimentari luca e lisa' && n !== 'spese animali';
+    }).reduce((s, x) => s + num(x.amount), 0) + allWeeklyTotal();
+    const netBal = incTot - expTot;
+    const savedVacanza = num(lastBudgetDoc?.vacanzaAccantonato || 0);
+
+    const promptText = `Sei l'AI Financial Coach di "AI-BUDGET".
+Analizza la situazione finanziaria dell'utente per il mese di ${mName}:
+- Entrate complessive: € ${incTot.toFixed(2)}
+- Spese complessive: € ${expTot.toFixed(2)}
+- Risparmio Netto disponibile: € ${netBal.toFixed(2)}
+- Fondo Vacanze accantonato questo mese: € ${savedVacanza.toFixed(2)} (Target mensile: € 120)
+- Voci di spesa registrate: ${state.expense.map(x => `${x.name}: €${x.amount}`).join(', ') || 'Nessuna spesa manuale'}
+
+Fornisci un'analisi in 3 punti sintetici e diretti (stile fintech, niente convenevoli o formule robotiche):
+1. **Stato Finanziario**: giudizio rapido sul bilancio entrate/uscite del mese.
+2. **Consiglio Pratico**: una dritta su come ottimizzare i costi o gestire la liquidità residua.
+3. **Obiettivo Vacanze**: breve raccomandazione sull'accantonamento per il salvadanaio vacanze.`;
+
+    try {
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${userGeminiApiKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: promptText }] }]
+        })
+      });
+
+      const data = await response.json();
+      if (data.error) throw new Error(data.error.message || "Errore API Gemini");
+
+      const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || "Nessun consiglio generato.";
+
+      // Formattazione semplice markdown: converte ** in <strong> e a capo in paragrafi
+      const formatted = reply
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\n\n/g, '</p><p>')
+        .replace(/\n/g, '<br>');
+
+      out.innerHTML = `<p>${formatted}</p>`;
+    } catch (err) {
+      out.innerHTML = `<span style="color: var(--accent-red);"><i class="fa-solid fa-triangle-exclamation"></i> Errore Coach AI: ${err.message}</span>`;
+    }
+  };
 
   /* Logica Calcolatrice Apple + Modal Popup */
   const calcModal = $('calcModal');
