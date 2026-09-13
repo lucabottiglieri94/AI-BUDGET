@@ -42,7 +42,6 @@
 
     button, a, input { font: inherit; outline: none; }
 
-    /* Login Screen */
     .login {
       position: fixed;
       inset: 0;
@@ -65,7 +64,6 @@
     .loginbox h1 { font-size: 28px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 8px; }
     .loginbox p { color: var(--muted); font-size: 14px; margin-bottom: 24px; }
 
-    /* Button Styles */
     .btn {
       border: 1px solid var(--border);
       border-radius: 14px;
@@ -95,8 +93,16 @@
     .btn.primary:hover {
       box-shadow: 0 6px 28px rgba(99, 102, 241, 0.55);
     }
+    .btn.danger {
+      background: var(--accent-red-bg);
+      color: var(--accent-red);
+      border-color: rgba(244, 63, 94, 0.3);
+    }
+    .btn.danger:hover {
+      background: var(--accent-red);
+      color: #fff;
+    }
 
-    /* Layout */
     .app { display: none; }
     .shell {
       display: grid;
@@ -116,7 +122,6 @@
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
     }
 
-    /* Sidebar */
     .side {
       position: sticky;
       top: 20px;
@@ -126,9 +131,6 @@
       gap: 20px;
     }
     .side-brand {
-      display: flex;
-      align-items: center;
-      gap: 10px;
       font-size: 20px;
       font-weight: 800;
       background: var(--primary-grad);
@@ -190,7 +192,7 @@
     .calc-operator { background: #f59e0b; color: #fff; font-size: 18px; }
     .calc-special { background: rgba(255, 255, 255, 0.08); color: var(--muted); }
 
-    /* Main */
+    /* Dashboard Main */
     .main { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
     .top {
       padding: 18px 24px;
@@ -201,7 +203,6 @@
     .top h3 { font-size: 18px; font-weight: 700; }
     .top .muted { font-size: 13px; margin-top: 2px; }
 
-    /* Statistiche */
     .summary {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -225,7 +226,6 @@
     .positive { color: var(--accent-green); }
     .negative { color: var(--accent-red); }
 
-    /* Cards e Liste */
     .grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -267,7 +267,6 @@
       background: rgba(5, 8, 17, 0.4);
       color: #fff;
       font-size: 13px;
-      transition: border 0.2s, box-shadow 0.2s;
     }
     .entry input:focus {
       border-color: var(--border-focus);
@@ -290,7 +289,6 @@
 
     .collapsed #incomeList, .collapsed #expenseList, .collapsed .add { display: none; }
 
-    /* Settimanale e Grafico */
     .linkcard { text-decoration: none; color: inherit; display: block; margin-bottom: 14px; }
     .linkcard strong { font-size: 16px; display: inline-flex; align-items: center; gap: 6px; }
     .weekbox {
@@ -324,7 +322,7 @@
     .weekamount { font-weight: 700; font-family: 'JetBrains Mono', monospace; }
     .chartwrap { height: 260px; margin-top: 14px; }
 
-    /* Ampolla Wave SVG/Canvas */
+    /* Ampolla Wave Rigorosamente Centrata */
     .ampolla-card {
       display: flex;
       align-items: center;
@@ -334,7 +332,7 @@
     }
     .ampolla-container {
       position: relative;
-      width: 140px;
+      width: 150px;
       height: 200px;
       flex-shrink: 0;
       display: flex;
@@ -345,7 +343,7 @@
       position: relative;
       width: 130px;
       height: 180px;
-      border-radius: 60px 60px 30px 30px;
+      border-radius: 65px 65px 35px 35px;
       background: rgba(255, 255, 255, 0.03);
       border: 2px solid rgba(255, 255, 255, 0.18);
       box-shadow: 
@@ -354,27 +352,17 @@
         inset 2px 2px 5px rgba(255, 255, 255, 0.2);
       overflow: hidden;
       backdrop-filter: blur(8px);
-    }
-    .ampolla-flask::before {
-      content: '';
-      position: absolute;
-      top: -12px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 50px;
-      height: 14px;
-      background: rgba(255, 255, 255, 0.08);
-      border: 2px solid rgba(255, 255, 255, 0.2);
-      border-radius: 6px;
-      z-index: 5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
     .ampolla-flask::after {
       content: '';
       position: absolute;
-      top: 10px;
+      top: 15px;
       right: 12px;
-      width: 8px;
-      height: 70px;
+      width: 6px;
+      height: 60px;
       background: linear-gradient(to bottom, rgba(255, 255, 255, 0.35), transparent);
       border-radius: 10px;
       z-index: 4;
@@ -389,31 +377,37 @@
     }
     .ampolla-center-text {
       position: absolute;
+      inset: 0;
+      margin: auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
       z-index: 6;
-      text-align: center;
       pointer-events: none;
+      width: 100%;
+      padding: 0 6px;
     }
     .ampolla-center-text strong {
-      display: block;
-      font-size: 19px;
+      font-size: 16px;
       font-weight: 800;
       color: #fff;
-      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
+      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9);
       font-family: 'JetBrains Mono', monospace;
+      white-space: nowrap;
     }
     .ampolla-center-text span {
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      color: #a7f3d0;
+      font-size: 12px;
       font-weight: 700;
-      text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
+      color: #6ee7b7;
+      text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9);
+      margin-top: 3px;
     }
     .ampolla-info { flex: 1; }
     .ampolla-title { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
     .ampolla-euro { font-size: 32px; font-weight: 800; color: var(--accent-green); font-family: 'JetBrains Mono', monospace; }
     .ampolla-percent { font-size: 13px; color: var(--muted); margin-bottom: 16px; }
-    .ampolla-actions { display: flex; gap: 10px; }
+    .ampolla-actions { display: flex; gap: 10px; flex-wrap: wrap; }
     .deposit-input {
       padding: 10px 14px;
       border-radius: 12px;
@@ -421,7 +415,7 @@
       background: rgba(5, 8, 17, 0.4);
       color: #fff;
       font-size: 13px;
-      width: 140px;
+      width: 130px;
     }
 
     .status { font-size: 12px; color: var(--muted); text-align: right; padding: 4px 10px; }
@@ -584,6 +578,7 @@
           <div class="ampolla-actions">
             <input id="depositAmount" class="deposit-input" type="number" min="0.01" step="0.01" placeholder="Importo €">
             <button class="btn primary" id="addVacanza">Versa +</button>
+            <button class="btn danger" id="resetVacanza">Svuota</button>
             <button class="btn" id="openVacanze">Dettagli</button>
           </div>
         </div>
@@ -843,7 +838,7 @@
     });
   }
 
-  /* --- MOTORE ANIMAZIONE ONDE LIQUIDE --- */
+  /* --- ONDE LIQUIDE CANVAS --- */
   const canvas = $('waveCanvas');
   const ctx = canvas ? canvas.getContext('2d') : null;
 
@@ -861,7 +856,7 @@
     const h = canvas.height;
     const baseHeight = h - (h * Math.max(0.04, Math.min(0.96, currentFillLevel)));
 
-    // Onda secondaria di sfondo
+    // Onda secondaria
     ctx.fillStyle = 'rgba(56, 189, 248, 0.35)';
     ctx.beginPath();
     ctx.moveTo(0, h);
@@ -912,15 +907,43 @@
     if (!auth.currentUser || !ref) return;
     const amount = num($('depositAmount').value);
     if (!amount || amount <= 0) return;
+    
     const snap = await getDoc(ref), d = snap.exists() ? snap.data() : {};
     const saved = num(d.vacanzaAccantonato) + amount, target = num(d.vacanzaTarget) || 1000;
-    await setDoc(ref, { vacanzaAccantonato: saved, vacanzaTarget: target, updatedAt: Date.now() }, { merge: true });
+    
+    // Inserisci automaticamente il versamento tra le SPESE
+    state.expense.push({
+      name: 'Versamento Salvadanaio Vacanze',
+      amount: amount,
+      date: today()
+    });
+    
+    await setDoc(ref, { 
+      vacanzaAccantonato: saved, 
+      vacanzaTarget: target, 
+      expense: state.expense,
+      updatedAt: Date.now() 
+    }, { merge: true });
+    
     $('depositAmount').value = '';
+    render('expense');
     updateAmpolla({ vacanzaAccantonato: saved, vacanzaTarget: target });
+  }
+
+  async function svuotaSalvadanaio() {
+    if (!auth.currentUser || !ref) return;
+    if (!confirm("Sei sicuro di voler azzerare il salvadanaio vacanze?")) return;
+    
+    const snap = await getDoc(ref), d = snap.exists() ? snap.data() : {};
+    const target = num(d.vacanzaTarget) || 1000;
+    
+    await setDoc(ref, { vacanzaAccantonato: 0, vacanzaTarget: target, updatedAt: Date.now() }, { merge: true });
+    updateAmpolla({ vacanzaAccantonato: 0, vacanzaTarget: target });
   }
 
   $('openVacanze').onclick = () => location.href = 'vacanze.html';
   $('addVacanza').onclick = versaImporto;
+  $('resetVacanza').onclick = svuotaSalvadanaio;
   $('depositAmount').addEventListener('keydown', e => { if (e.key === 'Enter') versaImporto(); });
 
   $('loginScreenBtn').onclick = async () => {
