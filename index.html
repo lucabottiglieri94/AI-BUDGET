@@ -284,7 +284,7 @@
     }
     .logout-btn-top:hover { color: var(--accent-red); }
 
-    /* Modali (Calcolatrice & Impostazioni AI) */
+    /* Modali (Calcolatrice & Configurazione AI) */
     .calc-modal {
       position: fixed;
       inset: 0;
@@ -298,7 +298,7 @@
     }
     .calc-modal.open { display: flex; }
     .calc-popup-content {
-      width: min(340px, 95%);
+      width: min(350px, 95%);
       background: rgba(13, 20, 36, 0.95);
       border: 1px solid var(--border);
       border-radius: 28px;
@@ -737,11 +737,11 @@
 <div id="geminiModal" class="calc-modal">
   <div class="calc-popup-content" style="width: min(420px, 95%);">
     <div class="calc-popup-header">
-      <span><i class="fa-solid fa-wand-magic-sparkles text-purple-400"></i> Chiave Gemini API</span>
+      <span><i class="fa-solid fa-wand-magic-sparkles" style="color: #c084fc;"></i> Chiave Gemini API</span>
       <button class="btn" id="closeGeminiModalBtn" style="padding: 4px 8px; border-radius: 8px;"><i class="fa-solid fa-xmark"></i></button>
     </div>
     <p style="font-size: 12px; color: var(--muted); margin-bottom: 14px; line-height: 1.5;">
-      La chiave è gratuita al 100% da <a href="https://aistudio.google.com/" target="_blank" style="color: #38bdf8; text-decoration: underline;">Google AI Studio</a>. Verrà salvata in modo sicuro nel tuo profilo Firebase privato senza comparire su GitHub.
+      La chiave è gratuita su <a href="https://aistudio.google.com/" target="_blank" style="color: #38bdf8; text-decoration: underline;">Google AI Studio</a>. Viene salvata in modo sicuro nel tuo database Firebase personale e non sarà mai pubblica.
     </p>
     <div style="margin-bottom: 14px;">
       <label style="font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; display: block; margin-bottom: 6px;">Gemini API Key</label>
@@ -809,7 +809,7 @@
     <main class="main">
       <div class="top">
         <div>
-          <!-- NAVIGAZIONE MENSILE -->
+          <!-- NAVIGAZIONE MENSILE ACCANTO A DASHBOARD MENSILE -->
           <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
             <h3>Dashboard Mensile</h3>
             <div class="month-navigator">
@@ -822,8 +822,8 @@
         </div>
 
         <div class="top-actions">
-          <!-- Pulsante rapido Configurazione Gemini AI -->
-          <button id="openGeminiModalBtn" class="btn calc-toggle-btn" title="Impostazioni Gemini AI" style="color: #c084fc;">
+          <!-- Configurazione Gemini AI Key -->
+          <button id="openGeminiModalBtn" class="btn calc-toggle-btn" title="Configura Gemini AI" style="color: #c084fc;">
             <i class="fa-solid fa-wand-magic-sparkles"></i>
           </button>
 
@@ -857,22 +857,30 @@
         </div>
       </div>
 
-      <!-- SEZIONE AI FINANCIAL COACH (GEMINI FLASH) -->
+      <!-- SEZIONE AI FINANCIAL COACH CON CHAT & DOMANDE LIBERE -->
       <section class="card ai-coach-card">
         <div class="section-title" style="margin-bottom: 8px;">
           <div style="display: flex; align-items: center; gap: 10px;">
-            <h2><i class="fa-solid fa-brain text-purple-400"></i> AI Financial Coach</h2>
-            <span class="ai-badge"><i class="fa-solid fa-bolt"></i> Gemini Flash</span>
+            <h2><i class="fa-solid fa-brain" style="color: #c084fc;"></i> AI Financial Coach</h2>
+            <span class="ai-badge"><i class="fa-solid fa-bolt"></i> Gemini 3.6 Flash</span>
           </div>
-          <div style="display: flex; gap: 8px;">
-            <button id="askAiCoachBtn" class="btn ai-btn" style="padding: 8px 14px; font-size: 12px;">
-              <i class="fa-solid fa-sparkles"></i> Analizza Mese con AI
-            </button>
-          </div>
+          <button id="askAiCoachBtn" class="btn ai-btn" style="padding: 7px 14px; font-size: 12px;">
+            <i class="fa-solid fa-sparkles"></i> Analisi Completa
+          </button>
         </div>
+
+        <!-- Barra di input per domande libere all'AI -->
+        <div style="display: flex; gap: 8px; margin-top: 10px;">
+          <input type="text" id="aiUserQuestionInput" placeholder="Fai una domanda al Coach (es: Posso permettermi una spesa extra di 150 €?)..." 
+                 style="flex: 1; padding: 10px 14px; border-radius: 12px; border: 1px solid rgba(168, 85, 247, 0.3); background: rgba(5, 8, 17, 0.7); color: #fff; font-size: 13px;">
+          <button id="sendAiQuestionBtn" class="btn primary" style="padding: 10px 16px; font-size: 13px;">
+            <i class="fa-solid fa-paper-plane"></i> Chiedi
+          </button>
+        </div>
+
         <div id="aiCoachText" class="ai-output-box">
           <span style="color: var(--muted); font-style: italic;">
-            Clicca su "Analizza Mese con AI" per ricevere un'analisi sintetica e consigli strategici su entrate, uscite e salvadanaio per questo mese.
+            Fai una domanda specifica nella barra qui sopra oppure premi su "Analisi Completa" per ricevere un resoconto del mese selezionato.
           </span>
         </div>
       </section>
@@ -925,7 +933,7 @@
         </div>
       </section>
 
-      <!-- SEZIONE DIVISA A METÀ: CONSUMI LIVE & AMPOLLA -->
+      <!-- SEZIONE METÀ E METÀ: CONSUMI LIVE (SINISTRA) & AMPOLLA (DESTRA) -->
       <div class="grid-halves">
         
         <!-- PARTE SINISTRA: Consumi Live Presa Smart Tuya -->
@@ -1569,7 +1577,6 @@
     $('topLogin').style.display = 'none';
     $('topUserProfile').style.display = 'flex';
     
-    // Listener per la chiave Gemini salvata privatamente su Firestore
     refGemini = doc(db, 'users', user.uid, 'settings', 'gemini');
     onSnapshot(refGemini, s => {
       if (s.exists()) {
@@ -1582,9 +1589,7 @@
     subscribeSelectedMonth();
   });
 
-  // =========================================================================
-  // GESTIONE CHIAVE GEMINI MODAL
-  // =========================================================================
+  // GESTIONE GEMINI MODAL
   const geminiModal = $('geminiModal');
   $('openGeminiModalBtn').onclick = () => geminiModal.classList.add('open');
   $('closeGeminiModalBtn').onclick = () => geminiModal.classList.remove('open');
@@ -1605,13 +1610,10 @@
     }
   };
 
-// =========================================================================
-  // INTEGRAZIONE AI FINANCIAL COACH (GEMINI FLASH)
   // =========================================================================
- // =========================================================================
   // INTEGRAZIONE AI FINANCIAL COACH (GEMINI 3.6 FLASH)
   // =========================================================================
-  $('askAiCoachBtn').onclick = async () => {
+  async function queryAiCoach(customQuestion = null) {
     if (!userGeminiApiKey) {
       geminiModal.classList.add('open');
       return alert("Inserisci prima la tua chiave gratuita di Gemini per attivare il Coach!");
@@ -1619,8 +1621,9 @@
 
     const out = $('aiCoachText');
     const mName = $('currentMonthDisplay').textContent;
+    
     out.innerHTML = `<div style="display: flex; align-items: center; gap: 8px; color: #38bdf8;">
-      <i class="fa-solid fa-spinner fa-spin"></i> Gemini sta analizzando i flussi di ${mName}...
+      <i class="fa-solid fa-spinner fa-spin"></i> Gemini sta analizzando i dati finanziari di ${mName}...
     </div>`;
 
     const incTot = state.income.reduce((s, x) => s + num(x.amount), 0);
@@ -1631,20 +1634,32 @@
     const netBal = incTot - expTot;
     const savedVacanza = num(lastBudgetDoc?.vacanzaAccantonato || 0);
 
-    const promptText = `Sei l'AI Financial Coach di "AI-BUDGET".
-Analizza la situazione finanziaria dell'utente per il mese di ${mName}:
+    const baseContext = `Sei l'AI Financial Coach dell'app "AI-BUDGET".
+Quadro finanziario del mese di ${mName}:
 - Entrate complessive: € ${incTot.toFixed(2)}
 - Spese complessive: € ${expTot.toFixed(2)}
 - Risparmio Netto disponibile: € ${netBal.toFixed(2)}
-- Fondo Vacanze accantonato questo mese: € ${savedVacanza.toFixed(2)} (Target mensile: € 120)
-- Voci di spesa registrate: ${state.expense.map(x => `${x.name}: €${x.amount}`).join(', ') || 'Nessuna spesa manuale'}
+- Fondo Vacanze accantonato: € ${savedVacanza.toFixed(2)} (Target mensile: € 120,00)
+- Voci di spesa registrate: ${state.expense.map(x => `${x.name}: €${x.amount}`).join(', ') || 'Nessuna spesa manuale'}`;
 
-Fornisci un'analisi in 3 punti sintetici e diretti (stile fintech, senza convenevoli):
+    let promptText = "";
+
+    if (customQuestion) {
+      promptText = `${baseContext}
+
+Domanda dell'utente:
+"${customQuestion}"
+
+Rispondi in modo diretto, concreto e senza convenevoli. Basa la risposta sui numeri reali forniti, indicando cifre e percentuali d'impatto.`;
+    } else {
+      promptText = `${baseContext}
+
+Fornisci un'analisi generale del mese in 3 punti sintetici e diretti (stile fintech, senza convenevoli):
 1. **Stato Finanziario**: giudizio rapido sul bilancio entrate/uscite del mese.
-2. **Consiglio Pratico**: una dritta su come ottimizzare i costi o gestire la liquidità residua.
-3. **Obiettivo Vacanze**: breve raccomandazione sull'accantonamento per il salvadanaio vacanze.`;
+2. **Consiglio Pratico**: una mossa pratica per ottimizzare i costi o gestire la liquidità residua.
+3. **Obiettivo Vacanze**: raccomandazione sull'accantonamento per il salvadanaio vacanze.`;
+    }
 
-    // Modelli aggiornati per Google AI Studio (3.6 Flash come primario)
     const modelsToTry = ['gemini-3.6-flash', 'gemini-2.5-flash'];
     let lastError = null;
     let reply = null;
@@ -1683,7 +1698,22 @@ Fornisci un'analisi in 3 punti sintetici e diretti (stile fintech, senza convene
       .replace(/\n/g, '<br>');
 
     out.innerHTML = `<p>${formatted}</p>`;
-  };
+  }
+
+  $('askAiCoachBtn').onclick = () => queryAiCoach();
+
+  function handleSendUserQuestion() {
+    const q = $('aiUserQuestionInput').value.trim();
+    if (!q) return;
+    queryAiCoach(q);
+    $('aiUserQuestionInput').value = '';
+  }
+
+  $('sendAiQuestionBtn').onclick = handleSendUserQuestion;
+  $('aiUserQuestionInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') handleSendUserQuestion();
+  });
+
   /* Logica Calcolatrice Apple + Modal Popup */
   const calcModal = $('calcModal');
   $('calcToggleBtn').onclick = () => calcModal.classList.add('open');
