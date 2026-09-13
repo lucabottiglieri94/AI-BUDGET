@@ -3,17 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AI-BUDGET Premium Dashboard</title>
+  <title>AI-BUDGET</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js"></script>
 
   <style>
     :root {
       --bg: #050811;
       --card-bg: rgba(13, 20, 36, 0.72);
-      --card-hover: rgba(18, 28, 51, 0.85);
       --border: rgba(255, 255, 255, 0.08);
       --border-focus: #6366f1;
       --text: #f8fafc;
@@ -97,7 +96,7 @@
       box-shadow: 0 6px 28px rgba(99, 102, 241, 0.55);
     }
 
-    /* Layout Shell */
+    /* Layout */
     .app { display: none; }
     .shell {
       display: grid;
@@ -148,7 +147,7 @@
     .menu { display: flex; flex-direction: column; gap: 8px; }
     .nav { width: 100%; justify-content: flex-start; padding: 12px 16px; border-radius: 12px; }
 
-    /* Calculator Redesign */
+    /* Calcolatrice */
     .apple-calculator-card { width: 100%; }
     .apple-calculator {
       width: 100%;
@@ -164,7 +163,7 @@
       justify-content: flex-end;
       color: #fff;
       font-family: 'JetBrains Mono', monospace;
-      font-size: 26px;
+      font-size: 24px;
       padding: 0 6px 4px;
       overflow: hidden;
     }
@@ -191,7 +190,7 @@
     .calc-operator { background: #f59e0b; color: #fff; font-size: 18px; }
     .calc-special { background: rgba(255, 255, 255, 0.08); color: var(--muted); }
 
-    /* Main Area */
+    /* Main */
     .main { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
     .top {
       padding: 18px 24px;
@@ -202,17 +201,13 @@
     .top h3 { font-size: 18px; font-weight: 700; }
     .top .muted { font-size: 13px; margin-top: 2px; }
 
-    /* Summary Stats */
+    /* Statistiche */
     .summary {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 16px;
     }
-    .sum {
-      padding: 20px;
-      position: relative;
-      overflow: hidden;
-    }
+    .sum { padding: 20px; }
     .label {
       font-size: 11px;
       text-transform: uppercase;
@@ -225,11 +220,12 @@
       font-weight: 800;
       letter-spacing: -0.5px;
       margin-top: 6px;
+      font-family: 'JetBrains Mono', monospace;
     }
     .positive { color: var(--accent-green); }
     .negative { color: var(--accent-red); }
 
-    /* Grid & Cards */
+    /* Cards e Liste */
     .grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -255,11 +251,8 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: background 0.2s;
     }
-    .section-toggle:hover { background: rgba(255, 255, 255, 0.1); }
 
-    /* Form Inputs */
     .entry {
       display: grid;
       grid-template-columns: 1fr 110px 135px 36px;
@@ -292,20 +285,13 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: 0.2s;
     }
-    .smallbtn:hover { background: var(--accent-red); color: #fff; }
     .add { width: 100%; border-radius: 12px; margin-top: 6px; }
 
     .collapsed #incomeList, .collapsed #expenseList, .collapsed .add { display: none; }
 
-    /* Weekly & Chart */
-    .linkcard {
-      text-decoration: none;
-      color: inherit;
-      display: block;
-      margin-bottom: 14px;
-    }
+    /* Settimanale e Grafico */
+    .linkcard { text-decoration: none; color: inherit; display: block; margin-bottom: 14px; }
     .linkcard strong { font-size: 16px; display: inline-flex; align-items: center; gap: 6px; }
     .weekbox {
       background: rgba(0, 0, 0, 0.25);
@@ -335,41 +321,94 @@
       border-bottom: 1px solid rgba(255, 255, 255, 0.04);
       font-size: 13px;
     }
-    .weekrow:last-of-type { border-bottom: none; }
     .weekamount { font-weight: 700; font-family: 'JetBrains Mono', monospace; }
     .chartwrap { height: 260px; margin-top: 14px; }
 
-    /* Savings Goal ("Ampolla") */
+    /* Ampolla Wave SVG/Canvas */
     .ampolla-card {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 30px;
+      gap: 32px;
       padding: 24px;
     }
-    .ampolla-visual {
+    .ampolla-container {
       position: relative;
       width: 140px;
-      aspect-ratio: 1;
+      height: 200px;
       flex-shrink: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
     }
-    .ampolla-image {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-      filter: drop-shadow(0 10px 15px rgba(0, 0, 0, 0.4));
+    .ampolla-flask {
+      position: relative;
+      width: 130px;
+      height: 180px;
+      border-radius: 60px 60px 30px 30px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 2px solid rgba(255, 255, 255, 0.18);
+      box-shadow: 
+        0 15px 35px rgba(0, 0, 0, 0.5),
+        inset 0 0 20px rgba(255, 255, 255, 0.05),
+        inset 2px 2px 5px rgba(255, 255, 255, 0.2);
+      overflow: hidden;
+      backdrop-filter: blur(8px);
     }
-    .ampolla-live {
+    .ampolla-flask::before {
+      content: '';
+      position: absolute;
+      top: -12px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 50px;
+      height: 14px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      border-radius: 6px;
+      z-index: 5;
+    }
+    .ampolla-flask::after {
+      content: '';
+      position: absolute;
+      top: 10px;
+      right: 12px;
+      width: 8px;
+      height: 70px;
+      background: linear-gradient(to bottom, rgba(255, 255, 255, 0.35), transparent);
+      border-radius: 10px;
+      z-index: 4;
+      pointer-events: none;
+    }
+    #waveCanvas {
       position: absolute;
       inset: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
+      width: 100%;
+      height: 100%;
+      z-index: 1;
     }
-    .ampolla-live strong { font-size: 18px; font-weight: 800; color: #fff; }
-    .ampolla-live span { font-size: 11px; text-transform: uppercase; color: #a7f3d0; }
+    .ampolla-center-text {
+      position: absolute;
+      z-index: 6;
+      text-align: center;
+      pointer-events: none;
+    }
+    .ampolla-center-text strong {
+      display: block;
+      font-size: 19px;
+      font-weight: 800;
+      color: #fff;
+      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .ampolla-center-text span {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #a7f3d0;
+      font-weight: 700;
+      text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
+    }
     .ampolla-info { flex: 1; }
     .ampolla-title { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
     .ampolla-euro { font-size: 32px; font-weight: 800; color: var(--accent-green); font-family: 'JetBrains Mono', monospace; }
@@ -385,14 +424,8 @@
       width: 140px;
     }
 
-    .status {
-      font-size: 12px;
-      color: var(--muted);
-      text-align: right;
-      padding: 4px 10px;
-    }
+    .status { font-size: 12px; color: var(--muted); text-align: right; padding: 4px 10px; }
 
-    /* Mobile Adaptations */
     @media (max-width: 860px) {
       .shell { grid-template-columns: 1fr; padding: 12px; }
       .side { position: relative; top: 0; }
@@ -408,7 +441,7 @@
 <div id="login" class="login">
   <div class="loginbox">
     <h1>💰 AI-BUDGET</h1>
-    <p>Accedi con Google per visualizzare e sincronizzare i tuoi dati in tempo reale.</p>
+    <p>Accedi con Google per sincronizzare i tuoi dati in tempo reale.</p>
     <button id="loginScreenBtn" class="btn primary" style="width: 100%;">Accedi con Google</button>
     <div id="loginError" class="status" style="margin-top: 14px; text-align: center;"></div>
   </div>
@@ -534,13 +567,16 @@
       </section>
 
       <section class="card ampolla-card">
-        <div class="ampolla-visual">
-          <img class="ampolla-image" src="ampolla.png" alt="Ampolla salvadanaio">
-          <div class="ampolla-live">
-            <strong id="ampollaInside">€ 0,00</strong>
-            <span>versati</span>
+        <div class="ampolla-container">
+          <div class="ampolla-flask">
+            <canvas id="waveCanvas" width="130" height="180"></canvas>
+            <div class="ampolla-center-text">
+              <strong id="ampollaInside">€ 0,00</strong>
+              <span id="ampollaPercentBadge">0%</span>
+            </div>
           </div>
         </div>
+
         <div class="ampolla-info">
           <div class="ampolla-title">🏖️ Salvadanaio Vacanze</div>
           <div id="ampollaEuro" class="ampolla-euro">€ 0,00</div>
@@ -715,7 +751,7 @@
     if (!ref) return;
     try {
       await setDoc(ref, { income: state.income, expense: state.expense, updatedAt: Date.now() }, { merge: true });
-      $('syncStatus').textContent = 'Sincronizzato con Cloud ✓';
+      $('syncStatus').textContent = 'Cloud sincronizzato ✓';
     } catch (e) {
       $('syncStatus').textContent = 'Errore di sincronizzazione: ' + e.message;
     }
@@ -807,12 +843,69 @@
     });
   }
 
+  /* --- MOTORE ANIMAZIONE ONDE LIQUIDE --- */
+  const canvas = $('waveCanvas');
+  const ctx = canvas ? canvas.getContext('2d') : null;
+
+  let targetFillLevel = 0.05;
+  let currentFillLevel = 0.05;
+  let waveStep = 0;
+
+  function drawWave() {
+    if (!ctx) return;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    currentFillLevel += (targetFillLevel - currentFillLevel) * 0.04;
+
+    const w = canvas.width;
+    const h = canvas.height;
+    const baseHeight = h - (h * Math.max(0.04, Math.min(0.96, currentFillLevel)));
+
+    // Onda secondaria di sfondo
+    ctx.fillStyle = 'rgba(56, 189, 248, 0.35)';
+    ctx.beginPath();
+    ctx.moveTo(0, h);
+    for (let x = 0; x <= w; x++) {
+      const y = Math.sin((x / 18) + (waveStep * 0.04)) * 4 + baseHeight;
+      ctx.lineTo(x, y);
+    }
+    ctx.lineTo(w, h);
+    ctx.closePath();
+    ctx.fill();
+
+    // Onda frontale principale
+    const grad = ctx.createLinearGradient(0, baseHeight - 10, 0, h);
+    grad.addColorStop(0, '#10b981');
+    grad.addColorStop(1, '#064e3b');
+    
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.moveTo(0, h);
+    for (let x = 0; x <= w; x++) {
+      const y = Math.cos((x / 22) - (waveStep * 0.05)) * 5 + (baseHeight + 3);
+      ctx.lineTo(x, y);
+    }
+    ctx.lineTo(w, h);
+    ctx.closePath();
+    ctx.fill();
+
+    waveStep++;
+    requestAnimationFrame(drawWave);
+  }
+  drawWave();
+
   function updateAmpolla(d) {
     const saved = num(d?.vacanzaAccantonato), target = num(d?.vacanzaTarget) || 1000;
-    const pct = Math.min(100, saved / target * 100);
+    const pct = Math.min(100, (saved / target) * 100);
+    
     $('ampollaEuro').textContent = money(saved);
     $('ampollaInside').textContent = money(saved);
     $('ampollaPercent').textContent = Math.round(pct) + '% dell\'obiettivo di ' + money(target);
+    
+    const badge = $('ampollaPercentBadge');
+    if (badge) badge.textContent = Math.round(pct) + '%';
+
+    targetFillLevel = Math.max(0.04, Math.min(1, saved / target));
   }
 
   async function versaImporto() {
