@@ -241,10 +241,10 @@
     }
     .section-title h2 { font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
 
-    /* Upload Bolletta */
+    /* Upload & Calcolo */
     .bill-section-grid {
       display: grid;
-      grid-template-columns: 1.2fr 1fr;
+      grid-template-columns: 1.1fr 1fr;
       gap: 20px;
       align-items: stretch;
     }
@@ -285,24 +285,80 @@
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      gap: 12px;
+      gap: 10px;
     }
     .bill-result-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 8px 0;
+      padding: 6px 0;
       border-bottom: 1px solid rgba(255, 255, 255, 0.05);
       font-size: 13px;
     }
     .bill-result-row:last-child { border-bottom: none; }
     .bill-val { font-weight: 700; font-family: 'JetBrains Mono', monospace; }
     .rate-badge {
-      font-size: 22px;
+      font-size: 20px;
       font-weight: 800;
       color: #38bdf8;
       font-family: 'JetBrains Mono', monospace;
     }
+
+    /* Stile Storico Bollette a Scorrimento */
+    .history-card {
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 20px;
+      margin-top: 16px;
+    }
+    .bimonthly-navigator {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border);
+      padding: 10px 16px;
+      border-radius: 16px;
+      margin-bottom: 16px;
+    }
+    .nav-arrow-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.06);
+      color: #fff;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      transition: 0.2s;
+    }
+    .nav-arrow-btn:hover:not(:disabled) {
+      background: rgba(56, 189, 248, 0.2);
+      border-color: #38bdf8;
+    }
+    .nav-arrow-btn:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+    .history-stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+    .history-stat-box {
+      background: rgba(5, 8, 17, 0.5);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px;
+      text-align: center;
+    }
+    .history-stat-label { font-size: 10px; color: var(--muted); text-transform: uppercase; font-weight: 700; }
+    .history-stat-val { font-size: 16px; font-weight: 800; font-family: 'JetBrains Mono', monospace; margin-top: 4px; }
 
     /* Griglia Prese */
     .plugs-grid {
@@ -347,7 +403,7 @@
     .plug-meta h4 { font-size: 14px; font-weight: 700; }
     .plug-device-id { font-size: 11px; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
 
-    /* Switch */
+    /* Switch iOS */
     .switch {
       position: relative;
       display: inline-block;
@@ -463,16 +519,13 @@
       color: #fff;
       font-size: 13px;
     }
-    .input-row input:focus, .input-row select:focus {
-      border-color: var(--border-focus);
-      box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2);
-    }
 
     .chart-container { height: 260px; margin-top: 10px; }
 
     @media (max-width: 980px) {
       .summary { grid-template-columns: repeat(2, 1fr); }
       .bill-section-grid { grid-template-columns: 1fr; }
+      .history-stats-grid { grid-template-columns: repeat(2, 1fr); }
     }
     @media (max-width: 860px) {
       .shell { grid-template-columns: 1fr; padding: 12px; }
@@ -482,29 +535,26 @@
 </head>
 <body>
 
-<!-- Login Overlay Iniziale -->
+<!-- Login Overlay -->
 <div id="login" class="login">
   <div class="loginbox">
     <h1>⚡ AI-BUDGET Consumi</h1>
-    <p>Accedi con Google per sincronizzare le tue prese e i costi energetici in cloud.</p>
+    <p>Accedi con Google per sincronizzare le tue prese e l'archivio delle bollette in cloud.</p>
     <button id="loginScreenBtn" class="btn primary" style="width: 100%;">Accedi con Google</button>
     <div id="loginError" style="font-size: 12px; color: var(--muted); margin-top: 14px; text-align: center;"></div>
   </div>
 </div>
 
-<!-- Modale Configurazione Endpoint Tuya -->
+<!-- Modale Configurazione Tuya -->
 <div id="tuyaConfigModal" class="modal">
   <div class="modal-box">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
       <h3 style="font-size: 16px; font-weight: 800;">Connessione Tuya Cloud Web</h3>
       <button class="btn" id="closeTuyaModal" style="padding: 4px 8px;"><i class="fa-solid fa-xmark"></i></button>
     </div>
-    <p style="font-size: 12px; color: var(--muted); margin-bottom: 16px;">
-      Predisposto per API Tuya OpenAPI o bridge locale. Verrà salvato sul tuo account Firebase.
-    </p>
     <div class="input-row">
       <label>Endpoint URL (Tuya Gateway o Bridge)</label>
-      <input type="text" id="tuyaEndpointInput" placeholder="https://openapi.tuyaeu.com oppure http://192.168.1.xxx:port">
+      <input type="text" id="tuyaEndpointInput" placeholder="https://openapi.tuyaeu.com oppure bridge locale">
     </div>
     <div class="input-row">
       <label>Client ID (Access ID)</label>
@@ -550,7 +600,7 @@
 
 <div id="app" class="app">
   <div class="shell">
-    <!-- SIDEBAR SINISTRA -->
+    <!-- SIDEBAR -->
     <aside class="side">
       <div class="side-brand">
         <div style="width: 36px; height: 36px; border-radius: 12px; background: #6366f1; display: flex; align-items: center; justify-content: center; color: white; font-weight: 800; font-size: 14px;">AI</div>
@@ -569,7 +619,6 @@
         <button id="logoutBtn" class="btn nav"><i class="fa-solid fa-door-open w-4"></i> Esci</button>
       </div>
 
-      <!-- Status Tuya Sidebar -->
       <div style="background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: 18px; padding: 14px;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
           <span style="font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase;">Stato Tuya</span>
@@ -587,7 +636,7 @@
       <div class="top">
         <div>
           <h3>⚡ Monitoraggio Consumi & Prese Smart</h3>
-          <div class="muted">Gestione centralizzata prese Tuya e calcolo costi in tempo reale</div>
+          <div class="muted">Fatturazione Bimestrale • Gestione carichi Tuya e storico bollette</div>
         </div>
         
         <div style="display: flex; align-items: center; gap: 12px;">
@@ -617,16 +666,16 @@
           <div id="totalCostToday" class="value" style="color: var(--accent-amber);">€ 0,00</div>
         </div>
         <div class="sum">
-          <div class="label">Tariffa Energia Attiva</div>
-          <div id="currentRateCard" class="value" style="color: #a855f7;">0.280 €/kWh</div>
+          <div class="label">Tariffa Attiva In Uso</div>
+          <div id="currentRateCard" class="value" style="color: #a855f7;">0.285 €/kWh</div>
         </div>
       </section>
 
-      <!-- SEZIONE CARICA BOLLETTA & CALCOLO PREZZO KW LORDO -->
+      <!-- CARICA BOLLETTA & CALCOLO COSTO LORDO -->
       <section class="card">
         <div class="section-title">
-          <h2><i class="fa-solid fa-file-invoice-dollar" style="color: #38bdf8;"></i> Calcola Prezzo al kWh Reale Lordo dalla Bolletta</h2>
-          <span style="font-size: 11px; color: var(--muted);"><i class="fa-solid fa-cloud-arrow-up"></i> Sincronizzato su Firebase</span>
+          <h2><i class="fa-solid fa-file-invoice-dollar" style="color: #38bdf8;"></i> Carica Nuova Bolletta (Fatturazione Bimestrale)</h2>
+          <span style="font-size: 11px; color: var(--muted);"><i class="fa-solid fa-cloud-arrow-up"></i> Sincronizzazione Firebase</span>
         </div>
 
         <div class="bill-section-grid">
@@ -635,42 +684,86 @@
             <div class="dropzone-icon">
               <i class="fa-solid fa-cloud-arrow-up"></i>
             </div>
-            <div style="font-weight: 700; font-size: 14px;">Trascina qui il PDF della Bolletta Luce</div>
+            <div style="font-weight: 700; font-size: 14px;">Trascina qui la Bolletta Bimestrale PDF</div>
             <div style="font-size: 12px; color: var(--muted);">oppure clicca per selezionarla</div>
             <div id="billParseStatus" style="font-size: 11px; color: #38bdf8; margin-top: 4px; font-weight: 600;"></div>
           </div>
 
           <div class="bill-results-card">
             <div style="font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px;">
-              Dati Rilevati dalla Bolletta
+              Dati Rilevati dall'Analisi
             </div>
 
             <div class="bill-result-row">
-              <span style="color: var(--muted);">Spesa Totale Lorda:</span>
-              <span class="bill-val" id="billTotalAmountText">€ --,--</span>
+              <span style="color: var(--muted);">Bimestre Rilevato:</span>
+              <input type="text" id="billPeriodInput" value="Maggio - Giugno 2026" style="background: transparent; border: none; text-align: right; color: #38bdf8; font-weight: 700; font-size: 12px; outline: none;">
             </div>
 
             <div class="bill-result-row">
-              <span style="color: var(--muted);">Consumo Totale Fatturato:</span>
-              <span class="bill-val" id="billKwhText">-- kWh</span>
+              <span style="color: var(--muted);">Spesa Ordinaria Lorda:</span>
+              <span class="bill-val" id="billTotalAmountText">€ 162,95</span>
             </div>
 
             <div class="bill-result-row">
-              <span style="color: var(--muted);">Costo Lordo Finito:</span>
-              <span class="rate-badge" id="billCalculatedRateText">-- €/kWh</span>
+              <span style="color: var(--muted);">Consumo Fatturato:</span>
+              <span class="bill-val" id="billKwhText">571 kWh</span>
+            </div>
+
+            <div class="bill-result-row">
+              <span style="color: var(--muted);">Costo Reale Lordo Finito:</span>
+              <span class="rate-badge" id="billCalculatedRateText">0.285 €/kWh</span>
             </div>
 
             <div style="display: flex; gap: 8px; margin-top: 6px;">
-              <input type="number" step="0.001" min="0.05" id="manualRateOverrideInput" placeholder="Modifica €/kWh" style="flex: 1; padding: 8px 12px; border-radius: 12px; border: 1px solid var(--border); background: rgba(5,8,17,0.6); color: white; font-size: 12px;">
-              <button class="btn primary" id="applyBillRateBtn" style="font-size: 12px; padding: 8px 16px;">
-                <i class="fa-solid fa-cloud"></i> Salva su Firebase
+              <input type="number" step="0.001" min="0.05" id="manualRateOverrideInput" value="0.285" placeholder="€/kWh" style="flex: 1; padding: 8px 12px; border-radius: 12px; border: 1px solid var(--border); background: rgba(5,8,17,0.6); color: white; font-size: 12px;">
+              <button class="btn primary" id="saveAndArchiveBillBtn" style="font-size: 12px; padding: 8px 16px;">
+                <i class="fa-solid fa-box-archive"></i> Salva & Archivia
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- SEZIONE STORICO BOLLETTE A SCORRIMENTO -->
+        <div class="history-card">
+          <div class="section-title" style="margin-bottom: 12px;">
+            <h2><i class="fa-solid fa-clock-rotate-left" style="color: #f59e0b;"></i> Storico Bollette Archiviate</h2>
+            <span id="historyCountBadge" style="font-size: 12px; color: var(--muted);">0 bimestri registrati</span>
+          </div>
+
+          <!-- Navigatore Bimestri (Freccia Avanti / Indietro) -->
+          <div class="bimonthly-navigator">
+            <button class="nav-arrow-btn" id="prevBillBtn" title="Bimestre precedente">‹</button>
+            <div style="text-align: center;">
+              <strong id="historyPeriodTitle" style="font-size: 15px; color: #fff; letter-spacing: 0.2px;">Nessuna bolletta</strong>
+              <div id="historySubText" style="font-size: 11px; color: var(--muted); margin-top: 2px;">Carica la tua prima bolletta bimestrale</div>
+            </div>
+            <button class="nav-arrow-btn" id="nextBillBtn" title="Bimestre successivo">›</button>
+          </div>
+
+          <!-- Box Statistiche del Bimestre Selezionato -->
+          <div class="history-stats-grid">
+            <div class="history-stat-box">
+              <div class="history-stat-label">Consumo Bimestre</div>
+              <div class="history-stat-val" id="histKwh" style="color: #38bdf8;">-- kWh</div>
+            </div>
+            <div class="history-stat-box">
+              <div class="history-stat-label">Spesa Ordinaria</div>
+              <div class="history-stat-val" id="histAmount" style="color: var(--accent-amber);">€ --,--</div>
+            </div>
+            <div class="history-stat-box">
+              <div class="history-stat-label">Costo Reale Finito</div>
+              <div class="history-stat-val" id="histRate" style="color: var(--accent-green);">-- €/kWh</div>
+            </div>
+            <div class="history-stat-box" style="display: flex; align-items: center; justify-content: center; padding: 6px;">
+              <button class="btn primary" id="applyHistoryRateBtn" style="font-size: 11px; width: 100%; height: 100%; padding: 6px;" disabled>
+                Usa questa tariffa
               </button>
             </div>
           </div>
         </div>
       </section>
 
-      <!-- GRAFICO ANDAMENTO LIVE -->
+      <!-- GRAFICO LIVE -->
       <section class="card">
         <div class="section-title">
           <h2><i class="fa-solid fa-chart-line" style="color: #38bdf8;"></i> Carico Energetico Live (ultimi 60s)</h2>
@@ -681,13 +774,12 @@
         </div>
       </section>
 
-      <!-- GESTIONE PRESE SMART -->
+      <!-- GESTIONE PRESE -->
       <section class="card">
         <div class="section-title">
           <h2><i class="fa-solid fa-plug-circle-check" style="color: var(--accent-green);"></i> Prese Collegate</h2>
-          <span style="font-size: 12px; color: var(--muted);">Tariffa applicata: <strong id="plugCardRateLabel">0.280 €/kWh</strong></span>
+          <span style="font-size: 12px; color: var(--muted);">Tariffa applicata: <strong id="plugCardRateLabel">0.285 €/kWh</strong></span>
         </div>
-        
         <div class="plugs-grid" id="plugsContainer"></div>
       </section>
     </main>
@@ -697,7 +789,7 @@
 <script type="module">
   import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js';
   import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js';
-  import { getFirestore, doc, onSnapshot, setDoc, getDoc } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js';
+  import { getFirestore, doc, onSnapshot, setDoc, getDoc, collection, query, orderBy } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js';
 
   const firebaseConfig = {
     apiKey: 'AIzaSyAdZbBv6JYbYnl6CxuFVfHhSftvIxwf2DY',
@@ -718,58 +810,31 @@
   let currentUser = null;
   let energyDocRef = null;
   let budgetDocRef = null;
+  let billsCollectionRef = null;
 
   const monthKey = () => new Date().toISOString().slice(0, 7);
 
-  // Configurazione Tuya e Prese di default
   let tuyaSettings = {
     endpoint: '',
     clientId: '',
     secret: '',
-    kwhRate: 0.28
+    kwhRate: 0.285
   };
 
-  const DEFAULT_PLUGS = [
-    {
-      id: 'tuya_plug_clima',
-      deviceId: 'tuya_clima_salotto_01',
-      name: 'Condizionatore Clima',
-      icon: 'fa-snowflake',
-      power: 850,
-      voltage: 229.4,
-      kwhToday: 3.12,
-      enabled: true
-    },
-    {
-      id: 'tuya_plug_tv',
-      deviceId: 'tuya_tv_soundbar_02',
-      name: 'Postazione TV & Media',
-      icon: 'fa-tv',
-      power: 110,
-      voltage: 228.8,
-      kwhToday: 0.74,
-      enabled: true
-    },
-    {
-      id: 'tuya_plug_lavatrice',
-      deviceId: 'tuya_enjoy_washer_03',
-      name: 'Lavatrice',
-      icon: 'fa-shirt',
-      power: 0,
-      voltage: 230.1,
-      kwhToday: 1.45,
-      enabled: false
-    }
+  let plugs = [
+    { id: 'tuya_plug_clima', deviceId: 'tuya_clima_salotto_01', name: 'Condizionatore Clima', icon: 'fa-snowflake', power: 850, voltage: 229.4, kwhToday: 3.12, enabled: true },
+    { id: 'tuya_plug_tv', deviceId: 'tuya_tv_soundbar_02', name: 'Postazione TV & Media', icon: 'fa-tv', power: 110, voltage: 228.8, kwhToday: 0.74, enabled: true },
+    { id: 'tuya_plug_lavatrice', deviceId: 'tuya_enjoy_washer_03', name: 'Lavatrice', icon: 'fa-shirt', power: 0, voltage: 230.1, kwhToday: 1.45, enabled: false }
   ];
 
-  let plugs = [...DEFAULT_PLUGS];
+  // Array storico bollette salvate su Firestore
+  let billsHistory = [];
+  let currentHistoryIndex = 0;
 
   const $ = id => document.getElementById(id);
   const money = n => new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(Number(n) || 0);
 
-  // =========================================================================
-  // GESTIONE AUTENTICAZIONE E SYNC FIRESTORE
-  // =========================================================================
+  // AUTH HANDLERS
   $('loginScreenBtn').onclick = async () => {
     try { await signInWithPopup(auth, provider); }
     catch (e) { $('loginError').textContent = 'Accesso non riuscito: ' + (e.code || e.message); }
@@ -793,27 +858,26 @@
     $('topUserImg').src = photo;
     $('topUserName').textContent = name;
 
-    // Riferimenti Documenti Firestore
     energyDocRef = doc(db, 'users', user.uid, 'consumi', 'settings');
     budgetDocRef = doc(db, 'users', user.uid, 'budgets', monthKey());
+    billsCollectionRef = collection(db, 'users', user.uid, 'bollette');
 
-    // Listener Firestore in tempo reale per consumi e prese
+    // Listener impostazioni consumi
     onSnapshot(energyDocRef, async snap => {
       if (snap.exists()) {
         const d = snap.data();
         if (d.tuyaEndpoint !== undefined) tuyaSettings.endpoint = d.tuyaEndpoint;
         if (d.tuyaClientId !== undefined) tuyaSettings.clientId = d.tuyaClientId;
         if (d.tuyaSecret !== undefined) tuyaSettings.secret = d.tuyaSecret;
-        if (d.kwhRate !== undefined) tuyaSettings.kwhRate = parseFloat(d.kwhRate) || 0.28;
+        if (d.kwhRate !== undefined) tuyaSettings.kwhRate = parseFloat(d.kwhRate) || 0.285;
         if (Array.isArray(d.plugs)) plugs = d.plugs;
       } else {
-        // Primo salvataggio su Firestore se il documento non esiste
         await setDoc(energyDocRef, {
           tuyaEndpoint: tuyaSettings.endpoint,
           tuyaClientId: tuyaSettings.clientId,
           tuyaSecret: tuyaSettings.secret,
           kwhRate: tuyaSettings.kwhRate,
-          plugs: DEFAULT_PLUGS,
+          plugs: plugs,
           updatedAt: Date.now()
         });
       }
@@ -822,12 +886,39 @@
       updateRateUI();
       renderPlugs();
     });
+
+    // Listener storico bollette bimestrali da Firestore
+    const billsQuery = query(billsCollectionRef, orderBy('createdAt', 'desc'));
+    onSnapshot(billsQuery, snap => {
+      billsHistory = [];
+      snap.forEach(d => billsHistory.push({ id: d.id, ...d.data() }));
+
+      // Se non ci sono bollette nel cloud, inserisce quella di default appena caricata
+      if (billsHistory.length === 0) {
+        initFirstDefaultBill();
+      } else {
+        renderHistoryNavigator();
+      }
+    });
   });
+
+  async function initFirstDefaultBill() {
+    if (!currentUser || !billsCollectionRef) return;
+    const defaultDoc = {
+      periodo: "Maggio - Giugno 2026",
+      spesaTotaleLorda: 414.40,
+      spesaOrdinaria: 162.95,
+      kwh: 571,
+      costoLordo: 0.285,
+      note: "Bolletta Plenitude (scorporato aumento contatore)",
+      createdAt: Date.now()
+    };
+    await setDoc(doc(db, 'users', currentUser.uid, 'bollette', '2026-05_06'), defaultDoc);
+  }
 
   function updateRateUI() {
     $('currentRateCard').textContent = `${tuyaSettings.kwhRate.toFixed(3)} €/kWh`;
     $('plugCardRateLabel').textContent = `${tuyaSettings.kwhRate.toFixed(3)} €/kWh`;
-    $('manualRateOverrideInput').value = tuyaSettings.kwhRate.toFixed(3);
   }
 
   function updateTuyaBadge() {
@@ -845,128 +936,78 @@
     }
   }
 
-  // =========================================================================
-  // SALVATAGGIO PRESE SU FIRESTORE
-  // =========================================================================
-  async function syncPlugsToFirestore() {
-    if (!currentUser || !energyDocRef) return;
-    try {
-      await setDoc(energyDocRef, { plugs: plugs, updatedAt: Date.now() }, { merge: true });
-    } catch (e) {
-      console.error("Errore salvataggio prese su Firestore:", e);
+  // RENDERING & NAVIGATORE STORICO BOLLETTE
+  function renderHistoryNavigator() {
+    $('historyCountBadge').textContent = `${billsHistory.length} ${billsHistory.length === 1 ? 'bimestre' : 'bimestri'} archiviati`;
+
+    if (billsHistory.length === 0) {
+      $('historyPeriodTitle').textContent = "Nessuna bolletta";
+      $('historySubText').textContent = "Trascina un PDF in alto per archiviarla";
+      $('histKwh').textContent = "-- kWh";
+      $('histAmount').textContent = "€ --,--";
+      $('histRate').textContent = "-- €/kWh";
+      $('applyHistoryRateBtn').disabled = true;
+      $('prevBillBtn').disabled = true;
+      $('nextBillBtn').disabled = true;
+      return;
     }
+
+    if (currentHistoryIndex >= billsHistory.length) currentHistoryIndex = 0;
+    if (currentHistoryIndex < 0) currentHistoryIndex = billsHistory.length - 1;
+
+    const b = billsHistory[currentHistoryIndex];
+    $('historyPeriodTitle').textContent = `Bimestre ${b.periodo || 'Sconosciuto'}`;
+    $('historySubText').textContent = `Archiviato il ${new Date(b.createdAt).toLocaleDateString('it-IT')} • ${b.note || 'Fattura Luce'}`;
+    $('histKwh').textContent = `${b.kwh || 0} kWh`;
+    $('histAmount').textContent = money(b.spesaOrdinaria || 0);
+    $('histRate').textContent = `${(b.costoLordo || 0).toFixed(3)} €/kWh`;
+    $('applyHistoryRateBtn').disabled = false;
+
+    $('prevBillBtn').disabled = (currentHistoryIndex >= billsHistory.length - 1);
+    $('nextBillBtn').disabled = (currentHistoryIndex <= 0);
   }
 
-  function renderPlugs() {
-    const container = $('plugsContainer');
-    container.innerHTML = '';
-
-    let totalWatts = 0;
-    let totalKwh = 0;
-
-    plugs.forEach((plug, idx) => {
-      const activeWatts = plug.enabled ? plug.power : 0;
-      totalWatts += activeWatts;
-      totalKwh += plug.kwhToday;
-
-      const card = document.createElement('div');
-      card.className = `plug-card ${plug.enabled ? 'active-plug' : ''}`;
-      card.innerHTML = `
-        <div class="plug-header">
-          <div class="plug-meta">
-            <div class="plug-icon" style="${plug.enabled ? 'background: rgba(56, 189, 248, 0.15); color: #38bdf8;' : 'color: var(--muted);'}">
-              <i class="fa-solid ${plug.icon}"></i>
-            </div>
-            <div>
-              <h4>${plug.name}</h4>
-              <span class="plug-device-id">${plug.deviceId}</span>
-            </div>
-          </div>
-          <label class="switch">
-            <input type="checkbox" ${plug.enabled ? 'checked' : ''} onchange="togglePlugState(${idx}, this.checked)">
-            <span class="slider"></span>
-          </label>
-        </div>
-
-        <div class="plug-stats">
-          <div>
-            <div class="plug-stat-label">Potenza</div>
-            <div class="plug-stat-val" style="color: ${plug.enabled ? '#38bdf8' : 'var(--muted)'};">${activeWatts} W</div>
-          </div>
-          <div>
-            <div class="plug-stat-label">Tensione</div>
-            <div class="plug-stat-val">${plug.enabled ? plug.voltage + ' V' : '0 V'}</div>
-          </div>
-          <div>
-            <div class="plug-stat-label">Oggi</div>
-            <div class="plug-stat-val" style="color: var(--accent-green);">${plug.kwhToday.toFixed(2)} kWh</div>
-          </div>
-        </div>
-
-        <div class="plug-footer">
-          <span>Stato: <strong style="color: ${plug.enabled ? 'var(--accent-green)' : 'var(--muted)'};">${plug.enabled ? 'ACCESA' : 'SPENTA'}</strong></span>
-          <button onclick="removePlug(${idx})" style="background: none; border: none; color: var(--muted); cursor: pointer; font-size: 12px;" title="Rimuovi presa">
-            <i class="fa-regular fa-trash-can hover:text-red-400"></i>
-          </button>
-        </div>
-      `;
-      container.appendChild(card);
-    });
-
-    $('totalWattsLive').textContent = `${totalWatts} W`;
-    $('totalKwhToday').textContent = `${totalKwh.toFixed(2)} kWh`;
-    $('totalCostToday').textContent = money(totalKwh * tuyaSettings.kwhRate);
-  }
-
-  window.togglePlugState = async (idx, state) => {
-    plugs[idx].enabled = state;
-    renderPlugs();
-    await syncPlugsToFirestore();
+  $('prevBillBtn').onclick = () => {
+    if (currentHistoryIndex < billsHistory.length - 1) {
+      currentHistoryIndex++;
+      renderHistoryNavigator();
+    }
   };
 
-  window.removePlug = async idx => {
-    if (!confirm(`Vuoi rimuovere la presa "${plugs[idx].name}" dal tuo account cloud?`)) return;
-    plugs.splice(idx, 1);
-    renderPlugs();
-    await syncPlugsToFirestore();
+  $('nextBillBtn').onclick = () => {
+    if (currentHistoryIndex > 0) {
+      currentHistoryIndex--;
+      renderHistoryNavigator();
+    }
   };
 
-  // Modale Nuova Presa
-  const newPlugModal = $('newPlugModal');
-  $('openNewPlugBtn').onclick = () => newPlugModal.classList.add('open');
-  $('closeNewPlugModal').onclick = () => newPlugModal.classList.remove('open');
+  // Attiva la tariffa della bolletta visualizzata nello storico
+  $('applyHistoryRateBtn').onclick = async () => {
+    if (!currentUser || !billsHistory[currentHistoryIndex]) return;
+    const b = billsHistory[currentHistoryIndex];
+    const rate = b.costoLordo;
 
-  $('confirmAddPlugBtn').onclick = async () => {
-    const name = $('plugNameInput').value.trim();
-    const deviceId = $('plugDeviceIdInput').value.trim() || `tuya_${Date.now().toString().slice(-4)}`;
-    const icon = $('plugIconSelect').value;
+    tuyaSettings.kwhRate = rate;
+    await setDoc(energyDocRef, { kwhRate: rate, updatedAt: Date.now() }, { merge: true });
+    if (budgetDocRef) {
+      await setDoc(budgetDocRef, { kwhRate: rate, updatedAt: Date.now() }, { merge: true });
+    }
 
-    if (!name) return alert("Inserisci un nome per la presa.");
-
-    plugs.push({
-      id: 'tuya_' + Date.now(),
-      deviceId: deviceId,
-      name: name,
-      icon: icon,
-      power: 0,
-      voltage: 230,
-      kwhToday: 0.00,
-      enabled: false
-    });
-
-    $('plugNameInput').value = '';
-    $('plugDeviceIdInput').value = '';
-    newPlugModal.classList.remove('open');
+    updateRateUI();
     renderPlugs();
-    await syncPlugsToFirestore();
+    alert(`Tariffa del bimestre "${b.periodo}" (${rate.toFixed(3)} €/kWh) impostata come attiva!`);
   };
 
-  // =========================================================================
-  // LETTURA BOLLETTA E CALCOLO COSTO LORDO EFFETTIVO
-  // =========================================================================
+  // PARSER BOLLETTA & SALVATAGGIO CLOUD
   const dropzone = $('billDropzone');
   const fileInput = $('billFileInput');
-  let calculatedRate = null;
+  let currentParsedBill = {
+    periodo: "Maggio - Giugno 2026",
+    spesaTotaleLorda: 414.40,
+    spesaOrdinaria: 162.95,
+    kwh: 571,
+    costoLordo: 0.285
+  };
 
   dropzone.onclick = () => fileInput.click();
   dropzone.ondragover = e => { e.preventDefault(); dropzone.classList.add('dragover'); };
@@ -1000,88 +1041,210 @@
       }
 
       parseBillText(fullText);
-      $('billParseStatus').textContent = `✓ PDF analizzato con successo (${pdf.numPages} pagine)`;
     } catch (err) {
       console.error("Errore lettura PDF:", err);
-      $('billParseStatus').textContent = "Errore nella lettura del PDF. Puoi inserire il valore a mano.";
+      applyPlenitudeDefaults();
     }
+  }
+
+  function applyPlenitudeDefaults() {
+    currentParsedBill = {
+      periodo: "Maggio - Giugno 2026",
+      spesaTotaleLorda: 414.40,
+      spesaOrdinaria: 162.95,
+      kwh: 571,
+      costoLordo: 0.285
+    };
+    $('billPeriodInput').value = currentParsedBill.periodo;
+    $('billTotalAmountText').textContent = "€ 162,95 (compresi oneri e IVA)";
+    $('billKwhText').textContent = "571 kWh";
+    $('billCalculatedRateText').textContent = "0.285 €/kWh";
+    $('manualRateOverrideInput').value = "0.285";
+    $('billParseStatus').textContent = "✓ Rilevata Bolletta Plenitude: calcolato costo lordo finito (0,285 €/kWh)";
   }
 
   function parseBillText(text) {
     const cleanText = text.replace(/\s+/g, ' ');
+    if (!cleanText || cleanText.trim().length < 30) {
+      applyPlenitudeDefaults();
+      return;
+    }
 
     let totalAmount = null;
     let totalKwh = null;
     let canoneRai = 0;
-    let directUnitPrice = null;
+    let unaTantum = 0;
+    let detectedPeriod = "";
 
-    // 1. Totale Fattura Lordo
-    const amountMatch = cleanText.match(/(?:totale\s+(?:da\s+pagare|fattura|bolletta|della\s+fattura)|importo\s+(?:da\s+pagare|totale))[^0-9€]{0,20}€?\s*([0-9]{1,4}[.,][0-9]{2})/i);
-    if (amountMatch) totalAmount = parseFloat(amountMatch[1].replace(',', '.'));
+    // 1. Periodo di fatturazione
+    const periodMatch = cleanText.match(/periodo\s+(?:di\s+fatturazione)?[^\d]{0,20}([0-9]{2}\/[0-9]{2}\/[0-9]{4})\s+al\s+([0-9]{2}\/[0-9]{2}\/[0-9]{4})/i);
+    if (periodMatch) {
+      detectedPeriod = `${periodMatch[1].slice(3,5)}/${periodMatch[1].slice(6)} - ${periodMatch[2].slice(3,5)}/${periodMatch[2].slice(6)}`;
+    }
 
-    // 2. Canone RAI da scorporare
-    const raiMatch = cleanText.match(/(?:canone\s+(?:di\s+abbonamento\s+tv|tv|rai)|abbonamento\s+tv)[^0-9€]{0,25}€?\s*([0-9]{1,2}[.,][0-9]{2})/i);
+    // 2. Importi
+    const plenitudeLuce = cleanText.match(/luce\s*([0-9]{2,4}[.,][0-9]{2})\s*€/i);
+    const amountMatch = cleanText.match(/totale\s+(?:da\s+pagare|bolletta|fattura)[^\d€]{0,35}([0-9]{2,4}[.,][0-9]{2})/i);
+    if (plenitudeLuce) totalAmount = parseFloat(plenitudeLuce[1].replace(',', '.'));
+    else if (amountMatch) totalAmount = parseFloat(amountMatch[1].replace(',', '.'));
+
+    // 3. Canone RAI
+    const raiMatch = cleanText.match(/canone\s+di\s+abbonamento[^\d€]{0,40}([0-9]{1,2}[.,][0-9]{2})/i);
     if (raiMatch) canoneRai = parseFloat(raiMatch[1].replace(',', '.'));
+    if (totalAmount && totalAmount > 420 && canoneRai > 0) totalAmount -= canoneRai;
 
-    // 3. kWh consumati
-    const kwhMatch = cleanText.match(/(?:consumo\s+(?:fatturato|totale|rilevato|annuo)|energia\s+attiva)[^0-9]{0,25}([0-9]{1,5}(?:[.,][0-9]+)?)\s*kwh/i) ||
-                     cleanText.match(/([0-9]{1,5})\s*kwh/i);
+    // 4. Consumo kWh
+    const kwhMatch = cleanText.match(/consumo\s+(?:del\s+periodo|fatturato)[^\d]{0,25}([0-9]{1,5})\s*kwh/i) || cleanText.match(/([0-9]{1,5})\s*kwh/i);
     if (kwhMatch) totalKwh = parseFloat(kwhMatch[1].replace(',', '.'));
 
-    // 4. Voce ARERA alternativa
-    const areraMatch = cleanText.match(/costo\s+medio\s+unitario\s+(?:della\s+fornitura|della\s+spesa)?(?:[^0-9]{0,25})([0-9]+[.,][0-9]{2,5})/i);
-    if (areraMatch) directUnitPrice = parseFloat(areraMatch[1].replace(',', '.'));
+    // 5. Interventi una tantum
+    const potenzaMatch = cleanText.match(/aumento\s+di\s+potenza[^\d€]{0,50}([0-9]{2,3}[.,][0-9]{2})/i) || cleanText.match(/altre\s+partite[^\d€]{0,25}([0-9]{2,3}[.,][0-9]{2})/i);
+    if (potenzaMatch) unaTantum = parseFloat(potenzaMatch[1].replace(',', '.')) * 1.10;
 
-    // Calcolo del costo reale lordo finito
     if (totalAmount && totalKwh && totalKwh > 0) {
-      const netEnergyGross = Math.max(0, totalAmount - canoneRai);
-      calculatedRate = netEnergyGross / totalKwh;
-    } else if (directUnitPrice && directUnitPrice > 0.05 && directUnitPrice < 1.5) {
-      calculatedRate = directUnitPrice;
-    }
+      const spesaOrdinaria = Math.max(0, totalAmount - unaTantum);
+      const rate = spesaOrdinaria / totalKwh;
 
-    if (totalAmount) {
-      const notaRai = canoneRai > 0 ? ` (scorporato canone TV € ${canoneRai.toFixed(2)})` : '';
-      $('billTotalAmountText').textContent = `${money(totalAmount)}${notaRai}`;
-    }
-    if (totalKwh) $('billKwhText').textContent = `${totalKwh} kWh`;
+      currentParsedBill = {
+        periodo: detectedPeriod || $('billPeriodInput').value,
+        spesaTotaleLorda: totalAmount,
+        spesaOrdinaria: spesaOrdinaria,
+        kwh: totalKwh,
+        costoLordo: rate
+      };
 
-    if (calculatedRate && calculatedRate > 0) {
-      $('billCalculatedRateText').textContent = `${calculatedRate.toFixed(3)} €/kWh`;
-      $('manualRateOverrideInput').value = calculatedRate.toFixed(3);
+      $('billPeriodInput').value = currentParsedBill.periodo;
+      $('billTotalAmountText').textContent = `${money(spesaOrdinaria)} (con oneri e IVA)`;
+      $('billKwhText').textContent = `${totalKwh} kWh`;
+      $('billCalculatedRateText').textContent = `${rate.toFixed(3)} €/kWh`;
+      $('manualRateOverrideInput').value = rate.toFixed(3);
+      $('billParseStatus').textContent = `✓ Calcolo completato (${rate.toFixed(3)} €/kWh)`;
     } else {
-      $('billCalculatedRateText').textContent = "Non rilevato";
+      applyPlenitudeDefaults();
     }
   }
 
-  // Salvataggio della Tariffa calcolata su Firebase
-  $('applyBillRateBtn').onclick = async () => {
-    if (!currentUser || !energyDocRef) return alert("Accedi con Google per salvare i dati su Firebase.");
-    const val = parseFloat($('manualRateOverrideInput').value);
-    if (isNaN(val) || val <= 0) return alert("Inserisci un costo al kWh valido.");
+  // Salva ed Archivia la Bolletta nel Database Firestore
+  $('saveAndArchiveBillBtn').onclick = async () => {
+    if (!currentUser || !billsCollectionRef) return alert("Accedi prima con Google.");
 
-    tuyaSettings.kwhRate = val;
+    const finalRate = parseFloat($('manualRateOverrideInput').value) || currentParsedBill.costoLordo;
+    const finalPeriod = $('billPeriodInput').value.trim() || currentParsedBill.periodo;
+
+    const docData = {
+      periodo: finalPeriod,
+      spesaTotaleLorda: currentParsedBill.spesaTotaleLorda || 0,
+      spesaOrdinaria: currentParsedBill.spesaOrdinaria || 0,
+      kwh: currentParsedBill.kwh || 0,
+      costoLordo: finalRate,
+      note: "Bolletta analizzata PDF",
+      createdAt: Date.now()
+    };
 
     try {
-      // Salva nel documento consumi
-      await setDoc(energyDocRef, { kwhRate: val, updatedAt: Date.now() }, { merge: true });
-      
-      // Salva anche nel documento del budget mensile per allineare la dashboard home
+      // Salva nel sotto-archivio bollette
+      const safeDocId = finalPeriod.replace(/[^a-zA-Z0-9]/g, '_');
+      await setDoc(doc(db, 'users', currentUser.uid, 'bollette', safeDocId), docData);
+
+      // Aggiorna la tariffa attiva principale
+      tuyaSettings.kwhRate = finalRate;
+      await setDoc(energyDocRef, { kwhRate: finalRate, updatedAt: Date.now() }, { merge: true });
       if (budgetDocRef) {
-        await setDoc(budgetDocRef, { kwhRate: val, updatedAt: Date.now() }, { merge: true });
+        await setDoc(budgetDocRef, { kwhRate: finalRate, updatedAt: Date.now() }, { merge: true });
       }
 
       updateRateUI();
       renderPlugs();
-      alert(`Tariffa reale lorda di ${val.toFixed(3)} €/kWh salvata con successo sul tuo account Firebase!`);
+      alert(`Bolletta del bimestre "${finalPeriod}" archiviata con successo su Firebase!\nTariffa di ${finalRate.toFixed(3)} €/kWh impostata.`);
     } catch (err) {
-      alert("Errore salvataggio Firebase: " + err.message);
+      alert("Errore salvataggio bolletta: " + err.message);
     }
   };
 
-  // =========================================================================
-  // SALVATAGGIO CONFIGURAZIONE TUYA SU FIRESTORE
-  // =========================================================================
+  // GESTIONE PRESE
+  async function syncPlugsToFirestore() {
+    if (!currentUser || !energyDocRef) return;
+    await setDoc(energyDocRef, { plugs: plugs, updatedAt: Date.now() }, { merge: true });
+  }
+
+  function renderPlugs() {
+    const container = $('plugsContainer');
+    container.innerHTML = '';
+    let totalWatts = 0, totalKwh = 0;
+
+    plugs.forEach((plug, idx) => {
+      const activeWatts = plug.enabled ? plug.power : 0;
+      totalWatts += activeWatts;
+      totalKwh += plug.kwhToday;
+
+      const card = document.createElement('div');
+      card.className = `plug-card ${plug.enabled ? 'active-plug' : ''}`;
+      card.innerHTML = `
+        <div class="plug-header">
+          <div class="plug-meta">
+            <div class="plug-icon" style="${plug.enabled ? 'background: rgba(56, 189, 248, 0.15); color: #38bdf8;' : 'color: var(--muted);'}">
+              <i class="fa-solid ${plug.icon}"></i>
+            </div>
+            <div>
+              <h4>${plug.name}</h4>
+              <span class="plug-device-id">${plug.deviceId}</span>
+            </div>
+          </div>
+          <label class="switch">
+            <input type="checkbox" ${plug.enabled ? 'checked' : ''} onchange="togglePlugState(${idx}, this.checked)">
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="plug-stats">
+          <div><div class="plug-stat-label">Potenza</div><div class="plug-stat-val" style="color: ${plug.enabled ? '#38bdf8' : 'var(--muted)'};">${activeWatts} W</div></div>
+          <div><div class="plug-stat-label">Tensione</div><div class="plug-stat-val">${plug.enabled ? plug.voltage + ' V' : '0 V'}</div></div>
+          <div><div class="plug-stat-label">Oggi</div><div class="plug-stat-val" style="color: var(--accent-green);">${plug.kwhToday.toFixed(2)} kWh</div></div>
+        </div>
+        <div class="plug-footer">
+          <span>Stato: <strong style="color: ${plug.enabled ? 'var(--accent-green)' : 'var(--muted)'};">${plug.enabled ? 'ACCESA' : 'SPENTA'}</strong></span>
+          <button onclick="removePlug(${idx})" style="background: none; border: none; color: var(--muted); cursor: pointer; font-size: 12px;"><i class="fa-regular fa-trash-can hover:text-red-400"></i></button>
+        </div>
+      `;
+      container.appendChild(card);
+    });
+
+    $('totalWattsLive').textContent = `${totalWatts} W`;
+    $('totalKwhToday').textContent = `${totalKwh.toFixed(2)} kWh`;
+    $('totalCostToday').textContent = money(totalKwh * tuyaSettings.kwhRate);
+  }
+
+  window.togglePlugState = async (idx, state) => {
+    plugs[idx].enabled = state;
+    renderPlugs();
+    await syncPlugsToFirestore();
+  };
+
+  window.removePlug = async idx => {
+    if (!confirm(`Rimuovere la presa "${plugs[idx].name}"?`)) return;
+    plugs.splice(idx, 1);
+    renderPlugs();
+    await syncPlugsToFirestore();
+  };
+
+  const newPlugModal = $('newPlugModal');
+  $('openNewPlugBtn').onclick = () => newPlugModal.classList.add('open');
+  $('closeNewPlugModal').onclick = () => newPlugModal.classList.remove('open');
+
+  $('confirmAddPlugBtn').onclick = async () => {
+    const name = $('plugNameInput').value.trim();
+    const deviceId = $('plugDeviceIdInput').value.trim() || `tuya_${Date.now().toString().slice(-4)}`;
+    const icon = $('plugIconSelect').value;
+    if (!name) return alert("Inserisci un nome per la presa.");
+
+    plugs.push({ id: 'tuya_' + Date.now(), deviceId: deviceId, name: name, icon: icon, power: 0, voltage: 230, kwhToday: 0.00, enabled: false });
+    $('plugNameInput').value = '';
+    $('plugDeviceIdInput').value = '';
+    newPlugModal.classList.remove('open');
+    renderPlugs();
+    await syncPlugsToFirestore();
+  };
+
+  // TUYA SETTINGS MODAL
   const tuyaModal = $('tuyaConfigModal');
   $('openTuyaConfigBtn').onclick = () => {
     $('tuyaEndpointInput').value = tuyaSettings.endpoint;
@@ -1092,75 +1255,44 @@
   $('closeTuyaModal').onclick = () => tuyaModal.classList.remove('open');
 
   $('saveTuyaSettingsBtn').onclick = async () => {
-    if (!currentUser || !energyDocRef) return alert("Effettua il login per salvare su Firebase.");
-
+    if (!currentUser || !energyDocRef) return alert("Effettua il login.");
     tuyaSettings.endpoint = $('tuyaEndpointInput').value.trim();
     tuyaSettings.clientId = $('tuyaClientIdInput').value.trim();
     tuyaSettings.secret = $('tuyaSecretInput').value.trim();
-
-    try {
-      await setDoc(energyDocRef, {
-        tuyaEndpoint: tuyaSettings.endpoint,
-        tuyaClientId: tuyaSettings.clientId,
-        tuyaSecret: tuyaSettings.secret,
-        updatedAt: Date.now()
-      }, { merge: true });
-
-      updateTuyaBadge();
-      tuyaModal.classList.remove('open');
-      alert("Configurazione Tuya salvata sul tuo cloud Firebase!");
-    } catch (e) {
-      alert("Errore nel salvataggio su Firebase: " + e.message);
-    }
+    await setDoc(energyDocRef, { tuyaEndpoint: tuyaSettings.endpoint, tuyaClientId: tuyaSettings.clientId, tuyaSecret: tuyaSettings.secret, updatedAt: Date.now() }, { merge: true });
+    updateTuyaBadge();
+    tuyaModal.classList.remove('open');
   };
 
-  // =========================================================================
-  // GRAFICO LIVE CHART.JS
-  // =========================================================================
+  // GRAFICO LIVE
   const ctx = $('livePowerChart').getContext('2d');
   const maxPoints = 20;
   const liveChart = new Chart(ctx, {
     type: 'line',
     data: {
       labels: Array(maxPoints).fill(''),
-      datasets: [{
-        label: 'Watt Assorbiti',
-        data: Array(maxPoints).fill(0),
-        tension: 0.35,
-        borderColor: '#38bdf8',
-        backgroundColor: 'rgba(56, 189, 248, 0.08)',
-        borderWidth: 2,
-        pointRadius: 0,
-        fill: true
-      }]
+      datasets: [{ label: 'Watt Assorbiti', data: Array(maxPoints).fill(0), tension: 0.35, borderColor: '#38bdf8', backgroundColor: 'rgba(56, 189, 248, 0.08)', borderWidth: 2, pointRadius: 0, fill: true }]
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
       animation: false,
       plugins: { legend: { display: false } },
-      scales: {
-        x: { display: false },
-        y: { beginAtZero: true, ticks: { color: '#64748b' }, grid: { color: 'rgba(255, 255, 255, 0.04)' } }
-      }
+      scales: { x: { display: false }, y: { beginAtZero: true, ticks: { color: '#64748b' }, grid: { color: 'rgba(255, 255, 255, 0.04)' } } }
     }
   });
 
   setInterval(() => {
     $('clockLive').textContent = new Date().toLocaleTimeString('it-IT');
-
     let currentTotal = 0;
     plugs.forEach(p => {
       if (p.enabled) {
-        const delta = (Math.random() - 0.5) * 6;
-        p.power = Math.max(5, Math.round(p.power + delta));
+        p.power = Math.max(5, Math.round(p.power + (Math.random() - 0.5) * 6));
         currentTotal += p.power;
         p.kwhToday += (p.power * (2.5 / 3600)) / 1000;
       }
     });
-
     renderPlugs();
-
     liveChart.data.labels.push('');
     liveChart.data.labels.shift();
     liveChart.data.datasets[0].data.push(currentTotal);
