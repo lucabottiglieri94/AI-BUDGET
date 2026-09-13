@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>AI-BUDGET</title>
 
-  <!-- Meta Tag PWA & Mobile Web App iOS / Android -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -205,7 +204,6 @@
     .top h3 { font-size: 18px; font-weight: 800; letter-spacing: -0.3px; }
     .top .muted { font-size: 13px; margin-top: 2px; }
 
-    /* Navigatore Mesi */
     .month-navigator {
       display: inline-flex;
       align-items: center;
@@ -431,7 +429,7 @@
     .ai-output-box p:last-child { margin-bottom: 0; }
     .ai-output-box strong { color: #38bdf8; font-weight: 700; }
 
-    /* Pulsante Microfono Registrazione Vocale */
+    /* Pulsante Microfono */
     .mic-btn {
       background: rgba(168, 85, 247, 0.15);
       border: 1px solid rgba(168, 85, 247, 0.4);
@@ -486,10 +484,11 @@
     }
     .section-toggle:hover { background: rgba(255, 255, 255, 0.1); }
 
+    /* Riga Spesa aggiornata con Pulsante Ricorrente (🔁) */
     .entry {
       display: grid;
-      grid-template-columns: 1fr 110px 135px 36px;
-      gap: 8px;
+      grid-template-columns: 1fr 100px 120px 36px 36px;
+      gap: 6px;
       margin-bottom: 10px;
       align-items: center;
     }
@@ -518,10 +517,31 @@
       align-items: center;
       justify-content: center;
     }
+    /* Bottone Ricorrente 🔁 */
+    .rec-toggle-btn {
+      width: 36px;
+      height: 36px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      transition: 0.2s;
+    }
+    .rec-toggle-btn.active {
+      background: rgba(168, 85, 247, 0.2);
+      border-color: #c084fc;
+      color: #c084fc;
+      box-shadow: 0 0 10px rgba(168, 85, 247, 0.3);
+    }
+
     .add { width: 100%; border-radius: 12px; margin-top: 6px; }
 
     .collapsed #incomeList, .collapsed #expenseList, .collapsed .add { display: none; }
-    .collapsed #recurringList, .collapsed #recurringActions { display: none; }
 
     .linkcard { text-decoration: none; color: inherit; display: block; margin-bottom: 14px; }
     .linkcard strong { font-size: 16px; display: inline-flex; align-items: center; gap: 6px; }
@@ -791,7 +811,7 @@
       }
       .side { display: none; }
       .summary, .grid { grid-template-columns: 1fr; }
-      .entry { grid-template-columns: 1fr 1fr; }
+      .entry { grid-template-columns: 1fr 90px 110px 34px 34px; }
       .ampolla-card { flex-direction: column; text-align: center; }
       .ampolla-actions { justify-content: center; }
       .top { flex-direction: column; align-items: stretch; gap: 12px; }
@@ -833,7 +853,6 @@
 </head>
 <body>
 
-<!-- Toast Swipe Mese Mobile -->
 <div id="swipeToast" class="swipe-indicator">
   <i class="fa-solid fa-arrows-left-right"></i> <span id="swipeToastText">Mese</span>
 </div>
@@ -907,7 +926,6 @@
 
 <div id="app" class="app">
   <div class="shell">
-    <!-- SIDEBAR DESKTOP -->
     <aside class="side">
       <div class="side-brand">💰 AI-BUDGET</div>
       <div id="userInfo" class="user-tag"></div>
@@ -922,11 +940,9 @@
       </div>
     </aside>
 
-    <!-- AREA PRINCIPALE -->
     <main class="main" id="mainContainer">
       <div class="top">
         <div>
-          <!-- NAVIGAZIONE MENSILE -->
           <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
             <h3>Dashboard Mensile</h3>
             <div class="month-navigator">
@@ -972,7 +988,7 @@
         </div>
       </div>
 
-      <!-- SEZIONE AI FINANCIAL COACH & INPUT VOCALE -->
+      <!-- AI COACH + VOCALE -->
       <section class="card ai-coach-card">
         <div class="section-title" style="margin-bottom: 8px;">
           <div style="display: flex; align-items: center; gap: 10px;">
@@ -984,7 +1000,6 @@
           </button>
         </div>
 
-        <!-- Barra di input + Microfono Vocale -->
         <div style="display: flex; gap: 8px; margin-top: 10px;">
           <input type="text" id="aiUserQuestionInput" placeholder="Chiedi al Coach o detta una spesa (es: 'Ho speso 34 euro per il cibo dei gatti')..." 
                  style="flex: 1; padding: 10px 14px; border-radius: 12px; border: 1px solid rgba(168, 85, 247, 0.3); background: rgba(5, 8, 17, 0.7); color: #fff; font-size: 13px;">
@@ -1000,21 +1015,6 @@
           <span style="color: var(--muted); font-style: italic;">
             Usa il microfono per dettare una spesa al volo (es: "Aggiungi 45 euro di benzina") oppure chiedi un consiglio finanziario.
           </span>
-        </div>
-      </section>
-
-      <!-- SEZIONE Uscite Fisse Ricorrenti / Abbonamenti -->
-      <section id="recurringCard" class="card">
-        <div class="section-title">
-          <h2>🔁 Uscite Fisse & Abbonamenti</h2>
-          <button class="section-toggle" type="button" onclick="toggleCollapse('recurringCard',this)">−</button>
-        </div>
-        <div id="recurringList"></div>
-        <button class="btn primary add" onclick="addRecurringRow()">+ Aggiungi Uscita Fissa</button>
-        <div id="recurringActions" style="margin-top: 12px; display: flex; justify-content: flex-end;">
-          <button class="btn ai-btn" id="importRecurringBtn" style="font-size: 12px; padding: 8px 14px;">
-            <i class="fa-solid fa-file-arrow-down"></i> 📥 Importa fisse nel mese corrente
-          </button>
         </div>
       </section>
 
@@ -1208,10 +1208,9 @@
     return `${selMKey}-01`;
   }
 
-  let ref = null, refVacanze = null, refGemini = null, refRecurring = null;
-  let unsubBudget = null, unsubVacanze = null, unsubRecurring = null;
+  let ref = null, refVacanze = null, refGemini = null;
+  let unsubBudget = null, unsubVacanze = null;
   let state = { income: [], expense: [] };
-  let recurringList = [];
   let saveTimer = null, editing = false, monthlyChart = null, allWeeks = {}, selectedWeekOffset = 0;
   let lastBudgetDoc = {}, lastVacanzeDoc = {};
   let userGeminiApiKey = "";
@@ -1308,6 +1307,53 @@
     }
   }
 
+  // CONTROLLO AUTOMATICO SPESE RICORRENTI AL CAMBIO MESE
+  async function checkAndApplyRecurringExpenses(budgetData, mKey) {
+    if (!auth.currentUser) return;
+    
+    // Controlla se abbiamo già applicato le ricorrenti per questo mese in questo documento
+    if (budgetData.recurringApplied === mKey) return;
+
+    // Cerca nel mese precedente o estrae le ricorrenti salvate nei mesi passati
+    const prevDate = new Date(selectedDate);
+    prevDate.setMonth(prevDate.getMonth() - 1);
+    const prevMKey = getMonthKey(prevDate);
+    
+    try {
+      const prevRef = doc(db, 'users', auth.currentUser.uid, 'budgets', prevMKey);
+      const prevSnap = await getDoc(prevRef);
+      
+      let recurringItems = [];
+      if (prevSnap.exists() && Array.isArray(prevSnap.data().expense)) {
+        // Prende le spese che avevano il flag isRecurring: true nel mese precedente
+        recurringItems = prevSnap.data().expense.filter(x => x.isRecurring === true);
+      }
+
+      if (recurringItems.length > 0) {
+        let currentExpenses = Array.isArray(budgetData.expense) ? budgetData.expense : [];
+        
+        recurringItems.forEach(rec => {
+          const exists = currentExpenses.some(x => (x.name || '').trim().toLowerCase() === rec.name.trim().toLowerCase());
+          if (!exists) {
+            currentExpenses.push({
+              name: rec.name,
+              amount: num(rec.amount),
+              date: `${mKey}-01`,
+              isRecurring: true
+            });
+          }
+        });
+
+        await setDoc(ref, { expense: currentExpenses, recurringApplied: mKey, updatedAt: Date.now() }, { merge: true });
+      } else {
+        // Segna comunque come controllato per evitare loop
+        await setDoc(ref, { recurringApplied: mKey, updatedAt: Date.now() }, { merge: true });
+      }
+    } catch (e) {
+      console.error("Errore verifica ricorrenti automatiche:", e);
+    }
+  }
+
   function subscribeSelectedMonth() {
     if (unsubBudget) unsubBudget();
     if (unsubVacanze) unsubVacanze();
@@ -1320,9 +1366,16 @@
 
     $('syncStatus').textContent = `Caricamento dati ${mKey}...`;
 
-    unsubBudget = onSnapshot(ref, s => {
+    unsubBudget = onSnapshot(ref, async s => {
       if (editing) return;
       const d = s.exists() ? s.data() : {};
+      
+      // Controlla e applica in automatico le ricorrenti del mese se non fatto
+      if (!s.exists() || !d.recurringApplied) {
+        await checkAndApplyRecurringExpenses(d, mKey);
+        return; // l'onSnapshot si riattiverà subito dopo il salvataggio
+      }
+
       lastBudgetDoc = d;
       refreshAmpollaFromDocs();
 
@@ -1416,6 +1469,13 @@
       const date = document.createElement('input');
       date.type = 'date';
       date.value = x.date || defaultDateForSelectedMonth();
+
+      // Pulsante Ricorrente 🔁 (disponibile solo nelle spese)
+      const recBtn = document.createElement('button');
+      recBtn.type = 'button';
+      recBtn.className = `rec-toggle-btn ${x.isRecurring ? 'active' : ''}`;
+      recBtn.innerHTML = '<i class="fa-solid fa-rotate"></i>';
+      recBtn.title = x.isRecurring ? 'Spesa ricorrente attiva (si ripeterà ogni mese)' : 'Attiva spesa ricorrente';
       
       const del = document.createElement('button');
       del.className = 'smallbtn';
@@ -1424,6 +1484,16 @@
       name.oninput = () => { state[type][i].name = name.value; updateTotals(); };
       amount.oninput = () => { state[type][i].amount = amount.value; updateTotals(); };
       date.onchange = () => { state[type][i].date = date.value; drawMonthly(); };
+
+      if (type === 'expense') {
+        recBtn.onclick = () => {
+          triggerHaptic(12);
+          state[type][i].isRecurring = !state[type][i].isRecurring;
+          recBtn.classList.toggle('active', state[type][i].isRecurring);
+          recBtn.title = state[type][i].isRecurring ? 'Spesa ricorrente attiva' : 'Attiva spesa ricorrente';
+          finishEdit();
+        };
+      }
       
       [name, amount, date].forEach(v => v.onblur = finishEdit);
       del.onclick = () => {
@@ -1433,55 +1503,13 @@
         saveNow();
       };
       
-      d.append(name, amount, date, del);
+      d.append(name, amount, date);
+      if (type === 'expense') d.appendChild(recBtn);
+      d.appendChild(del);
       el.appendChild(d);
     });
     updateTotals();
     drawMonthly();
-  }
-
-  function renderRecurring() {
-    const el = $('recurringList');
-    el.innerHTML = '';
-    recurringList.forEach((x, i) => {
-      const d = document.createElement('div');
-      d.className = 'entry';
-      
-      const name = document.createElement('input');
-      name.placeholder = 'Nome (es. Mutuo, Fibra)';
-      name.value = x.name || '';
-      
-      const amount = document.createElement('input');
-      amount.type = 'number';
-      amount.step = '0.01';
-      amount.placeholder = '€';
-      amount.value = x.amount ?? '';
-      
-      const day = document.createElement('input');
-      day.type = 'number';
-      day.min = '1';
-      day.max = '31';
-      day.placeholder = 'Giorno';
-      day.value = x.day || '1';
-      
-      const del = document.createElement('button');
-      del.className = 'smallbtn';
-      del.textContent = '✕';
-      
-      name.oninput = () => { recurringList[i].name = name.value; saveRecurringNow(); };
-      amount.oninput = () => { recurringList[i].amount = amount.value; saveRecurringNow(); };
-      day.oninput = () => { recurringList[i].day = day.value; saveRecurringNow(); };
-      
-      del.onclick = () => {
-        triggerHaptic(15);
-        recurringList.splice(i, 1);
-        renderRecurring();
-        saveRecurringNow();
-      };
-      
-      d.append(name, amount, day, del);
-      el.appendChild(d);
-    });
   }
 
   function finishEdit() {
@@ -1505,16 +1533,9 @@
 
   window.addRow = type => {
     triggerHaptic(15);
-    state[type].push({ name: '', amount: '', date: defaultDateForSelectedMonth() });
+    state[type].push({ name: '', amount: '', date: defaultDateForSelectedMonth(), isRecurring: false });
     render(type);
     setTimeout(() => $(type === 'income' ? 'incomeList' : 'expenseList').lastElementChild?.querySelector('input')?.focus(), 50);
-  };
-
-  window.addRecurringRow = () => {
-    triggerHaptic(15);
-    recurringList.push({ name: '', amount: '', day: '1' });
-    renderRecurring();
-    saveRecurringNow();
   };
 
   window.toggleCollapse = (id, btn) => {
@@ -1533,42 +1554,6 @@
       $('syncStatus').textContent = 'Errore di sincronizzazione: ' + e.message;
     }
   }
-
-  async function saveRecurringNow() {
-    if (!refRecurring || !auth.currentUser) return;
-    try {
-      await setDoc(refRecurring, { recurring: recurringList, updatedAt: Date.now() }, { merge: true });
-    } catch (e) {
-      console.error("Errore salvataggio ricorrenti:", e);
-    }
-  }
-
-  // Importa le uscite fisse nel mese corrente
-  $('importRecurringBtn').onclick = async () => {
-    if (!recurringList.length) return alert("Nessuna spesa fissa configurata.");
-    triggerHaptic(20);
-
-    const selMKey = getMonthKey(selectedDate);
-    recurringList.forEach(rec => {
-      if (!rec.name || !num(rec.amount)) return;
-      const dayStr = String(rec.day || 1).padStart(2, '0');
-      const dateStr = `${selMKey}-${dayStr}`;
-
-      // Evita duplicati identici nel mese
-      const exists = state.expense.some(x => (x.name || '').trim().toLowerCase() === rec.name.trim().toLowerCase());
-      if (!exists) {
-        state.expense.push({
-          name: rec.name,
-          amount: num(rec.amount),
-          date: dateStr
-        });
-      }
-    });
-
-    render('expense');
-    await saveNow();
-    alert(`Importate ${recurringList.length} uscite fisse nel mese di ${selMKey}!`);
-  };
 
   function drawMonthly() {
     const y = selectedDate.getFullYear();
@@ -1763,7 +1748,7 @@
     const saved = currentData.saved + amount;
     const target = currentData.target || 120;
     
-    state.expense.push({ name: 'Versamento Salvadanaio Vacanze', amount: amount, date: defaultDateForSelectedMonth() });
+    state.expense.push({ name: 'Versamento Salvadanaio Vacanze', amount: amount, date: defaultDateForSelectedMonth(), isRecurring: false });
     await setDoc(ref, { vacanzaAccantonato: saved, vacanzaTarget: target, expense: state.expense, updatedAt: Date.now() }, { merge: true });
 
     if (refVacanze) {
@@ -1825,20 +1810,6 @@
       }
     });
 
-    // Riferimento Uscite Fisse globali dell'utente
-    refRecurring = doc(db, 'users', user.uid, 'settings', 'recurring');
-    onSnapshot(refRecurring, s => {
-      if (s.exists() && Array.isArray(s.data().recurring)) {
-        recurringList = s.data().recurring;
-      } else {
-        recurringList = [
-          { name: 'Affitto / Mutuo', amount: 650, day: 1 },
-          { name: 'Fibra Internet', amount: 26.90, day: 15 }
-        ];
-      }
-      renderRecurring();
-    });
-
     updateMonthHeader();
     subscribeSelectedMonth();
   });
@@ -1862,9 +1833,7 @@
     }
   };
 
-  // =========================================================================
-  // AI COACH + SPEECH-TO-TEXT VOCALE INTEGRATO
-  // =========================================================================
+  // AI COACH + VOCALE
   async function queryAiCoach(customQuestion = null, isVoiceExpense = false) {
     if (!userGeminiApiKey) {
       geminiModal.classList.add('open');
@@ -1911,14 +1880,14 @@ Restituisci la risposta ESATTAMENTE in questo formato JSON valido, senza altri c
 Domanda dell'utente:
 "${customQuestion}"
 
-Rispondi in modo diretto, concreto e senza convenevoli.`;
+Rispondi in modo diretto, concreto e senza convenevoli. Basa la risposta sui numeri reali forniti, indicando cifre e percentuali d'impatto.`;
     } else {
       promptText = `${baseContext}
 
-Fornisci un'analisi generale del mese in 3 punti sintetici e diretti:
-1. **Stato Finanziario**: bilancio entrate/uscite.
-2. **Consiglio Pratico**: ottimizzazione costi.
-3. **Obiettivo Vacanze**: raccomandazione accantonamento.`;
+Fornisci un'analisi generale del mese in 3 punti sintetici e diretti (stile fintech, senza convenevoli):
+1. **Stato Finanziario**: giudizio rapido sul bilancio entrate/uscite del mese.
+2. **Consiglio Pratico**: una mossa pratica per ottimizzare i costi o gestire la liquidità residua.
+3. **Obiettivo Vacanze**: raccomandazione sull'accantonamento per il salvadanaio vacanze.`;
     }
 
     const modelsToTry = ['gemini-3.6-flash', 'gemini-2.5-flash'];
@@ -1944,7 +1913,6 @@ Fornisci un'analisi generale del mese in 3 punti sintetici e diretti:
       return;
     }
 
-    // Se era una spesa vocale, interpreta il JSON restituito da Gemini
     if (isVoiceExpense) {
       try {
         const cleanJson = reply.replace(/```json/g, '').replace(/```/g, '').trim();
@@ -1953,7 +1921,8 @@ Fornisci un'analisi generale del mese in 3 punti sintetici e diretti:
           state.expense.push({
             name: parsed.name,
             amount: num(parsed.amount),
-            date: defaultDateForSelectedMonth()
+            date: defaultDateForSelectedMonth(),
+            isRecurring: false
           });
           render('expense');
           await saveNow();
@@ -1991,7 +1960,6 @@ Fornisci un'analisi generale del mese in 3 punti sintetici e diretti:
     if (e.key === 'Enter') handleSendUserQuestion();
   });
 
-  // GESTIONE MICROFONO (WEB SPEECH API)
   const micBtn = $('micVoiceBtn');
   const speechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
@@ -2016,7 +1984,6 @@ Fornisci un'analisi generale del mese in 3 punti sintetici e diretti:
       micBtn.classList.remove('listening');
       const speechText = event.results[0][0].transcript;
       $('aiUserQuestionInput').value = speechText;
-      // Invia direttamente come spesa vocale interpretata da AI
       queryAiCoach(speechText, true);
     };
 
@@ -2032,7 +1999,7 @@ Fornisci un'analisi generale del mese in 3 punti sintetici e diretti:
     micBtn.onclick = () => alert("Il tuo browser non supporta le API di riconoscimento vocale native.");
   }
 
-  // Calcolatrice Apple
+  // Calcolatrice
   const calcModal = $('calcModal');
   $('calcToggleBtn').onclick = () => { triggerHaptic(12); calcModal.classList.add('open'); };
   $('closeCalcBtn').onclick = () => calcModal.classList.remove('open');
