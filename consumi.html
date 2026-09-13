@@ -175,7 +175,6 @@
 
     .main { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
     
-    /* Top Bar con Selettore Bimestre */
     .top {
       padding: 14px 22px;
       display: flex;
@@ -194,7 +193,6 @@
       flex-wrap: wrap;
     }
 
-    /* Selettore Bimestre in Alto */
     .bimonth-selector-bar {
       display: flex;
       align-items: center;
@@ -303,7 +301,6 @@
     }
     .section-title h2 { font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
 
-    /* Area Upload e Dettagli */
     .bill-section-grid {
       display: grid;
       grid-template-columns: 1fr 1.15fr;
@@ -366,7 +363,6 @@
       font-family: 'JetBrains Mono', monospace;
     }
 
-    /* Griglia Prese */
     .plugs-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -640,7 +636,7 @@
       <div class="top">
         <div>
           <h3>⚡ Monitoraggio Consumi & Prese Smart</h3>
-          <div class="muted">Quota / 2 • Sincronizzazione automatica "Bolletta Luce" in Home</div>
+          <div class="muted">Gestione carichi Tuya e calcolo automatico quota / 2</div>
         </div>
         
         <!-- SELETTORE BIMESTRE ACCANTO AL PROFILO -->
@@ -717,6 +713,11 @@
             </div>
 
             <div class="bill-result-row">
+              <span style="color: var(--muted);">Competenza Spesa:</span>
+              <span id="billPaymentNotice" style="font-size: 12px; font-weight: 700; color: #f59e0b;">Addebito a Luglio 2026 (Già saldata)</span>
+            </div>
+
+            <div class="bill-result-row">
               <span style="color: var(--muted);">Spesa Totale (senza Canone RAI):</span>
               <span class="bill-val" id="billNetNoRaiText">€ --,--</span>
             </div>
@@ -737,15 +738,15 @@
             </div>
 
             <div style="display: flex; gap: 8px; margin-top: 6px; flex-wrap: wrap;">
-              <input type="number" step="0.001" min="0.05" id="manualRateOverrideInput" placeholder="€/kWh" style="width: 100px; padding: 8px 10px; border-radius: 12px; border: 1px solid var(--border); background: rgba(5,8,17,0.6); color: white; font-size: 12px;">
+              <input type="number" step="0.001" min="0.05" id="manualRateOverrideInput" placeholder="€/kWh" style="width: 95px; padding: 8px 10px; border-radius: 12px; border: 1px solid var(--border); background: rgba(5,8,17,0.6); color: white; font-size: 12px;">
               <button class="btn primary" id="saveAndArchiveBillBtn" style="font-size: 12px; padding: 8px 14px; flex: 1;">
-                <i class="fa-solid fa-cloud-arrow-up"></i> Salva in Spese & Cloud
+                <i class="fa-solid fa-cloud-arrow-up"></i> Salva su Cloud
               </button>
-              <button class="btn danger" id="deleteCurrentBillBtn" style="font-size: 12px; padding: 8px 14px;" disabled>
+              <button class="btn danger" id="deleteCurrentBillBtn" style="font-size: 12px; padding: 8px 12px;" disabled>
                 <i class="fa-regular fa-trash-can"></i> Elimina
               </button>
-              <button class="btn" id="applyCurrentRateBtn" style="font-size: 12px; padding: 8px 14px;" disabled title="Imposta questa tariffa per i calcoli delle prese smart">
-                Usa Tariffa
+              <button class="btn" id="removeSeptExpenseBtn" style="font-size: 12px; padding: 8px 12px; background: rgba(245, 158, 11, 0.15); border-color: rgba(245, 158, 11, 0.3); color: #f59e0b;" title="Se presente per errore, rimuove la voce Bolletta Luce dalle spese di Settembre">
+                Rimuovi da Spese Settembre
               </button>
             </div>
           </div>
@@ -798,25 +799,23 @@
 
   let currentUser = null;
   let energyDocRef = null;
-  let budgetDocRef = null;
   let billsCollectionRef = null;
 
-  const monthKey = () => new Date().toISOString().slice(0, 7);
+  const currentActiveMonthKey = "2026-09"; // Mese corrente di gestione budget
 
-  // Lista Bimestri
+  // Definizione bimestri e abbinamento al relativo mese di pagamento
   const BIMESTRI = [
-    { key: '2025-09_10', label: 'Settembre – Ottobre 2025' },
-    { key: '2025-11_12', label: 'Novembre – Dicembre 2025' },
-    { key: '2026-01_02', label: 'Gennaio – Febbraio 2026' },
-    { key: '2026-03_04', label: 'Marzo – Aprile 2026' },
-    { key: '2026-05_06', label: 'Maggio – Giugno 2026' },
-    { key: '2026-07_08', label: 'Luglio – Agosto 2026' },
-    { key: '2026-09_10', label: 'Settembre – Ottobre 2026' },
-    { key: '2026-11_12', label: 'Novembre – Dicembre 2026' },
-    { key: '2027-01_02', label: 'Gennaio – Febbraio 2027' }
+    { key: '2025-09_10', label: 'Settembre – Ottobre 2025', payMonth: '2025-11', payLabel: 'Novembre 2025' },
+    { key: '2025-11_12', label: 'Novembre – Dicembre 2025', payMonth: '2026-01', payLabel: 'Gennaio 2026' },
+    { key: '2026-01_02', label: 'Gennaio – Febbraio 2026', payMonth: '2026-03', payLabel: 'Marzo 2026' },
+    { key: '2026-03_04', label: 'Marzo – Aprile 2026', payMonth: '2026-05', payLabel: 'Maggio 2026' },
+    { key: '2026-05_06', label: 'Maggio – Giugno 2026', payMonth: '2026-07', payLabel: 'Luglio 2026' },
+    { key: '2026-07_08', label: 'Luglio – Agosto 2026', payMonth: '2026-09', payLabel: 'Settembre 2026' },
+    { key: '2026-09_10', label: 'Settembre – Ottobre 2026', payMonth: '2026-11', payLabel: 'Novembre 2026' },
+    { key: '2026-11_12', label: 'Novembre – Dicembre 2026', payMonth: '2027-01', payLabel: 'Gennaio 2027' }
   ];
 
-  let currentBimIndex = 4; // Maggio – Giugno 2026
+  let currentBimIndex = 4; // Maggio – Giugno 2026 di default
 
   let tuyaSettings = {
     endpoint: '',
@@ -874,7 +873,6 @@
     $('topUserName').textContent = name;
 
     energyDocRef = doc(db, 'users', user.uid, 'consumi', 'settings');
-    budgetDocRef = doc(db, 'users', user.uid, 'budgets', monthKey());
     billsCollectionRef = collection(db, 'users', user.uid, 'bollette');
 
     onSnapshot(energyDocRef, async snap => {
@@ -923,7 +921,7 @@
     }
   }
 
-  // NAVIGAZIONE BIMESTRE
+  // NAVIGAZIONE BIMESTRE IN ALTO
   $('topPrevBim').onclick = () => {
     if (currentBimIndex > 0) {
       currentBimIndex--;
@@ -950,6 +948,18 @@
     $('currentBimestreTitle').textContent = currentBim.label;
     $('billParseStatus').textContent = "";
 
+    // Mostra se è una bolletta passata (es. Luglio) o quella corrente di Settembre
+    if (currentBim.payMonth === currentActiveMonthKey) {
+      $('billPaymentNotice').textContent = `In pagamento a ${currentBim.payLabel} • Verrà inserita nelle Spese correnti`;
+      $('billPaymentNotice').style.color = '#38bdf8';
+    } else if (currentBim.payMonth < currentActiveMonthKey) {
+      $('billPaymentNotice').textContent = `Addebito a ${currentBim.payLabel} • Già pagata (non entra in Settembre)`;
+      $('billPaymentNotice').style.color = '#f59e0b';
+    } else {
+      $('billPaymentNotice').textContent = `Addebito futuro a ${currentBim.payLabel}`;
+      $('billPaymentNotice').style.color = 'var(--muted)';
+    }
+
     if (!currentUser) return;
 
     const billRef = doc(db, 'users', currentUser.uid, 'bollette', currentBim.key);
@@ -970,7 +980,6 @@
       $('manualRateOverrideInput').value = (currentBillData.costoLordo || 0).toFixed(3);
 
       $('deleteCurrentBillBtn').disabled = false;
-      $('applyCurrentRateBtn').disabled = false;
     } else {
       currentBillData = null;
       $('billStatusTag').textContent = "NON CARICATA";
@@ -986,51 +995,42 @@
       $('manualRateOverrideInput').value = "";
 
       $('deleteCurrentBillBtn').disabled = true;
-      $('applyCurrentRateBtn').disabled = true;
     }
   }
 
-  // ELIMINA BOLLETTA (E RIMUOVE LA VOCE DA SPESE IN HOME)
+  // PULSANTE PER RIMUOVERE "BOLLETTA LUCE" DALLE SPESE DI SETTEMBRE
+  $('removeSeptExpenseBtn').onclick = async () => {
+    if (!currentUser) return;
+    try {
+      const septBudgetRef = doc(db, 'users', currentUser.uid, 'budgets', currentActiveMonthKey);
+      const bSnap = await getDoc(septBudgetRef);
+      if (bSnap.exists() && Array.isArray(bSnap.data().expense)) {
+        const filtered = bSnap.data().expense.filter(x => (x.name || '').trim().toLowerCase() !== 'bolletta luce');
+        await setDoc(septBudgetRef, { expense: filtered, updatedAt: Date.now() }, { merge: true });
+        alert("Voce 'Bolletta Luce' rimossa con successo dalle spese di Settembre 2026!");
+      } else {
+        alert("Nessuna voce 'Bolletta Luce' trovata nelle spese di Settembre 2026.");
+      }
+    } catch (err) {
+      alert("Errore: " + err.message);
+    }
+  };
+
+  // ELIMINA BOLLETTA
   $('deleteCurrentBillBtn').onclick = async () => {
     if (!currentUser) return;
     const currentBim = BIMESTRI[currentBimIndex];
 
-    const conferma = confirm(`Vuoi cancellare definitivamente la bolletta del bimestre "${currentBim.label}"?\nVerrà rimossa anche la voce "Bolletta Luce" dalle spese della Home.`);
+    const conferma = confirm(`Vuoi cancellare la bolletta del bimestre "${currentBim.label}"?`);
     if (!conferma) return;
 
     try {
       await deleteDoc(doc(db, 'users', currentUser.uid, 'bollette', currentBim.key));
-
-      // Rimuove la voce "Bolletta Luce" dal budget mensile
-      if (budgetDocRef) {
-        const bSnap = await getDoc(budgetDocRef);
-        if (bSnap.exists() && Array.isArray(bSnap.data().expense)) {
-          const filtered = bSnap.data().expense.filter(x => (x.name || '').trim().toLowerCase() !== 'bolletta luce');
-          await setDoc(budgetDocRef, { expense: filtered, updatedAt: Date.now() }, { merge: true });
-        }
-      }
-
-      alert(`Bolletta di "${currentBim.label}" eliminata con successo.`);
+      alert(`Bolletta di "${currentBim.label}" eliminata.`);
       loadSelectedBimestreBill();
     } catch (err) {
       alert("Errore eliminazione: " + err.message);
     }
-  };
-
-  // APPLICA QUESTA TARIFFA
-  $('applyCurrentRateBtn').onclick = async () => {
-    if (!currentBillData || !currentUser) return;
-    const rate = currentBillData.costoLordo;
-
-    tuyaSettings.kwhRate = rate;
-    await setDoc(energyDocRef, { kwhRate: rate, updatedAt: Date.now() }, { merge: true });
-    if (budgetDocRef) {
-      await setDoc(budgetDocRef, { kwhRate: rate, updatedAt: Date.now() }, { merge: true });
-    }
-
-    updateRateUI();
-    renderPlugs();
-    alert(`Tariffa di ${rate.toFixed(3)} €/kWh impostata come attiva per i calcoli delle prese!`);
   };
 
   // PDF PARSER
@@ -1154,7 +1154,7 @@
   }
 
   // =========================================================================
-  // SALVATAGGIO IN ARCHIVIO E INSERIMENTO AUTOMATICO IN "SPESE"
+  // SALVATAGGIO CLOUD: INSERISCE IN SPESE SOLO SE APPARTIENE AL MESE CORRENTE!
   // =========================================================================
   $('saveAndArchiveBillBtn').onclick = async () => {
     if (!currentUser || !billsCollectionRef) return alert("Accedi prima con Google.");
@@ -1165,6 +1165,7 @@
 
     const docData = {
       periodo: currentBim.label,
+      payMonth: currentBim.payMonth,
       spesaTotaleLorda: currentBillData?.spesaTotaleLorda || 0,
       canoneRai: currentBillData?.canoneRai || 18.00,
       spesaSenzaRai: currentBillData?.spesaSenzaRai || (quotaPersonale * 2),
@@ -1175,22 +1176,22 @@
     };
 
     try {
-      // 1. Salva la bolletta nell'archivio del bimestre
+      // 1. Archivia la bolletta nel suo documento bimestrale
       await setDoc(doc(db, 'users', currentUser.uid, 'bollette', currentBim.key), docData);
 
-      // 2. Imposta la tariffa kwh attiva
+      // 2. Aggiorna la tariffa kWh per le prese smart
       tuyaSettings.kwhRate = finalRate;
       await setDoc(energyDocRef, { kwhRate: finalRate, updatedAt: Date.now() }, { merge: true });
 
-      // 3. INSERIMENTO/AGGIORNAMENTO AUTOMATICO NELLE SPESE DELLA HOME
-      if (budgetDocRef) {
-        const bSnap = await getDoc(budgetDocRef);
+      // 3. LOGICA DI INSERIMENTO SPESE: Solo se il mese di addebito coincide con il mese corrente!
+      if (currentBim.payMonth === currentActiveMonthKey) {
+        const activeBudgetRef = doc(db, 'users', currentUser.uid, 'budgets', currentActiveMonthKey);
+        const bSnap = await getDoc(activeBudgetRef);
         let existingExpenses = [];
         if (bSnap.exists() && Array.isArray(bSnap.data().expense)) {
           existingExpenses = bSnap.data().expense;
         }
 
-        // Rimuove eventuale voce "Bolletta Luce" precedente e inserisce la nuova quota aggiornata
         const filteredExpenses = existingExpenses.filter(x => (x.name || '').trim().toLowerCase() !== 'bolletta luce');
         filteredExpenses.push({
           name: 'Bolletta Luce',
@@ -1198,23 +1199,27 @@
           date: new Date().toISOString().slice(0, 10)
         });
 
-        await setDoc(budgetDocRef, {
+        await setDoc(activeBudgetRef, {
           kwhRate: finalRate,
           expense: filteredExpenses,
           updatedAt: Date.now()
         }, { merge: true });
+
+        alert(`Bolletta archiviata con successo!\n• Bimestre di competenza: ${currentBim.label}\n• Addebito Settembre 2026: Quota di € ${quotaPersonale.toFixed(2)} inserita in Spese della Home!\n• Nuova tariffa: ${finalRate.toFixed(3)} €/kWh`);
+      } else {
+        // Se è una bolletta passata (come Maggio-Giugno pagata a Luglio), NON tocca le spese di Settembre!
+        alert(`Bolletta "${currentBim.label}" archiviata nello storico con successo!\n• Nota: La spesa appartiene a ${currentBim.payLabel} (già saldata), quindi NON è stata inserita nelle spese di Settembre.\n• Tariffa attiva aggiornata: ${finalRate.toFixed(3)} €/kWh.`);
       }
 
       updateRateUI();
       renderPlugs();
       loadSelectedBimestreBill();
-      alert(`Bolletta archiviata con successo!\n• Quota personale (/ 2): € ${quotaPersonale.toFixed(2)}\n• Aggiunta in automatico nella Home sotto la voce "Bolletta Luce"!\n• Tariffa kWh aggiornata: ${finalRate.toFixed(3)} €/kWh`);
     } catch (err) {
       alert("Errore salvataggio bolletta: " + err.message);
     }
   };
 
-  // PRESE
+  // PRESE SMART
   async function syncPlugsToFirestore() {
     if (!currentUser || !energyDocRef) return;
     await setDoc(energyDocRef, { plugs: plugs, updatedAt: Date.now() }, { merge: true });
