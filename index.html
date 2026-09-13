@@ -2,8 +2,16 @@
 <html lang="it">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>AI-BUDGET</title>
+
+  <!-- Meta Tag PWA & Mobile Web App iOS / Android -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="AI-BUDGET">
+  <meta name="theme-color" content="#0b0f19">
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
@@ -27,7 +35,7 @@
       --radius: 24px;
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
     body {
       background-color: var(--bg);
@@ -40,6 +48,7 @@
       font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
       min-height: 100vh;
       -webkit-font-smoothing: antialiased;
+      overscroll-behavior-y: contain;
     }
 
     button, a, input { font: inherit; outline: none; }
@@ -80,12 +89,14 @@
       align-items: center;
       justify-content: center;
       gap: 8px;
+      user-select: none;
     }
     .btn:hover {
       background: rgba(255, 255, 255, 0.08);
       border-color: rgba(255, 255, 255, 0.18);
       transform: translateY(-1px);
     }
+    .btn:active { transform: scale(0.97); }
     .btn.primary {
       background: var(--primary-grad);
       color: #fff;
@@ -172,8 +183,24 @@
     .menu { display: flex; flex-direction: column; gap: 8px; }
     .nav { width: 100%; justify-content: flex-start; padding: 12px 16px; border-radius: 14px; }
 
-    /* Top Nav e Utente */
-    .main { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+    /* Contenitore Principale con Transizione Swipe Fluida */
+    .main { 
+      display: flex; 
+      flex-direction: column; 
+      gap: 20px; 
+      min-width: 0; 
+      transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.22s ease;
+      will-change: transform, opacity;
+    }
+    .main.swipe-left {
+      transform: translateX(-35px);
+      opacity: 0.3;
+    }
+    .main.swipe-right {
+      transform: translateX(35px);
+      opacity: 0.3;
+    }
+
     .top {
       padding: 16px 24px;
       display: flex;
@@ -196,8 +223,8 @@
       padding: 3px 8px;
     }
     .month-btn {
-      width: 26px;
-      height: 26px;
+      width: 28px;
+      height: 28px;
       border-radius: 50%;
       border: 1px solid var(--border);
       background: rgba(255, 255, 255, 0.06);
@@ -216,8 +243,8 @@
       background: rgba(56, 189, 248, 0.25);
       border-color: #38bdf8;
       color: #38bdf8;
-      transform: scale(1.05);
     }
+    .month-btn:active { transform: scale(0.9); }
     #currentMonthDisplay {
       font-size: 13px;
       font-weight: 700;
@@ -225,13 +252,11 @@
       padding: 0 6px;
       min-width: 128px;
       text-align: center;
-      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
       letter-spacing: 0.2px;
       cursor: pointer;
+      user-select: none;
     }
-    #currentMonthDisplay:hover {
-      text-decoration: underline;
-    }
+    #currentMonthDisplay:hover { text-decoration: underline; }
 
     .top-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 
@@ -284,7 +309,7 @@
     }
     .logout-btn-top:hover { color: var(--accent-red); }
 
-    /* Modali (Calcolatrice & Configurazione AI) */
+    /* Modali */
     .calc-modal {
       position: fixed;
       inset: 0;
@@ -378,7 +403,7 @@
     .positive { color: var(--accent-green); }
     .negative { color: var(--accent-red); }
 
-    /* AI Coach Card Stile Fintech */
+    /* AI Coach Card */
     .ai-coach-card {
       border: 1px solid rgba(168, 85, 247, 0.3);
       background: linear-gradient(135deg, rgba(168, 85, 247, 0.06) 0%, rgba(56, 189, 248, 0.04) 100%), rgba(17, 24, 39, 0.85);
@@ -512,7 +537,7 @@
     .weekamount { font-weight: 700; font-family: 'JetBrains Mono', monospace; }
     .chartwrap { height: 260px; margin-top: 14px; }
 
-    /* Griglia Metà e Metà: Consumi Live + Ampolla */
+    /* Griglia Metà e Metà */
     .grid-halves {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -707,21 +732,97 @@
 
     .status { font-size: 12px; color: var(--muted); text-align: right; padding: 4px 10px; }
 
+    /* Indicatore Swipe Toast Mobile */
+    .swipe-indicator {
+      position: fixed;
+      top: 18px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-60px);
+      background: rgba(13, 20, 36, 0.92);
+      border: 1px solid #38bdf8;
+      color: #fff;
+      padding: 6px 14px;
+      border-radius: 100px;
+      font-size: 12px;
+      font-weight: 700;
+      z-index: 101;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s;
+      opacity: 0;
+      pointer-events: none;
+    }
+    .swipe-indicator.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    /* Bottom Nav Mobile Touch Bar */
+    .mobile-bottom-bar {
+      display: none;
+    }
+
     @media (max-width: 980px) {
       .grid-halves { grid-template-columns: 1fr; }
     }
+
+    /* Ottimizzazioni Responsive Smartphone */
     @media (max-width: 860px) {
-      .shell { grid-template-columns: 1fr; padding: 12px; }
-      .side { position: relative; top: 0; }
+      .shell { 
+        grid-template-columns: 1fr; 
+        padding: 10px 10px 85px 10px; /* Spazio per la bottom bar */
+      }
+      .side { display: none; } /* Su mobile usiamo la bottom bar */
       .summary, .grid { grid-template-columns: 1fr; }
       .entry { grid-template-columns: 1fr 1fr; }
       .ampolla-card { flex-direction: column; text-align: center; }
       .ampolla-actions { justify-content: center; }
-      .top { flex-direction: column; align-items: flex-start; }
+      .top { flex-direction: column; align-items: stretch; gap: 12px; }
+      .top-actions { justify-content: space-between; }
+
+      /* Visualizzazione Barra Inferiore Smartphone */
+      .mobile-bottom-bar {
+        display: flex;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 64px;
+        background: rgba(11, 15, 25, 0.88);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-top: 1px solid var(--border);
+        justify-content: space-around;
+        align-items: center;
+        z-index: 95;
+        padding-bottom: env(safe-area-inset-bottom, 0);
+      }
+      .mobile-tab-btn {
+        background: none;
+        border: none;
+        color: var(--muted);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 3px;
+        font-size: 10px;
+        font-weight: 700;
+        cursor: pointer;
+        padding: 6px;
+      }
+      .mobile-tab-btn i { font-size: 16px; }
+      .mobile-tab-btn.active { color: #38bdf8; }
     }
   </style>
 </head>
 <body>
+
+<!-- Toast Swipe Mese Mobile -->
+<div id="swipeToast" class="swipe-indicator">
+  <i class="fa-solid fa-arrows-left-right"></i> <span id="swipeToastText">Mese</span>
+</div>
 
 <!-- Login Overlay Iniziale -->
 <div id="login" class="login">
@@ -733,7 +834,7 @@
   </div>
 </div>
 
-<!-- Modal Configurazione Gemini API Key (Privata su Firebase) -->
+<!-- Modal Configurazione Gemini API Key -->
 <div id="geminiModal" class="calc-modal">
   <div class="calc-popup-content" style="width: min(420px, 95%);">
     <div class="calc-popup-header">
@@ -741,7 +842,7 @@
       <button class="btn" id="closeGeminiModalBtn" style="padding: 4px 8px; border-radius: 8px;"><i class="fa-solid fa-xmark"></i></button>
     </div>
     <p style="font-size: 12px; color: var(--muted); margin-bottom: 14px; line-height: 1.5;">
-      La chiave è gratuita su <a href="https://aistudio.google.com/" target="_blank" style="color: #38bdf8; text-decoration: underline;">Google AI Studio</a>. Viene salvata in modo sicuro nel tuo database Firebase personale e non sarà mai pubblica.
+      La chiave è gratuita su <a href="https://aistudio.google.com/" target="_blank" style="color: #38bdf8; text-decoration: underline;">Google AI Studio</a>. Viene salvata nel tuo profilo Firebase privato senza comparire su GitHub.
     </p>
     <div style="margin-bottom: 14px;">
       <label style="font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; display: block; margin-bottom: 6px;">Gemini API Key</label>
@@ -792,6 +893,7 @@
 
 <div id="app" class="app">
   <div class="shell">
+    <!-- SIDEBAR DESKTOP -->
     <aside class="side">
       <div class="side-brand">💰 AI-BUDGET</div>
       <div id="userInfo" class="user-tag"></div>
@@ -806,10 +908,11 @@
       </div>
     </aside>
 
-    <main class="main">
+    <!-- AREA PRINCIPALE (CON TOUCH SWIPE) -->
+    <main class="main" id="mainContainer">
       <div class="top">
         <div>
-          <!-- NAVIGAZIONE MENSILE ACCANTO A DASHBOARD MENSILE -->
+          <!-- NAVIGAZIONE MENSILE -->
           <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
             <h3>Dashboard Mensile</h3>
             <div class="month-navigator">
@@ -818,7 +921,7 @@
               <button type="button" id="monthNextBtn" class="month-btn" title="Mese successivo">›</button>
             </div>
           </div>
-          <div class="muted" id="currentMonthSubtext">Gestione flussi di cassa e risparmi</div>
+          <div class="muted" id="currentMonthSubtext">Gestione flussi di cassa e risparmi (Swipe con il dito per cambiare mese)</div>
         </div>
 
         <div class="top-actions">
@@ -857,7 +960,7 @@
         </div>
       </div>
 
-      <!-- SEZIONE AI FINANCIAL COACH CON CHAT & DOMANDE LIBERE -->
+      <!-- SEZIONE AI FINANCIAL COACH -->
       <section class="card ai-coach-card">
         <div class="section-title" style="margin-bottom: 8px;">
           <div style="display: flex; align-items: center; gap: 10px;">
@@ -869,9 +972,8 @@
           </button>
         </div>
 
-        <!-- Barra di input per domande libere all'AI -->
         <div style="display: flex; gap: 8px; margin-top: 10px;">
-          <input type="text" id="aiUserQuestionInput" placeholder="Fai una domanda al Coach (es: Posso permettermi una spesa extra di 150 €?)..." 
+          <input type="text" id="aiUserQuestionInput" placeholder="Fai una domanda al Coach (es: Posso spendere 150 € per un weekend?)..." 
                  style="flex: 1; padding: 10px 14px; border-radius: 12px; border: 1px solid rgba(168, 85, 247, 0.3); background: rgba(5, 8, 17, 0.7); color: #fff; font-size: 13px;">
           <button id="sendAiQuestionBtn" class="btn primary" style="padding: 10px 16px; font-size: 13px;">
             <i class="fa-solid fa-paper-plane"></i> Chiedi
@@ -933,10 +1035,8 @@
         </div>
       </section>
 
-      <!-- SEZIONE METÀ E METÀ: CONSUMI LIVE (SINISTRA) & AMPOLLA (DESTRA) -->
+      <!-- SEZIONE METÀ E METÀ -->
       <div class="grid-halves">
-        
-        <!-- PARTE SINISTRA: Consumi Live Presa Smart Tuya -->
         <section class="card energy-live-card">
           <div class="section-title" style="margin-bottom: 4px;">
             <h2>⚡ Consumi Live • Presa Clima</h2>
@@ -977,7 +1077,6 @@
           </div>
         </section>
 
-        <!-- PARTE DESTRA: Ampolla Salvadanaio Vacanze -->
         <section class="card ampolla-card">
           <div class="ampolla-container">
             <div class="ampolla-flask">
@@ -1001,12 +1100,35 @@
             </div>
           </div>
         </section>
-
       </div>
 
       <div id="syncStatus" class="status">In attesa di autenticazione...</div>
     </main>
   </div>
+
+  <!-- BARRA INFERIORE SMARTPHONE (MOBILE BOTTOM BAR) -->
+  <nav class="mobile-bottom-bar">
+    <button class="mobile-tab-btn active" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">
+      <i class="fa-solid fa-house"></i>
+      <span>Home</span>
+    </button>
+    <button class="mobile-tab-btn" onclick="location.href='consumi.html'">
+      <i class="fa-solid fa-bolt"></i>
+      <span>Consumi</span>
+    </button>
+    <button class="mobile-tab-btn" onclick="location.href='vacanze.html'">
+      <i class="fa-solid fa-umbrella-beach"></i>
+      <span>Vacanze</span>
+    </button>
+    <button class="mobile-tab-btn" onclick="location.href='spesa-settimanale.html'">
+      <i class="fa-solid fa-basket-shopping"></i>
+      <span>Spesa</span>
+    </button>
+    <button class="mobile-tab-btn" onclick="$('calcToggleBtn').click()">
+      <i class="fa-solid fa-calculator"></i>
+      <span>Calcola</span>
+    </button>
+  </nav>
 </div>
 
 <script type="module">
@@ -1029,6 +1151,13 @@
   const db = getFirestore(app);
   const provider = new GoogleAuthProvider();
   provider.setCustomParameters({ prompt: 'select_account' });
+
+  // FUNZIONE HAPTIC FEEDBACK (VIBRAZIONE SMARTPHONE)
+  function triggerHaptic(ms = 18) {
+    if ('vibrate' in navigator) {
+      try { navigator.vibrate(ms); } catch (e) {}
+    }
+  }
 
   // GESTIONE DINAMICA DEL MESE SELEZIONATO
   let selectedDate = new Date();
@@ -1062,6 +1191,13 @@
 
   function num(v) { return Number(String(v ?? '').replace(',', '.')) || 0; }
 
+  function showToast(text) {
+    const t = $('swipeToast');
+    $('swipeToastText').textContent = text;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 1200);
+  }
+
   function updateMonthHeader() {
     const monthNames = [
       'Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno',
@@ -1085,18 +1221,74 @@
   $('currentMonthDisplay').onclick = () => {
     const now = new Date();
     if (getMonthKey(selectedDate) !== getMonthKey(now)) {
+      triggerHaptic(25);
       selectedDate = new Date();
       selectedDate.setDate(1);
       updateMonthHeader();
       subscribeSelectedMonth();
+      showToast($('currentMonthDisplay').textContent);
     }
   };
 
-  function changeMonth(delta) {
+  function changeMonth(delta, animatedDirection = null) {
     if (editing) finishEdit();
-    selectedDate.setMonth(selectedDate.getMonth() + delta);
-    updateMonthHeader();
-    subscribeSelectedMonth();
+    triggerHaptic(20);
+
+    const container = $('mainContainer');
+    if (animatedDirection) {
+      container.classList.add(animatedDirection === 'left' ? 'swipe-left' : 'swipe-right');
+      setTimeout(() => {
+        selectedDate.setMonth(selectedDate.getMonth() + delta);
+        updateMonthHeader();
+        subscribeSelectedMonth();
+        showToast($('currentMonthDisplay').textContent);
+        container.classList.remove('swipe-left', 'swipe-right');
+      }, 150);
+    } else {
+      selectedDate.setMonth(selectedDate.getMonth() + delta);
+      updateMonthHeader();
+      subscribeSelectedMonth();
+      showToast($('currentMonthDisplay').textContent);
+    }
+  }
+
+  // =========================================================================
+  // GESTIONE TOUCH SWIPE MOBILE (SCORRIMENTO CON IL DITO)
+  // =========================================================================
+  let touchStartX = 0;
+  let touchStartY = 0;
+  let touchEndX = 0;
+  let touchEndY = 0;
+  const minSwipeDistance = 55; // soglia minima pixel
+
+  document.addEventListener('touchstart', e => {
+    // Non attiva swipe se l'utente tocca modali, input o canvas
+    if (e.target.closest('.calc-modal, input, button, select, canvas')) return;
+    touchStartX = e.changedTouches[0].screenX;
+    touchStartY = e.changedTouches[0].screenY;
+  }, { passive: true });
+
+  document.addEventListener('touchend', e => {
+    if (e.target.closest('.calc-modal, input, button, select, canvas')) return;
+    touchEndX = e.changedTouches[0].screenX;
+    touchEndY = e.changedTouches[0].screenY;
+    handleTouchSwipe();
+  }, { passive: true });
+
+  function handleTouchSwipe() {
+    const deltaX = touchEndX - touchStartX;
+    const deltaY = touchEndY - touchStartY;
+
+    // Assicuriamoci che il movimento sia orizzontale e non verticale (scroll della pagina)
+    if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > minSwipeDistance) {
+      if (deltaX < 0) {
+        // Swipe verso Sinistra -> Mese successivo
+        changeMonth(1, 'left');
+      } else {
+        // Swipe verso Destra -> Mese precedente
+        changeMonth(-1, 'right');
+      }
+    }
   }
 
   function subscribeSelectedMonth() {
@@ -1169,6 +1361,7 @@
   }
 
   window.changeWeek = delta => {
+    triggerHaptic(12);
     selectedWeekOffset += delta;
     renderSelectedWeek();
   };
@@ -1217,6 +1410,7 @@
       
       [name, amount, date].forEach(v => v.onblur = finishEdit);
       del.onclick = () => {
+        triggerHaptic(15);
         state[type].splice(i, 1);
         render(type);
         saveNow();
@@ -1249,12 +1443,14 @@
   }
 
   window.addRow = type => {
+    triggerHaptic(15);
     state[type].push({ name: '', amount: '', date: defaultDateForSelectedMonth() });
     render(type);
     setTimeout(() => $(type === 'income' ? 'incomeList' : 'expenseList').lastElementChild?.querySelector('input')?.focus(), 50);
   };
 
   window.toggleCollapse = (id, btn) => {
+    triggerHaptic(10);
     const card = $(id);
     card.classList.toggle('collapsed');
     if (btn) btn.textContent = card.classList.contains('collapsed') ? '+' : '−';
@@ -1495,6 +1691,7 @@
     const amount = num($('depositAmount').value);
     if (!amount || amount <= 0) return;
     
+    triggerHaptic(25);
     const snap = await getDoc(ref), d = snap.exists() ? snap.data() : {};
     const snapV = refVacanze ? await getDoc(refVacanze) : null;
     const dV = snapV && snapV.exists() ? snapV.data() : {};
@@ -1534,6 +1731,7 @@
     if (!auth.currentUser || !ref) return;
     if (!confirm("Sei sicuro di voler azzerare il salvadanaio vacanze per questo mese?")) return;
     
+    triggerHaptic(35);
     const target = 120;
     await setDoc(ref, { vacanzaAccantonato: 0, vacanzaTarget: target, updatedAt: Date.now() }, { merge: true });
     if (refVacanze) {
@@ -1561,8 +1759,6 @@
       $('app').style.display = 'none';
       $('topLogin').style.display = 'inline-flex';
       $('topUserProfile').style.display = 'none';
-      if (unsubBudget) { unsubBudget(); unsubBudget = null; }
-      if (unsubVacanze) { unsubVacanze(); unsubVacanze = null; }
       return;
     }
     $('login').style.display = 'none';
@@ -1591,7 +1787,7 @@
 
   // GESTIONE GEMINI MODAL
   const geminiModal = $('geminiModal');
-  $('openGeminiModalBtn').onclick = () => geminiModal.classList.add('open');
+  $('openGeminiModalBtn').onclick = () => { triggerHaptic(12); geminiModal.classList.add('open'); };
   $('closeGeminiModalBtn').onclick = () => geminiModal.classList.remove('open');
   geminiModal.onclick = e => { if (e.target === geminiModal) geminiModal.classList.remove('open'); };
 
@@ -1610,15 +1806,14 @@
     }
   };
 
-  // =========================================================================
   // INTEGRAZIONE AI FINANCIAL COACH (GEMINI 3.6 FLASH)
-  // =========================================================================
   async function queryAiCoach(customQuestion = null) {
     if (!userGeminiApiKey) {
       geminiModal.classList.add('open');
       return alert("Inserisci prima la tua chiave gratuita di Gemini per attivare il Coach!");
     }
 
+    triggerHaptic(20);
     const out = $('aiCoachText');
     const mName = $('currentMonthDisplay').textContent;
     
@@ -1716,7 +1911,7 @@ Fornisci un'analisi generale del mese in 3 punti sintetici e diretti (stile fint
 
   /* Logica Calcolatrice Apple + Modal Popup */
   const calcModal = $('calcModal');
-  $('calcToggleBtn').onclick = () => calcModal.classList.add('open');
+  $('calcToggleBtn').onclick = () => { triggerHaptic(12); calcModal.classList.add('open'); };
   $('closeCalcBtn').onclick = () => calcModal.classList.remove('open');
   calcModal.onclick = e => { if (e.target === calcModal) calcModal.classList.remove('open'); };
 
@@ -1727,6 +1922,7 @@ Fornisci un'analisi generale del mese in 3 punti sintetici e diretti (stile fint
     if (d) d.textContent = appleCalcCurrent.length > 9 ? Number(appleCalcCurrent).toLocaleString('it-IT', { maximumFractionDigits: 6 }) : appleCalcCurrent;
   }
   window.appleCalcNumber = n => {
+    triggerHaptic(8);
     if (appleCalcCurrent === '0' || appleCalcWaitingForNewNumber) {
       appleCalcCurrent = n;
       appleCalcWaitingForNewNumber = false;
@@ -1734,6 +1930,7 @@ Fornisci un'analisi generale del mese in 3 punti sintetici e diretti (stile fint
     appleCalcUpdateDisplay();
   };
   window.appleCalcDecimal = () => {
+    triggerHaptic(8);
     if (appleCalcWaitingForNewNumber) {
       appleCalcCurrent = '0.';
       appleCalcWaitingForNewNumber = false;
@@ -1741,24 +1938,29 @@ Fornisci un'analisi generale del mese in 3 punti sintetici e diretti (stile fint
     appleCalcUpdateDisplay();
   };
   window.appleCalcClear = () => {
+    triggerHaptic(12);
     appleCalcCurrent = '0'; appleCalcPrevious = null; appleCalcOperatorValue = null; appleCalcWaitingForNewNumber = false;
     appleCalcUpdateDisplay();
   };
   window.appleCalcPlusMinus = () => {
+    triggerHaptic(10);
     if (appleCalcCurrent !== '0') appleCalcCurrent = String(Number(appleCalcCurrent) * -1);
     appleCalcUpdateDisplay();
   };
   window.appleCalcPercent = () => {
+    triggerHaptic(10);
     appleCalcCurrent = String(Number(appleCalcCurrent) / 100);
     appleCalcUpdateDisplay();
   };
   window.appleCalcOperator = op => {
+    triggerHaptic(12);
     if (appleCalcOperatorValue && !appleCalcWaitingForNewNumber) window.appleCalcEquals();
     appleCalcPrevious = Number(appleCalcCurrent);
     appleCalcOperatorValue = op;
     appleCalcWaitingForNewNumber = true;
   };
   window.appleCalcEquals = () => {
+    triggerHaptic(15);
     if (appleCalcPrevious === null || !appleCalcOperatorValue) return;
     const c = Number(appleCalcCurrent);
     let r = 0;
@@ -1781,6 +1983,7 @@ Fornisci un'analisi generale del mese in 3 punti sintetici e diretti (stile fint
   const setWattBtn = $('setWattBtn');
   if (setWattBtn) {
     setWattBtn.onclick = () => {
+      triggerHaptic(12);
       const v = num($('simWattInput').value);
       currentWatts = Math.max(0, v);
       $('liveWattValue').textContent = currentWatts;
