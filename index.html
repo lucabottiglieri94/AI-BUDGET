@@ -7,12 +7,13 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js"></script>
 
   <style>
     :root {
-      --bg: #050811;
-      --card-bg: rgba(13, 20, 36, 0.72);
+      --bg: #0b0f19;
+      --card-bg: rgba(17, 24, 39, 0.75);
       --border: rgba(255, 255, 255, 0.08);
       --border-focus: #6366f1;
       --text: #f8fafc;
@@ -22,7 +23,7 @@
       --accent-green-bg: rgba(16, 185, 129, 0.12);
       --accent-red: #f43f5e;
       --accent-red-bg: rgba(244, 63, 94, 0.12);
-      --radius: 20px;
+      --radius: 24px;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -31,8 +32,8 @@
       background-color: var(--bg);
       background-image: 
         radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0, transparent 50%),
-        radial-gradient(at 100% 100%, rgba(56, 189, 248, 0.12) 0, transparent 50%),
-        radial-gradient(at 50% 50%, rgba(15, 23, 42, 0.6) 0, transparent 100%);
+        radial-gradient(at 100% 100%, rgba(56, 189, 248, 0.10) 0, transparent 50%),
+        radial-gradient(at 50% 50%, rgba(15, 23, 42, 0.5) 0, transparent 100%);
       background-attachment: fixed;
       color: var(--text);
       font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
@@ -48,7 +49,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      background: rgba(5, 8, 17, 0.85);
+      background: rgba(11, 15, 25, 0.88);
       backdrop-filter: blur(25px);
       z-index: 99;
     }
@@ -58,7 +59,7 @@
       border: 1px solid var(--border);
       border-radius: 28px;
       background: var(--card-bg);
-      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.1);
       text-align: center;
     }
     .loginbox h1 { font-size: 28px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 8px; }
@@ -67,12 +68,12 @@
     .btn {
       border: 1px solid var(--border);
       border-radius: 14px;
-      padding: 12px 18px;
+      padding: 10px 16px;
       background: rgba(255, 255, 255, 0.04);
       color: var(--text);
       cursor: pointer;
       font-weight: 600;
-      font-size: 14px;
+      font-size: 13px;
       transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
       display: inline-flex;
       align-items: center;
@@ -82,16 +83,16 @@
     .btn:hover {
       background: rgba(255, 255, 255, 0.08);
       border-color: rgba(255, 255, 255, 0.18);
-      transform: translateY(-2px);
+      transform: translateY(-1px);
     }
     .btn.primary {
       background: var(--primary-grad);
       color: #fff;
       border: none;
-      box-shadow: 0 4px 20px rgba(99, 102, 241, 0.35);
+      box-shadow: 0 4px 18px rgba(99, 102, 241, 0.35);
     }
     .btn.primary:hover {
-      box-shadow: 0 6px 28px rgba(99, 102, 241, 0.55);
+      box-shadow: 0 6px 24px rgba(99, 102, 241, 0.5);
     }
     .btn.danger {
       background: var(--accent-red-bg);
@@ -119,7 +120,7 @@
       -webkit-backdrop-filter: blur(16px);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
     }
 
     .side {
@@ -129,86 +130,180 @@
       display: flex;
       flex-direction: column;
       gap: 20px;
+      height: fit-content;
     }
     .side-brand {
-      font-size: 20px;
+      font-size: 22px;
       font-weight: 800;
       background: var(--primary-grad);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
     .user-tag {
       font-size: 12px;
       color: var(--muted);
       background: rgba(255, 255, 255, 0.03);
-      padding: 6px 12px;
+      padding: 8px 12px;
       border-radius: 100px;
       border: 1px solid var(--border);
-      word-break: break-all;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .user-avatar-small {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      object-fit: cover;
     }
     .menu { display: flex; flex-direction: column; gap: 8px; }
-    .nav { width: 100%; justify-content: flex-start; padding: 12px 16px; border-radius: 12px; }
+    .nav { width: 100%; justify-content: flex-start; padding: 12px 16px; border-radius: 14px; }
 
-    /* Calcolatrice */
-    .apple-calculator-card { width: 100%; }
-    .apple-calculator {
-      width: 100%;
-      background: rgba(0, 0, 0, 0.4);
-      border: 1px solid rgba(255, 255, 255, 0.06);
-      border-radius: 20px;
-      padding: 12px;
+    /* Header e Barra Utente Superiore */
+    .main { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+    .top {
+      padding: 16px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+    }
+    .top h3 { font-size: 18px; font-weight: 800; letter-spacing: -0.3px; }
+    .top .muted { font-size: 13px; margin-top: 2px; }
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .calc-toggle-btn {
+      width: 40px;
+      height: 40px;
+      padding: 0;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      color: var(--muted);
+    }
+    .calc-toggle-btn:hover { color: #fff; }
+    
+    .profile-pill {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 4px 6px 4px 12px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+    }
+    .profile-pill img {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 1.5px solid #6366f1;
+    }
+    .profile-pill span {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      max-width: 150px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .logout-btn-top {
+      background: none;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      padding: 6px;
+      font-size: 14px;
+      border-radius: 50%;
+      transition: 0.15s;
+    }
+    .logout-btn-top:hover { color: var(--accent-red); }
+
+    /* Modale Calcolatrice a comparsa */
+    .calc-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.65);
+      backdrop-filter: blur(12px);
+      z-index: 100;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .calc-modal.open { display: flex; }
+    .calc-popup-content {
+      width: min(330px, 95%);
+      background: rgba(13, 20, 36, 0.95);
+      border: 1px solid var(--border);
+      border-radius: 28px;
+      padding: 20px;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6);
+    }
+    .calc-popup-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
     .apple-calc-display {
-      height: 48px;
+      height: 52px;
       display: flex;
       align-items: flex-end;
       justify-content: flex-end;
       color: #fff;
       font-family: 'JetBrains Mono', monospace;
-      font-size: 24px;
-      padding: 0 6px 4px;
+      font-size: 26px;
+      padding: 0 8px 6px;
       overflow: hidden;
+      background: rgba(0, 0, 0, 0.35);
+      border-radius: 14px;
+      margin-bottom: 12px;
+      border: 1px solid var(--border);
     }
     .apple-calc-buttons {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 6px;
+      gap: 8px;
     }
     .calc-btn {
       aspect-ratio: 1;
       border: 0;
-      border-radius: 12px;
-      font-size: 15px;
+      border-radius: 14px;
+      font-size: 16px;
       font-weight: 600;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: opacity 0.15s;
+      transition: all 0.15s;
     }
-    .calc-btn:active { opacity: 0.6; }
-    .calc-number { background: rgba(255, 255, 255, 0.08); color: #fff; }
-    .calc-function { background: rgba(255, 255, 255, 0.18); color: #fff; }
-    .calc-operator { background: #f59e0b; color: #fff; font-size: 18px; }
-    .calc-special { background: rgba(255, 255, 255, 0.08); color: var(--muted); }
+    .calc-btn:active { transform: scale(0.95); opacity: 0.7; }
+    .calc-number { background: rgba(255, 255, 255, 0.07); color: #fff; }
+    .calc-function { background: rgba(255, 255, 255, 0.14); color: #fff; }
+    .calc-operator { background: #f59e0b; color: #fff; font-size: 19px; }
+    .calc-special { background: rgba(255, 255, 255, 0.07); color: var(--muted); }
 
-    /* Dashboard Main */
-    .main { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
-    .top {
-      padding: 18px 24px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .top h3 { font-size: 18px; font-weight: 700; }
-    .top .muted { font-size: 13px; margin-top: 2px; }
-
+    /* Dashboard Cards */
     .summary {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 16px;
     }
-    .sum { padding: 20px; }
+    .sum { padding: 22px; border-radius: var(--radius); }
     .label {
       font-size: 11px;
       text-transform: uppercase;
@@ -232,7 +327,7 @@
       gap: 16px;
       align-items: start;
     }
-    .card { padding: 22px; }
+    .card { padding: 24px; border-radius: var(--radius); }
     .section-title {
       display: flex;
       align-items: center;
@@ -241,17 +336,20 @@
     }
     .section-title h2 { font-size: 16px; font-weight: 700; }
     .section-toggle {
-      width: 30px;
-      height: 30px;
+      width: 32px;
+      height: 32px;
       border: 1px solid var(--border);
-      border-radius: 8px;
+      border-radius: 10px;
       background: rgba(255, 255, 255, 0.05);
       color: #fff;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
+      font-size: 16px;
+      transition: 0.15s;
     }
+    .section-toggle:hover { background: rgba(255, 255, 255, 0.1); }
 
     .entry {
       display: grid;
@@ -264,7 +362,7 @@
       padding: 10px 14px;
       border-radius: 12px;
       border: 1px solid var(--border);
-      background: rgba(5, 8, 17, 0.4);
+      background: rgba(5, 8, 17, 0.5);
       color: #fff;
       font-size: 13px;
     }
@@ -292,10 +390,10 @@
     .linkcard { text-decoration: none; color: inherit; display: block; margin-bottom: 14px; }
     .linkcard strong { font-size: 16px; display: inline-flex; align-items: center; gap: 6px; }
     .weekbox {
-      background: rgba(0, 0, 0, 0.25);
+      background: rgba(0, 0, 0, 0.3);
       border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 16px;
+      border-radius: 20px;
+      padding: 18px;
     }
     .week-selector {
       display: flex;
@@ -306,7 +404,7 @@
     .week-selector button {
       width: 32px;
       height: 32px;
-      border-radius: 8px;
+      border-radius: 10px;
       border: 1px solid var(--border);
       background: rgba(255, 255, 255, 0.05);
       color: #fff;
@@ -328,7 +426,7 @@
       align-items: center;
       justify-content: space-between;
       gap: 32px;
-      padding: 24px;
+      padding: 26px;
     }
     .ampolla-container {
       position: relative;
@@ -412,7 +510,7 @@
       padding: 10px 14px;
       border-radius: 12px;
       border: 1px solid var(--border);
-      background: rgba(5, 8, 17, 0.4);
+      background: rgba(5, 8, 17, 0.5);
       color: #fff;
       font-size: 13px;
       width: 130px;
@@ -432,12 +530,50 @@
 </head>
 <body>
 
+<!-- Schermata Login Iniziale -->
 <div id="login" class="login">
   <div class="loginbox">
     <h1>💰 AI-BUDGET</h1>
     <p>Accedi con Google per sincronizzare i tuoi dati in tempo reale.</p>
     <button id="loginScreenBtn" class="btn primary" style="width: 100%;">Accedi con Google</button>
     <div id="loginError" class="status" style="margin-top: 14px; text-align: center;"></div>
+  </div>
+</div>
+
+<!-- Cassetto Modale Calcolatrice Apple -->
+<div id="calcModal" class="calc-modal">
+  <div class="calc-popup-content">
+    <div class="calc-popup-header">
+      <span>Calcolatrice</span>
+      <button class="btn" id="closeCalcBtn" style="padding: 4px 8px; border-radius: 8px;"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="apple-calc-display" id="appleCalcDisplay">0</div>
+    <div class="apple-calc-buttons">
+      <button class="calc-btn calc-function" onclick="appleCalcClear()">AC</button>
+      <button class="calc-btn calc-function" onclick="appleCalcPlusMinus()">+/-</button>
+      <button class="calc-btn calc-function" onclick="appleCalcPercent()">%</button>
+      <button class="calc-btn calc-operator" onclick="appleCalcOperator('÷')">÷</button>
+      
+      <button class="calc-btn calc-number" onclick="appleCalcNumber('7')">7</button>
+      <button class="calc-btn calc-number" onclick="appleCalcNumber('8')">8</button>
+      <button class="calc-btn calc-number" onclick="appleCalcNumber('9')">9</button>
+      <button class="calc-btn calc-operator" onclick="appleCalcOperator('×')">×</button>
+      
+      <button class="calc-btn calc-number" onclick="appleCalcNumber('4')">4</button>
+      <button class="calc-btn calc-number" onclick="appleCalcNumber('5')">5</button>
+      <button class="calc-btn calc-number" onclick="appleCalcNumber('6')">6</button>
+      <button class="calc-btn calc-operator" onclick="appleCalcOperator('-')">−</button>
+      
+      <button class="calc-btn calc-number" onclick="appleCalcNumber('1')">1</button>
+      <button class="calc-btn calc-number" onclick="appleCalcNumber('2')">2</button>
+      <button class="calc-btn calc-number" onclick="appleCalcNumber('3')">3</button>
+      <button class="calc-btn calc-operator" onclick="appleCalcOperator('+')">+</button>
+      
+      <button class="calc-btn calc-special" onclick="appleCalcClear()">▦</button>
+      <button class="calc-btn calc-number" onclick="appleCalcNumber('0')">0</button>
+      <button class="calc-btn calc-number" onclick="appleCalcDecimal()">,</button>
+      <button class="calc-btn calc-operator" onclick="appleCalcEquals()">=</button>
+    </div>
   </div>
 </div>
 
@@ -454,38 +590,6 @@
         <button class="btn nav" onclick="location.href='spesa-settimanale.html'">🛒 Spesa settimanale</button>
         <button id="logoutBtn" class="btn nav">🚪 Esci</button>
       </div>
-
-      <section class="apple-calculator-card">
-        <div class="apple-calculator">
-          <div class="apple-calc-display" id="appleCalcDisplay">0</div>
-          <div class="apple-calc-buttons">
-            <button class="calc-btn calc-function" onclick="appleCalcClear()">AC</button>
-            <button class="calc-btn calc-function" onclick="appleCalcPlusMinus()">+/-</button>
-            <button class="calc-btn calc-function" onclick="appleCalcPercent()">%</button>
-            <button class="calc-btn calc-operator" onclick="appleCalcOperator('÷')">÷</button>
-            
-            <button class="calc-btn calc-number" onclick="appleCalcNumber('7')">7</button>
-            <button class="calc-btn calc-number" onclick="appleCalcNumber('8')">8</button>
-            <button class="calc-btn calc-number" onclick="appleCalcNumber('9')">9</button>
-            <button class="calc-btn calc-operator" onclick="appleCalcOperator('×')">×</button>
-            
-            <button class="calc-btn calc-number" onclick="appleCalcNumber('4')">4</button>
-            <button class="calc-btn calc-number" onclick="appleCalcNumber('5')">5</button>
-            <button class="calc-btn calc-number" onclick="appleCalcNumber('6')">6</button>
-            <button class="calc-btn calc-operator" onclick="appleCalcOperator('-')">−</button>
-            
-            <button class="calc-btn calc-number" onclick="appleCalcNumber('1')">1</button>
-            <button class="calc-btn calc-number" onclick="appleCalcNumber('2')">2</button>
-            <button class="calc-btn calc-number" onclick="appleCalcNumber('3')">3</button>
-            <button class="calc-btn calc-operator" onclick="appleCalcOperator('+')">+</button>
-            
-            <button class="calc-btn calc-special" onclick="appleCalcClear()">▦</button>
-            <button class="calc-btn calc-number" onclick="appleCalcNumber('0')">0</button>
-            <button class="calc-btn calc-number" onclick="appleCalcDecimal()">,</button>
-            <button class="calc-btn calc-operator" onclick="appleCalcEquals()">=</button>
-          </div>
-        </div>
-      </section>
     </aside>
 
     <main class="main">
@@ -494,7 +598,20 @@
           <h3>Dashboard Mensile</h3>
           <div class="muted">Gestione flussi di cassa e risparmi</div>
         </div>
-        <button id="topLogin" class="btn primary">Accedi</button>
+
+        <div class="top-actions">
+          <button id="calcToggleBtn" class="btn calc-toggle-btn" title="Apri Calcolatrice">
+            <i class="fa-solid fa-calculator"></i>
+          </button>
+          
+          <div id="topUserProfile" class="profile-pill" style="display: none;">
+            <img id="topUserImg" src="" alt="Avatar">
+            <span id="topUserName">Utente</span>
+            <button id="topLogoutBtn" class="logout-btn-top" title="Esci"><i class="fa-solid fa-arrow-right-from-bracket"></i></button>
+          </div>
+
+          <button id="topLogin" class="btn primary">Accedi</button>
+        </div>
       </div>
 
       <div class="summary">
@@ -608,6 +725,7 @@
   const auth = getAuth(app);
   const db = getFirestore(app);
   const provider = new GoogleAuthProvider();
+  provider.setCustomParameters({ prompt: 'select_account' });
 
   let ref = null, state = { income: [], expense: [] }, saveTimer = null, editing = false, monthlyChart = null, allWeeks = {}, selectedWeekOffset = 0;
   
@@ -816,7 +934,7 @@
             labels: { color: '#94a3b8', font: { family: 'Plus Jakarta Sans', size: 12 }, boxWidth: 8, usePointStyle: true }
           },
           tooltip: {
-            backgroundColor: 'rgba(13, 20, 36, 0.95)',
+            backgroundColor: 'rgba(11, 15, 25, 0.95)',
             borderColor: 'rgba(255, 255, 255, 0.1)',
             borderWidth: 1,
             padding: 10,
@@ -838,29 +956,37 @@
     });
   }
 
-  /* --- ONDE LIQUIDE CANVAS --- */
+  /* --- ONDE LIQUIDE CANVAS OTTIMIZZATE (GPU / RETINA / VISIBILITY) --- */
   const canvas = $('waveCanvas');
   const ctx = canvas ? canvas.getContext('2d') : null;
 
   let targetFillLevel = 0.05;
   let currentFillLevel = 0.05;
   let waveStep = 0;
+  let animationId = null;
+
+  // Adattamento HiDPI / Retina per nitidezza e zero lag
+  if (canvas && ctx) {
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = 130 * dpr;
+    canvas.height = 180 * dpr;
+    ctx.scale(dpr, dpr);
+  }
 
   function drawWave() {
     if (!ctx) return;
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const w = 130;
+    const h = 180;
+    ctx.clearRect(0, 0, w, h);
 
     currentFillLevel += (targetFillLevel - currentFillLevel) * 0.04;
-
-    const w = canvas.width;
-    const h = canvas.height;
     const baseHeight = h - (h * Math.max(0.04, Math.min(0.96, currentFillLevel)));
 
     // Onda secondaria
     ctx.fillStyle = 'rgba(56, 189, 248, 0.35)';
     ctx.beginPath();
     ctx.moveTo(0, h);
-    for (let x = 0; x <= w; x++) {
+    for (let x = 0; x <= w; x += 2) {
       const y = Math.sin((x / 18) + (waveStep * 0.04)) * 4 + baseHeight;
       ctx.lineTo(x, y);
     }
@@ -876,7 +1002,7 @@
     ctx.fillStyle = grad;
     ctx.beginPath();
     ctx.moveTo(0, h);
-    for (let x = 0; x <= w; x++) {
+    for (let x = 0; x <= w; x += 2) {
       const y = Math.cos((x / 22) - (waveStep * 0.05)) * 5 + (baseHeight + 3);
       ctx.lineTo(x, y);
     }
@@ -885,8 +1011,17 @@
     ctx.fill();
 
     waveStep++;
-    requestAnimationFrame(drawWave);
+    animationId = requestAnimationFrame(drawWave);
   }
+
+  // Risparmio batteria/GPU: arresta l'animazione quando la scheda non è visibile
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      if (animationId) cancelAnimationFrame(animationId);
+    } else {
+      drawWave();
+    }
+  });
   drawWave();
 
   function updateAmpolla(d) {
@@ -911,7 +1046,6 @@
     const snap = await getDoc(ref), d = snap.exists() ? snap.data() : {};
     const saved = num(d.vacanzaAccantonato) + amount, target = num(d.vacanzaTarget) || 1000;
     
-    // Inserisci automaticamente il versamento tra le SPESE
     state.expense.push({
       name: 'Versamento Salvadanaio Vacanze',
       amount: amount,
@@ -952,16 +1086,28 @@
   };
   $('topLogin').onclick = () => $('loginScreenBtn').click();
   $('logoutBtn').onclick = () => signOut(auth);
+  $('topLogoutBtn').onclick = () => signOut(auth);
 
   onAuthStateChanged(auth, user => {
     if (!user) {
       $('login').style.display = 'flex';
       $('app').style.display = 'none';
+      $('topLogin').style.display = 'inline-flex';
+      $('topUserProfile').style.display = 'none';
       return;
     }
     $('login').style.display = 'none';
     $('app').style.display = 'block';
-    $('userInfo').textContent = user.email || '';
+
+    // Mostra foto Google ed email
+    const photo = user.photoURL || 'https://via.placeholder.com/32';
+    const name = user.displayName || user.email || 'Utente';
+    
+    $('userInfo').innerHTML = `<img src="${photo}" class="user-avatar-small" alt="Avatar"> <span>${user.email || ''}</span>`;
+    $('topUserImg').src = photo;
+    $('topUserName').textContent = name;
+    $('topLogin').style.display = 'none';
+    $('topUserProfile').style.display = 'flex';
     
     ref = doc(db, 'users', user.uid, 'budgets', monthKey());
     onSnapshot(ref, s => {
@@ -982,7 +1128,12 @@
     }, e => $('syncStatus').textContent = 'Errore Database: ' + e.message);
   });
 
-  /* Logica Calcolatrice */
+  /* Logica Calcolatrice Apple + Modal Popup */
+  const calcModal = $('calcModal');
+  $('calcToggleBtn').onclick = () => calcModal.classList.add('open');
+  $('closeCalcBtn').onclick = () => calcModal.classList.remove('open');
+  calcModal.onclick = e => { if (e.target === calcModal) calcModal.classList.remove('open'); };
+
   let appleCalcCurrent = '0', appleCalcPrevious = null, appleCalcOperatorValue = null, appleCalcWaitingForNewNumber = false;
   
   function appleCalcUpdateDisplay() {
