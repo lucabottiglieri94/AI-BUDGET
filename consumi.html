@@ -9,6 +9,11 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js"></script>
+  <!-- PDF.js per lettura bollette PDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script>
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  </script>
 
   <style>
     :root {
@@ -24,7 +29,6 @@
       --accent-red: #f43f5e;
       --accent-red-bg: rgba(244, 63, 94, 0.12);
       --accent-amber: #f59e0b;
-      --accent-amber-bg: rgba(245, 158, 11, 0.12);
       --radius: 24px;
     }
 
@@ -44,6 +48,28 @@
     }
 
     button, a, input, select { font: inherit; outline: none; }
+
+    .login {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(11, 15, 25, 0.88);
+      backdrop-filter: blur(25px);
+      z-index: 99;
+    }
+    .loginbox {
+      width: min(420px, 90%);
+      padding: 40px;
+      border: 1px solid var(--border);
+      border-radius: 28px;
+      background: var(--card-bg);
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+      text-align: center;
+    }
+    .loginbox h1 { font-size: 28px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 8px; }
+    .loginbox p { color: var(--muted); font-size: 14px; margin-bottom: 24px; }
 
     .btn {
       border: 1px solid var(--border);
@@ -75,6 +101,7 @@
       box-shadow: 0 6px 24px rgba(56, 189, 248, 0.5);
     }
 
+    .app { display: none; }
     .shell {
       display: grid;
       grid-template-columns: 280px minmax(0, 1fr);
@@ -112,6 +139,23 @@
       align-items: center;
       gap: 10px;
     }
+    .user-tag {
+      font-size: 12px;
+      color: var(--muted);
+      background: rgba(255, 255, 255, 0.03);
+      padding: 8px 12px;
+      border-radius: 100px;
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .user-avatar-small {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
     .menu { display: flex; flex-direction: column; gap: 8px; }
     .nav { width: 100%; justify-content: flex-start; padding: 12px 16px; border-radius: 14px; text-decoration: none; }
     .nav.active {
@@ -130,6 +174,42 @@
     }
     .top h3 { font-size: 18px; font-weight: 800; letter-spacing: -0.3px; }
     .top .muted { font-size: 13px; margin-top: 2px; }
+
+    .profile-pill {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 4px 6px 4px 12px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+    }
+    .profile-pill img {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 1.5px solid #38bdf8;
+    }
+    .profile-pill span {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      max-width: 150px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .logout-btn-top {
+      background: none;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      padding: 6px;
+      font-size: 14px;
+      border-radius: 50%;
+      transition: 0.15s;
+    }
+    .logout-btn-top:hover { color: var(--accent-red); }
 
     .summary {
       display: grid;
@@ -160,6 +240,69 @@
       margin-bottom: 18px;
     }
     .section-title h2 { font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+
+    /* Upload Bolletta */
+    .bill-section-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 20px;
+      align-items: stretch;
+    }
+    .dropzone {
+      border: 2px dashed rgba(56, 189, 248, 0.35);
+      border-radius: 20px;
+      padding: 30px 20px;
+      text-align: center;
+      background: rgba(5, 8, 17, 0.45);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+    .dropzone:hover, .dropzone.dragover {
+      border-color: #38bdf8;
+      background: rgba(56, 189, 248, 0.08);
+    }
+    .dropzone-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: 16px;
+      background: rgba(56, 189, 248, 0.12);
+      color: #38bdf8;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+    }
+    .bill-results-card {
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .bill-result-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      font-size: 13px;
+    }
+    .bill-result-row:last-child { border-bottom: none; }
+    .bill-val { font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+    .rate-badge {
+      font-size: 22px;
+      font-weight: 800;
+      color: #38bdf8;
+      font-family: 'JetBrains Mono', monospace;
+    }
 
     /* Griglia Prese */
     .plugs-grid {
@@ -204,7 +347,7 @@
     .plug-meta h4 { font-size: 14px; font-weight: 700; }
     .plug-device-id { font-size: 11px; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
 
-    /* Switch iOS Style */
+    /* Switch */
     .switch {
       position: relative;
       display: inline-block;
@@ -284,7 +427,7 @@
       box-shadow: 0 0 8px #38bdf8;
     }
 
-    /* Modale e Form */
+    /* Modali */
     .modal {
       position: fixed;
       inset: 0;
@@ -329,6 +472,7 @@
 
     @media (max-width: 980px) {
       .summary { grid-template-columns: repeat(2, 1fr); }
+      .bill-section-grid { grid-template-columns: 1fr; }
     }
     @media (max-width: 860px) {
       .shell { grid-template-columns: 1fr; padding: 12px; }
@@ -338,6 +482,16 @@
 </head>
 <body>
 
+<!-- Login Overlay Iniziale -->
+<div id="login" class="login">
+  <div class="loginbox">
+    <h1>⚡ AI-BUDGET Consumi</h1>
+    <p>Accedi con Google per sincronizzare le tue prese e i costi energetici in cloud.</p>
+    <button id="loginScreenBtn" class="btn primary" style="width: 100%;">Accedi con Google</button>
+    <div id="loginError" style="font-size: 12px; color: var(--muted); margin-top: 14px; text-align: center;"></div>
+  </div>
+</div>
+
 <!-- Modale Configurazione Endpoint Tuya -->
 <div id="tuyaConfigModal" class="modal">
   <div class="modal-box">
@@ -346,7 +500,7 @@
       <button class="btn" id="closeTuyaModal" style="padding: 4px 8px;"><i class="fa-solid fa-xmark"></i></button>
     </div>
     <p style="font-size: 12px; color: var(--muted); margin-bottom: 16px;">
-      Predisposto per API Tuya OpenAPI o bridge locale (Home Assistant / Node-RED / Tuya Webhook).
+      Predisposto per API Tuya OpenAPI o bridge locale. Verrà salvato sul tuo account Firebase.
     </p>
     <div class="input-row">
       <label>Endpoint URL (Tuya Gateway o Bridge)</label>
@@ -360,7 +514,7 @@
       <label>Secret Key / Token</label>
       <input type="password" id="tuyaSecretInput" placeholder="Inserisci Access Secret">
     </div>
-    <button class="btn primary" id="saveTuyaSettingsBtn" style="width: 100%; margin-top: 8px;">Salva Configurazione Tuya</button>
+    <button class="btn primary" id="saveTuyaSettingsBtn" style="width: 100%; margin-top: 8px;">Salva su Cloud Firebase</button>
   </div>
 </div>
 
@@ -390,111 +544,191 @@
         <option value="fa-laptop">💻 Ufficio / PC</option>
       </select>
     </div>
-    <button class="btn primary" id="confirmAddPlugBtn" style="width: 100%; margin-top: 8px;">Aggiungi Presa</button>
+    <button class="btn primary" id="confirmAddPlugBtn" style="width: 100%; margin-top: 8px;">Aggiungi Presa al Cloud</button>
   </div>
 </div>
 
-<div class="shell">
-  <!-- SIDEBAR SINISTRA -->
-  <aside class="side">
-    <div class="side-brand">
-      <div style="width: 36px; height: 36px; border-radius: 12px; background: #6366f1; display: flex; align-items: center; justify-content: center; color: white; font-weight: 800; font-size: 14px;">AI</div>
-      AI-BUDGET
-    </div>
+<div id="app" class="app">
+  <div class="shell">
+    <!-- SIDEBAR SINISTRA -->
+    <aside class="side">
+      <div class="side-brand">
+        <div style="width: 36px; height: 36px; border-radius: 12px; background: #6366f1; display: flex; align-items: center; justify-content: center; color: white; font-weight: 800; font-size: 14px;">AI</div>
+        AI-BUDGET
+      </div>
 
-    <div class="menu">
-      <a href="index.html" class="btn nav"><i class="fa-solid fa-house w-4"></i> Dashboard</a>
-      <a href="consumi.html" class="btn nav active"><i class="fa-solid fa-bolt w-4"></i> Consumi tempo reale</a>
-      <a href="risparmi.html" class="btn nav"><i class="fa-solid fa-chart-pie w-4"></i> Risparmi</a>
-      <a href="vacanze.html" class="btn nav"><i class="fa-solid fa-umbrella-beach w-4"></i> Vacanze</a>
-      <a href="comparatori.html" class="btn nav"><i class="fa-solid fa-store w-4"></i> Comparatori</a>
-      <a href="spesa-settimanale.html" class="btn nav"><i class="fa-solid fa-basket-shopping w-4"></i> Spesa settimanale</a>
-      <button class="btn nav" onclick="location.href='index.html'"><i class="fa-solid fa-arrow-left w-4"></i> Torna alla Home</button>
-    </div>
+      <div id="userInfo" class="user-tag"></div>
 
-    <!-- Status Bridge Tuya Sidebar -->
-    <div style="background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: 18px; padding: 14px;">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-        <span style="font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase;">Stato Tuya</span>
-        <span class="tuya-pill" id="tuyaStatusBadge"><span class="dot"></span> PRONTO</span>
+      <div class="menu">
+        <a href="index.html" class="btn nav"><i class="fa-solid fa-house w-4"></i> Dashboard</a>
+        <a href="consumi.html" class="btn nav active"><i class="fa-solid fa-bolt w-4"></i> Consumi tempo reale</a>
+        <a href="risparmi.html" class="btn nav"><i class="fa-solid fa-chart-pie w-4"></i> Risparmi</a>
+        <a href="vacanze.html" class="btn nav"><i class="fa-solid fa-umbrella-beach w-4"></i> Vacanze</a>
+        <a href="comparatori.html" class="btn nav"><i class="fa-solid fa-store w-4"></i> Comparatori</a>
+        <a href="spesa-settimanale.html" class="btn nav"><i class="fa-solid fa-basket-shopping w-4"></i> Spesa settimanale</a>
+        <button id="logoutBtn" class="btn nav"><i class="fa-solid fa-door-open w-4"></i> Esci</button>
       </div>
-      <p id="tuyaEndpointLabel" style="font-size: 11px; color: var(--muted); word-break: break-all;">Modalità locale attiva</p>
-      <button class="btn" id="openTuyaConfigBtn" style="width: 100%; margin-top: 10px; font-size: 11px; padding: 6px 10px;">
-        <i class="fa-solid fa-sliders"></i> Imposta Endpoint
-      </button>
-    </div>
-  </aside>
 
-  <!-- CONTENUTO PRINCIPALE -->
-  <main class="main">
-    <div class="top">
-      <div>
-        <h3>⚡ Monitoraggio Consumi & Prese Smart</h3>
-        <div class="muted">Gestione centralizzata prese Tuya in tempo reale</div>
+      <!-- Status Tuya Sidebar -->
+      <div style="background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: 18px; padding: 14px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+          <span style="font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase;">Stato Tuya</span>
+          <span class="tuya-pill" id="tuyaStatusBadge"><span class="dot"></span> PRONTO</span>
+        </div>
+        <p id="tuyaEndpointLabel" style="font-size: 11px; color: var(--muted); word-break: break-all;">Modalità cloud attiva</p>
+        <button class="btn" id="openTuyaConfigBtn" style="width: 100%; margin-top: 10px; font-size: 11px; padding: 6px 10px;">
+          <i class="fa-solid fa-sliders"></i> Imposta Endpoint
+        </button>
       </div>
-      <button class="btn primary" id="openNewPlugBtn">
-        <i class="fa-solid fa-plus"></i> Aggiungi Presa
-      </button>
-    </div>
+    </aside>
 
-    <!-- KPI CARDS -->
-    <section class="summary">
-      <div class="sum">
-        <div class="label">Potenza Live Totale</div>
-        <div id="totalWattsLive" class="value" style="color: #38bdf8;">0 W</div>
+    <!-- CONTENUTO PRINCIPALE -->
+    <main class="main">
+      <div class="top">
+        <div>
+          <h3>⚡ Monitoraggio Consumi & Prese Smart</h3>
+          <div class="muted">Gestione centralizzata prese Tuya e calcolo costi in tempo reale</div>
+        </div>
+        
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <div id="topUserProfile" class="profile-pill">
+            <img id="topUserImg" src="" alt="Avatar">
+            <span id="topUserName">Utente</span>
+            <button id="topLogoutBtn" class="logout-btn-top" title="Esci"><i class="fa-solid fa-arrow-right-from-bracket"></i></button>
+          </div>
+          <button class="btn primary" id="openNewPlugBtn">
+            <i class="fa-solid fa-plus"></i> Aggiungi Presa
+          </button>
+        </div>
       </div>
-      <div class="sum">
-        <div class="label">Consumo Oggi</div>
-        <div id="totalKwhToday" class="value" style="color: var(--accent-green);">0.00 kWh</div>
-      </div>
-      <div class="sum">
-        <div class="label">Spesa Stimata Oggi</div>
-        <div id="totalCostToday" class="value" style="color: var(--accent-amber);">€ 0,00</div>
-      </div>
-      <div class="sum">
-        <div class="label">Prese Attive</div>
-        <div id="activePlugsCount" class="value">0 / 0</div>
-      </div>
-    </section>
 
-    <!-- GRAFICO ANDAMENTO LIVE -->
-    <section class="card">
-      <div class="section-title">
-        <h2><i class="fa-solid fa-chart-line" style="color: #38bdf8;"></i> Carico Energetico Live (ultimi 60s)</h2>
-        <span style="font-size: 12px; color: var(--muted); font-family: 'JetBrains Mono', monospace;" id="clockLive">--:--:--</span>
-      </div>
-      <div class="chart-container">
-        <canvas id="livePowerChart"></canvas>
-      </div>
-    </section>
+      <!-- KPI CARDS -->
+      <section class="summary">
+        <div class="sum">
+          <div class="label">Potenza Live Totale</div>
+          <div id="totalWattsLive" class="value" style="color: #38bdf8;">0 W</div>
+        </div>
+        <div class="sum">
+          <div class="label">Consumo Oggi</div>
+          <div id="totalKwhToday" class="value" style="color: var(--accent-green);">0.00 kWh</div>
+        </div>
+        <div class="sum">
+          <div class="label">Spesa Stimata Oggi</div>
+          <div id="totalCostToday" class="value" style="color: var(--accent-amber);">€ 0,00</div>
+        </div>
+        <div class="sum">
+          <div class="label">Tariffa Energia Attiva</div>
+          <div id="currentRateCard" class="value" style="color: #a855f7;">0.280 €/kWh</div>
+        </div>
+      </section>
 
-    <!-- GESTIONE DELLE PRESE SMART -->
-    <section class="card">
-      <div class="section-title">
-        <h2><i class="fa-solid fa-plug-circle-check" style="color: var(--accent-green);"></i> Prese Collegate</h2>
-        <span style="font-size: 12px; color: var(--muted);">Tariffa stimata: <strong>0.28 €/kWh</strong></span>
-      </div>
-      
-      <div class="plugs-grid" id="plugsContainer">
-        <!-- Generato dinamicamente da JS -->
-      </div>
-    </section>
-  </main>
+      <!-- SEZIONE CARICA BOLLETTA & CALCOLO PREZZO KW LORDO -->
+      <section class="card">
+        <div class="section-title">
+          <h2><i class="fa-solid fa-file-invoice-dollar" style="color: #38bdf8;"></i> Calcola Prezzo al kWh Reale Lordo dalla Bolletta</h2>
+          <span style="font-size: 11px; color: var(--muted);"><i class="fa-solid fa-cloud-arrow-up"></i> Sincronizzato su Firebase</span>
+        </div>
+
+        <div class="bill-section-grid">
+          <div class="dropzone" id="billDropzone">
+            <input type="file" id="billFileInput" accept="application/pdf" style="display: none;">
+            <div class="dropzone-icon">
+              <i class="fa-solid fa-cloud-arrow-up"></i>
+            </div>
+            <div style="font-weight: 700; font-size: 14px;">Trascina qui il PDF della Bolletta Luce</div>
+            <div style="font-size: 12px; color: var(--muted);">oppure clicca per selezionarla</div>
+            <div id="billParseStatus" style="font-size: 11px; color: #38bdf8; margin-top: 4px; font-weight: 600;"></div>
+          </div>
+
+          <div class="bill-results-card">
+            <div style="font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px;">
+              Dati Rilevati dalla Bolletta
+            </div>
+
+            <div class="bill-result-row">
+              <span style="color: var(--muted);">Spesa Totale Lorda:</span>
+              <span class="bill-val" id="billTotalAmountText">€ --,--</span>
+            </div>
+
+            <div class="bill-result-row">
+              <span style="color: var(--muted);">Consumo Totale Fatturato:</span>
+              <span class="bill-val" id="billKwhText">-- kWh</span>
+            </div>
+
+            <div class="bill-result-row">
+              <span style="color: var(--muted);">Costo Lordo Finito:</span>
+              <span class="rate-badge" id="billCalculatedRateText">-- €/kWh</span>
+            </div>
+
+            <div style="display: flex; gap: 8px; margin-top: 6px;">
+              <input type="number" step="0.001" min="0.05" id="manualRateOverrideInput" placeholder="Modifica €/kWh" style="flex: 1; padding: 8px 12px; border-radius: 12px; border: 1px solid var(--border); background: rgba(5,8,17,0.6); color: white; font-size: 12px;">
+              <button class="btn primary" id="applyBillRateBtn" style="font-size: 12px; padding: 8px 16px;">
+                <i class="fa-solid fa-cloud"></i> Salva su Firebase
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- GRAFICO ANDAMENTO LIVE -->
+      <section class="card">
+        <div class="section-title">
+          <h2><i class="fa-solid fa-chart-line" style="color: #38bdf8;"></i> Carico Energetico Live (ultimi 60s)</h2>
+          <span style="font-size: 12px; color: var(--muted); font-family: 'JetBrains Mono', monospace;" id="clockLive">--:--:--</span>
+        </div>
+        <div class="chart-container">
+          <canvas id="livePowerChart"></canvas>
+        </div>
+      </section>
+
+      <!-- GESTIONE PRESE SMART -->
+      <section class="card">
+        <div class="section-title">
+          <h2><i class="fa-solid fa-plug-circle-check" style="color: var(--accent-green);"></i> Prese Collegate</h2>
+          <span style="font-size: 12px; color: var(--muted);">Tariffa applicata: <strong id="plugCardRateLabel">0.280 €/kWh</strong></span>
+        </div>
+        
+        <div class="plugs-grid" id="plugsContainer"></div>
+      </section>
+    </main>
+  </div>
 </div>
 
-<script>
-  // =========================================================================
-  // PREDISPOSIZIONE TUYA WEB API (ENDPOINT & BRIDGE)
-  // Inserirai qui l'URL endpoint non appena configurato il tuo gateway / Tuya Cloud
-  // =========================================================================
-  const TUYA_CONFIG = {
-    endpoint: localStorage.getItem('tuya_endpoint') || '', // Es: https://openapi.tuyaeu.com/v1.0 o proxy locale
-    clientId: localStorage.getItem('tuya_client_id') || '',
-    secret: localStorage.getItem('tuya_secret') || '',
-    kwhRate: 0.28 // Tariffa media luce €/kWh
+<script type="module">
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js';
+  import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js';
+  import { getFirestore, doc, onSnapshot, setDoc, getDoc } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js';
+
+  const firebaseConfig = {
+    apiKey: 'AIzaSyAdZbBv6JYbYnl6CxuFVfHhSftvIxwf2DY',
+    authDomain: 'budget-luca.firebaseapp.com',
+    projectId: 'budget-luca',
+    storageBucket: 'budget-luca.firebasestorage.app',
+    messagingSenderId: '67496424698',
+    appId: '1:67496424698:web:efc07408543',
+    measurementId: 'G-7LEYRZE9QN'
   };
 
-  // Elenco Prese configurate con persistenza in LocalStorage
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+  const provider = new GoogleAuthProvider();
+  provider.setCustomParameters({ prompt: 'select_account' });
+
+  let currentUser = null;
+  let energyDocRef = null;
+  let budgetDocRef = null;
+
+  const monthKey = () => new Date().toISOString().slice(0, 7);
+
+  // Configurazione Tuya e Prese di default
+  let tuyaSettings = {
+    endpoint: '',
+    clientId: '',
+    secret: '',
+    kwhRate: 0.28
+  };
+
   const DEFAULT_PLUGS = [
     {
       id: 'tuya_plug_clima',
@@ -528,56 +762,112 @@
     }
   ];
 
-  let plugs = JSON.parse(localStorage.getItem('ai_budget_plugs')) || DEFAULT_PLUGS;
+  let plugs = [...DEFAULT_PLUGS];
 
   const $ = id => document.getElementById(id);
   const money = n => new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(Number(n) || 0);
 
   // =========================================================================
-  // HOOK TUYA API (INVIA COMANDI ON/OFF & LEGGE TELEMETRIA)
+  // GESTIONE AUTENTICAZIONE E SYNC FIRESTORE
   // =========================================================================
-  async function sendTuyaCommand(deviceId, state) {
-    if (!TUYA_CONFIG.endpoint) {
-      console.log(`[SIMULAZIONE TUYA] Presa ${deviceId} impostata a: ${state ? 'ACCESA' : 'SPENTA'}`);
-      return true;
-    }
+  $('loginScreenBtn').onclick = async () => {
+    try { await signInWithPopup(auth, provider); }
+    catch (e) { $('loginError').textContent = 'Accesso non riuscito: ' + (e.code || e.message); }
+  };
+  $('logoutBtn').onclick = () => signOut(auth);
+  $('topLogoutBtn').onclick = () => signOut(auth);
 
-    try {
-      // Struttura standard Tuya OpenAPI command code switch_1
-      const response = await fetch(`${TUYA_CONFIG.endpoint}/v1.0/devices/${deviceId}/commands`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'client_id': TUYA_CONFIG.clientId,
-          'sign_method': 'HMAC-SHA256'
-        },
-        body: JSON.stringify({
-          commands: [{ code: 'switch_1', value: state }]
-        })
-      });
-      return response.ok;
-    } catch (err) {
-      console.warn(`[TUYA GATEWAY ERROR] Impossibile inviare comando a ${deviceId}:`, err);
-      return false;
+  onAuthStateChanged(auth, user => {
+    currentUser = user;
+    if (!user) {
+      $('login').style.display = 'flex';
+      $('app').style.display = 'none';
+      return;
+    }
+    $('login').style.display = 'none';
+    $('app').style.display = 'block';
+
+    const photo = user.photoURL || 'https://via.placeholder.com/32';
+    const name = user.displayName || user.email || 'Utente';
+    $('userInfo').innerHTML = `<img src="${photo}" class="user-avatar-small" alt="Avatar"> <span>${user.email || ''}</span>`;
+    $('topUserImg').src = photo;
+    $('topUserName').textContent = name;
+
+    // Riferimenti Documenti Firestore
+    energyDocRef = doc(db, 'users', user.uid, 'consumi', 'settings');
+    budgetDocRef = doc(db, 'users', user.uid, 'budgets', monthKey());
+
+    // Listener Firestore in tempo reale per consumi e prese
+    onSnapshot(energyDocRef, async snap => {
+      if (snap.exists()) {
+        const d = snap.data();
+        if (d.tuyaEndpoint !== undefined) tuyaSettings.endpoint = d.tuyaEndpoint;
+        if (d.tuyaClientId !== undefined) tuyaSettings.clientId = d.tuyaClientId;
+        if (d.tuyaSecret !== undefined) tuyaSettings.secret = d.tuyaSecret;
+        if (d.kwhRate !== undefined) tuyaSettings.kwhRate = parseFloat(d.kwhRate) || 0.28;
+        if (Array.isArray(d.plugs)) plugs = d.plugs;
+      } else {
+        // Primo salvataggio su Firestore se il documento non esiste
+        await setDoc(energyDocRef, {
+          tuyaEndpoint: tuyaSettings.endpoint,
+          tuyaClientId: tuyaSettings.clientId,
+          tuyaSecret: tuyaSettings.secret,
+          kwhRate: tuyaSettings.kwhRate,
+          plugs: DEFAULT_PLUGS,
+          updatedAt: Date.now()
+        });
+      }
+
+      updateTuyaBadge();
+      updateRateUI();
+      renderPlugs();
+    });
+  });
+
+  function updateRateUI() {
+    $('currentRateCard').textContent = `${tuyaSettings.kwhRate.toFixed(3)} €/kWh`;
+    $('plugCardRateLabel').textContent = `${tuyaSettings.kwhRate.toFixed(3)} €/kWh`;
+    $('manualRateOverrideInput').value = tuyaSettings.kwhRate.toFixed(3);
+  }
+
+  function updateTuyaBadge() {
+    const badge = $('tuyaStatusBadge');
+    const label = $('tuyaEndpointLabel');
+    if (tuyaSettings.endpoint) {
+      badge.innerHTML = `<span class="dot" style="background:#10b981; box-shadow:0 0 8px #10b981;"></span> CONNESSO`;
+      badge.style.color = '#10b981';
+      badge.style.background = 'rgba(16, 185, 129, 0.12)';
+      badge.style.borderColor = 'rgba(16, 185, 129, 0.25)';
+      label.textContent = tuyaSettings.endpoint.replace('https://', '').replace('http://', '').slice(0, 24) + '...';
+    } else {
+      badge.innerHTML = `<span class="dot"></span> PRONTO`;
+      label.textContent = 'Predisposto per endpoint Tuya';
     }
   }
 
   // =========================================================================
-  // RENDERING DELLE PRESE
+  // SALVATAGGIO PRESE SU FIRESTORE
   // =========================================================================
+  async function syncPlugsToFirestore() {
+    if (!currentUser || !energyDocRef) return;
+    try {
+      await setDoc(energyDocRef, { plugs: plugs, updatedAt: Date.now() }, { merge: true });
+    } catch (e) {
+      console.error("Errore salvataggio prese su Firestore:", e);
+    }
+  }
+
   function renderPlugs() {
     const container = $('plugsContainer');
     container.innerHTML = '';
 
     let totalWatts = 0;
     let totalKwh = 0;
-    let activeCount = 0;
 
     plugs.forEach((plug, idx) => {
       const activeWatts = plug.enabled ? plug.power : 0;
       totalWatts += activeWatts;
       totalKwh += plug.kwhToday;
-      if (plug.enabled) activeCount++;
 
       const card = document.createElement('div');
       card.className = `plug-card ${plug.enabled ? 'active-plug' : ''}`;
@@ -625,34 +915,30 @@
 
     $('totalWattsLive').textContent = `${totalWatts} W`;
     $('totalKwhToday').textContent = `${totalKwh.toFixed(2)} kWh`;
-    $('totalCostToday').textContent = money(totalKwh * TUYA_CONFIG.kwhRate);
-    $('activePlugsCount').textContent = `${activeCount} / ${plugs.length}`;
-
-    localStorage.setItem('ai_budget_plugs', JSON.stringify(plugs));
+    $('totalCostToday').textContent = money(totalKwh * tuyaSettings.kwhRate);
   }
 
   window.togglePlugState = async (idx, state) => {
     plugs[idx].enabled = state;
     renderPlugs();
-    await sendTuyaCommand(plugs[idx].deviceId, state);
+    await syncPlugsToFirestore();
   };
 
-  window.removePlug = idx => {
-    if (!confirm(`Vuoi rimuovere la presa "${plugs[idx].name}"?`)) return;
+  window.removePlug = async idx => {
+    if (!confirm(`Vuoi rimuovere la presa "${plugs[idx].name}" dal tuo account cloud?`)) return;
     plugs.splice(idx, 1);
     renderPlugs();
+    await syncPlugsToFirestore();
   };
 
-  // =========================================================================
-  // AGGIUNTA NUOVA PRESA
-  // =========================================================================
+  // Modale Nuova Presa
   const newPlugModal = $('newPlugModal');
   $('openNewPlugBtn').onclick = () => newPlugModal.classList.add('open');
   $('closeNewPlugModal').onclick = () => newPlugModal.classList.remove('open');
 
-  $('confirmAddPlugBtn').onclick = () => {
+  $('confirmAddPlugBtn').onclick = async () => {
     const name = $('plugNameInput').value.trim();
-    const deviceId = $('plugDeviceIdInput').value.trim() || `tuya_device_${Date.now().toString().slice(-4)}`;
+    const deviceId = $('plugDeviceIdInput').value.trim() || `tuya_${Date.now().toString().slice(-4)}`;
     const icon = $('plugIconSelect').value;
 
     if (!name) return alert("Inserisci un nome per la presa.");
@@ -672,63 +958,174 @@
     $('plugDeviceIdInput').value = '';
     newPlugModal.classList.remove('open');
     renderPlugs();
+    await syncPlugsToFirestore();
   };
 
   // =========================================================================
-  // GESTIONE CONFIGURAZIONE TUYA ENDPOINT
+  // LETTURA BOLLETTA E CALCOLO COSTO LORDO EFFETTIVO
+  // =========================================================================
+  const dropzone = $('billDropzone');
+  const fileInput = $('billFileInput');
+  let calculatedRate = null;
+
+  dropzone.onclick = () => fileInput.click();
+  dropzone.ondragover = e => { e.preventDefault(); dropzone.classList.add('dragover'); };
+  dropzone.ondragleave = () => dropzone.classList.remove('dragover');
+  dropzone.ondrop = e => {
+    e.preventDefault();
+    dropzone.classList.remove('dragover');
+    if (e.dataTransfer.files.length) handleBillFile(e.dataTransfer.files[0]);
+  };
+  fileInput.onchange = e => {
+    if (e.target.files.length) handleBillFile(e.target.files[0]);
+  };
+
+  async function handleBillFile(file) {
+    if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+      alert("Carica un file PDF valido della bolletta.");
+      return;
+    }
+
+    $('billParseStatus').textContent = "Scansione del PDF e calcolo costo lordo in corso...";
+
+    try {
+      const arrayBuffer = await file.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+      let fullText = "";
+
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const textContent = await page.getTextContent();
+        fullText += " " + textContent.items.map(item => item.str).join(" ");
+      }
+
+      parseBillText(fullText);
+      $('billParseStatus').textContent = `✓ PDF analizzato con successo (${pdf.numPages} pagine)`;
+    } catch (err) {
+      console.error("Errore lettura PDF:", err);
+      $('billParseStatus').textContent = "Errore nella lettura del PDF. Puoi inserire il valore a mano.";
+    }
+  }
+
+  function parseBillText(text) {
+    const cleanText = text.replace(/\s+/g, ' ');
+
+    let totalAmount = null;
+    let totalKwh = null;
+    let canoneRai = 0;
+    let directUnitPrice = null;
+
+    // 1. Totale Fattura Lordo
+    const amountMatch = cleanText.match(/(?:totale\s+(?:da\s+pagare|fattura|bolletta|della\s+fattura)|importo\s+(?:da\s+pagare|totale))[^0-9€]{0,20}€?\s*([0-9]{1,4}[.,][0-9]{2})/i);
+    if (amountMatch) totalAmount = parseFloat(amountMatch[1].replace(',', '.'));
+
+    // 2. Canone RAI da scorporare
+    const raiMatch = cleanText.match(/(?:canone\s+(?:di\s+abbonamento\s+tv|tv|rai)|abbonamento\s+tv)[^0-9€]{0,25}€?\s*([0-9]{1,2}[.,][0-9]{2})/i);
+    if (raiMatch) canoneRai = parseFloat(raiMatch[1].replace(',', '.'));
+
+    // 3. kWh consumati
+    const kwhMatch = cleanText.match(/(?:consumo\s+(?:fatturato|totale|rilevato|annuo)|energia\s+attiva)[^0-9]{0,25}([0-9]{1,5}(?:[.,][0-9]+)?)\s*kwh/i) ||
+                     cleanText.match(/([0-9]{1,5})\s*kwh/i);
+    if (kwhMatch) totalKwh = parseFloat(kwhMatch[1].replace(',', '.'));
+
+    // 4. Voce ARERA alternativa
+    const areraMatch = cleanText.match(/costo\s+medio\s+unitario\s+(?:della\s+fornitura|della\s+spesa)?(?:[^0-9]{0,25})([0-9]+[.,][0-9]{2,5})/i);
+    if (areraMatch) directUnitPrice = parseFloat(areraMatch[1].replace(',', '.'));
+
+    // Calcolo del costo reale lordo finito
+    if (totalAmount && totalKwh && totalKwh > 0) {
+      const netEnergyGross = Math.max(0, totalAmount - canoneRai);
+      calculatedRate = netEnergyGross / totalKwh;
+    } else if (directUnitPrice && directUnitPrice > 0.05 && directUnitPrice < 1.5) {
+      calculatedRate = directUnitPrice;
+    }
+
+    if (totalAmount) {
+      const notaRai = canoneRai > 0 ? ` (scorporato canone TV € ${canoneRai.toFixed(2)})` : '';
+      $('billTotalAmountText').textContent = `${money(totalAmount)}${notaRai}`;
+    }
+    if (totalKwh) $('billKwhText').textContent = `${totalKwh} kWh`;
+
+    if (calculatedRate && calculatedRate > 0) {
+      $('billCalculatedRateText').textContent = `${calculatedRate.toFixed(3)} €/kWh`;
+      $('manualRateOverrideInput').value = calculatedRate.toFixed(3);
+    } else {
+      $('billCalculatedRateText').textContent = "Non rilevato";
+    }
+  }
+
+  // Salvataggio della Tariffa calcolata su Firebase
+  $('applyBillRateBtn').onclick = async () => {
+    if (!currentUser || !energyDocRef) return alert("Accedi con Google per salvare i dati su Firebase.");
+    const val = parseFloat($('manualRateOverrideInput').value);
+    if (isNaN(val) || val <= 0) return alert("Inserisci un costo al kWh valido.");
+
+    tuyaSettings.kwhRate = val;
+
+    try {
+      // Salva nel documento consumi
+      await setDoc(energyDocRef, { kwhRate: val, updatedAt: Date.now() }, { merge: true });
+      
+      // Salva anche nel documento del budget mensile per allineare la dashboard home
+      if (budgetDocRef) {
+        await setDoc(budgetDocRef, { kwhRate: val, updatedAt: Date.now() }, { merge: true });
+      }
+
+      updateRateUI();
+      renderPlugs();
+      alert(`Tariffa reale lorda di ${val.toFixed(3)} €/kWh salvata con successo sul tuo account Firebase!`);
+    } catch (err) {
+      alert("Errore salvataggio Firebase: " + err.message);
+    }
+  };
+
+  // =========================================================================
+  // SALVATAGGIO CONFIGURAZIONE TUYA SU FIRESTORE
   // =========================================================================
   const tuyaModal = $('tuyaConfigModal');
   $('openTuyaConfigBtn').onclick = () => {
-    $('tuyaEndpointInput').value = TUYA_CONFIG.endpoint;
-    $('tuyaClientIdInput').value = TUYA_CONFIG.clientId;
-    $('tuyaSecretInput').value = TUYA_CONFIG.secret;
+    $('tuyaEndpointInput').value = tuyaSettings.endpoint;
+    $('tuyaClientIdInput').value = tuyaSettings.clientId;
+    $('tuyaSecretInput').value = tuyaSettings.secret;
     tuyaModal.classList.add('open');
   };
   $('closeTuyaModal').onclick = () => tuyaModal.classList.remove('open');
 
-  $('saveTuyaSettingsBtn').onclick = () => {
-    TUYA_CONFIG.endpoint = $('tuyaEndpointInput').value.trim();
-    TUYA_CONFIG.clientId = $('tuyaClientIdInput').value.trim();
-    TUYA_CONFIG.secret = $('tuyaSecretInput').value.trim();
+  $('saveTuyaSettingsBtn').onclick = async () => {
+    if (!currentUser || !energyDocRef) return alert("Effettua il login per salvare su Firebase.");
 
-    localStorage.setItem('tuya_endpoint', TUYA_CONFIG.endpoint);
-    localStorage.setItem('tuya_client_id', TUYA_CONFIG.clientId);
-    localStorage.setItem('tuya_secret', TUYA_CONFIG.secret);
+    tuyaSettings.endpoint = $('tuyaEndpointInput').value.trim();
+    tuyaSettings.clientId = $('tuyaClientIdInput').value.trim();
+    tuyaSettings.secret = $('tuyaSecretInput').value.trim();
 
-    updateTuyaBadge();
-    tuyaModal.classList.remove('open');
+    try {
+      await setDoc(energyDocRef, {
+        tuyaEndpoint: tuyaSettings.endpoint,
+        tuyaClientId: tuyaSettings.clientId,
+        tuyaSecret: tuyaSettings.secret,
+        updatedAt: Date.now()
+      }, { merge: true });
+
+      updateTuyaBadge();
+      tuyaModal.classList.remove('open');
+      alert("Configurazione Tuya salvata sul tuo cloud Firebase!");
+    } catch (e) {
+      alert("Errore nel salvataggio su Firebase: " + e.message);
+    }
   };
 
-  function updateTuyaBadge() {
-    const badge = $('tuyaStatusBadge');
-    const label = $('tuyaEndpointLabel');
-    if (TUYA_CONFIG.endpoint) {
-      badge.innerHTML = `<span class="dot" style="background:#10b981; box-shadow:0 0 8px #10b981;"></span> CONNESSO`;
-      badge.style.color = '#10b981';
-      badge.style.background = 'rgba(16, 185, 129, 0.12)';
-      badge.style.borderColor = 'rgba(16, 185, 129, 0.25)';
-      label.textContent = TUYA_CONFIG.endpoint.replace('https://', '').replace('http://', '').slice(0, 24) + '...';
-    } else {
-      badge.innerHTML = `<span class="dot"></span> PRONTO`;
-      label.textContent = 'Predisposto per endpoint Tuya';
-    }
-  }
-
   // =========================================================================
-  // GRAFICO LIVE CHART.JS (CARICO WATT REAL-TIME)
+  // GRAFICO LIVE CHART.JS
   // =========================================================================
   const ctx = $('livePowerChart').getContext('2d');
-  const maxDataPoints = 20;
-  const initialLabels = Array.from({ length: maxDataPoints }, () => '');
-  const initialData = Array.from({ length: maxDataPoints }, () => 0);
-
+  const maxPoints = 20;
   const liveChart = new Chart(ctx, {
     type: 'line',
     data: {
-      labels: initialLabels,
+      labels: Array(maxPoints).fill(''),
       datasets: [{
         label: 'Watt Assorbiti',
-        data: initialData,
+        data: Array(maxPoints).fill(0),
         tension: 0.35,
         borderColor: '#38bdf8',
         backgroundColor: 'rgba(56, 189, 248, 0.08)',
@@ -741,54 +1138,35 @@
       responsive: true,
       maintainAspectRatio: false,
       animation: false,
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          callbacks: { label: c => ` ${c.raw} Watt` }
-        }
-      },
+      plugins: { legend: { display: false } },
       scales: {
         x: { display: false },
-        y: {
-          beginAtZero: true,
-          ticks: { color: '#64748b' },
-          grid: { color: 'rgba(255, 255, 255, 0.04)' }
-        }
+        y: { beginAtZero: true, ticks: { color: '#64748b' }, grid: { color: 'rgba(255, 255, 255, 0.04)' } }
       }
     }
   });
 
-  // Loop di simulazione dinamica / campionamento (ogni 2.5 secondi)
   setInterval(() => {
-    // Aggiorna orologio live
     $('clockLive').textContent = new Date().toLocaleTimeString('it-IT');
 
     let currentTotal = 0;
     plugs.forEach(p => {
       if (p.enabled) {
-        // Piccola variazione casuale realistica sui Watt (+/- 1.5%)
         const delta = (Math.random() - 0.5) * 6;
         p.power = Math.max(5, Math.round(p.power + delta));
         currentTotal += p.power;
-
-        // Accumulo kWh (2.5 secondi)
         p.kwhToday += (p.power * (2.5 / 3600)) / 1000;
       }
     });
 
     renderPlugs();
 
-    // Aggiornamento grafico
     liveChart.data.labels.push('');
     liveChart.data.labels.shift();
     liveChart.data.datasets[0].data.push(currentTotal);
     liveChart.data.datasets[0].data.shift();
     liveChart.update();
   }, 2500);
-
-  // Inizializzazione
-  renderPlugs();
-  updateTuyaBadge();
 </script>
 </body>
 </html>
