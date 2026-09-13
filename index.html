@@ -1608,6 +1608,9 @@
 // =========================================================================
   // INTEGRAZIONE AI FINANCIAL COACH (GEMINI FLASH)
   // =========================================================================
+ // =========================================================================
+  // INTEGRAZIONE AI FINANCIAL COACH (GEMINI 3.6 FLASH)
+  // =========================================================================
   $('askAiCoachBtn').onclick = async () => {
     if (!userGeminiApiKey) {
       geminiModal.classList.add('open');
@@ -1620,7 +1623,6 @@
       <i class="fa-solid fa-spinner fa-spin"></i> Gemini sta analizzando i flussi di ${mName}...
     </div>`;
 
-    // Calcolo metriche del mese corrente
     const incTot = state.income.reduce((s, x) => s + num(x.amount), 0);
     const expTot = state.expense.filter(x => {
       const n = (x.name || '').trim().toLowerCase();
@@ -1642,8 +1644,8 @@ Fornisci un'analisi in 3 punti sintetici e diretti (stile fintech, senza convene
 2. **Consiglio Pratico**: una dritta su come ottimizzare i costi o gestire la liquidità residua.
 3. **Obiettivo Vacanze**: breve raccomandazione sull'accantonamento per il salvadanaio vacanze.`;
 
-    // Tentativo sui modelli supportati con trattino ASCII standard (-)
-    const modelsToTry = ['gemini-1.5-flash', 'gemini-2.0-flash', 'gemini-2.5-flash'];
+    // Modelli aggiornati per Google AI Studio (3.6 Flash come primario)
+    const modelsToTry = ['gemini-3.6-flash', 'gemini-2.5-flash'];
     let lastError = null;
     let reply = null;
 
@@ -1682,7 +1684,6 @@ Fornisci un'analisi in 3 punti sintetici e diretti (stile fintech, senza convene
 
     out.innerHTML = `<p>${formatted}</p>`;
   };
-
   /* Logica Calcolatrice Apple + Modal Popup */
   const calcModal = $('calcModal');
   $('calcToggleBtn').onclick = () => calcModal.classList.add('open');
