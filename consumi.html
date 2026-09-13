@@ -174,28 +174,81 @@
     }
 
     .main { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+    
+    /* Top Bar con Selettore Bimestre */
     .top {
-      padding: 16px 24px;
+      padding: 14px 22px;
       display: flex;
       justify-content: space-between;
       align-items: center;
       gap: 16px;
+      flex-wrap: wrap;
     }
     .top h3 { font-size: 18px; font-weight: 800; letter-spacing: -0.3px; }
     .top .muted { font-size: 13px; margin-top: 2px; }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    /* Selettore Bimestre in Alto */
+    .bimonth-selector-bar {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      padding: 3px 6px;
+    }
+    .bim-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.05);
+      color: #fff;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      transition: 0.15s;
+    }
+    .bim-btn:hover {
+      background: rgba(56, 189, 248, 0.25);
+      border-color: #38bdf8;
+    }
+    .bim-select {
+      background: transparent;
+      border: none;
+      color: #38bdf8;
+      font-weight: 700;
+      font-size: 13px;
+      padding: 4px 6px;
+      cursor: pointer;
+      outline: none;
+    }
+    .bim-select option {
+      background: #0d1424;
+      color: #f8fafc;
+    }
 
     .profile-pill {
       display: flex;
       align-items: center;
       gap: 10px;
-      padding: 4px 6px 4px 12px;
+      padding: 4px 6px 4px 10px;
       background: rgba(255, 255, 255, 0.04);
       border: 1px solid var(--border);
       border-radius: 100px;
     }
     .profile-pill img {
-      width: 32px;
-      height: 32px;
+      width: 30px;
+      height: 30px;
       border-radius: 50%;
       border: 1.5px solid #38bdf8;
     }
@@ -203,7 +256,7 @@
       font-size: 13px;
       font-weight: 600;
       color: var(--text);
-      max-width: 150px;
+      max-width: 140px;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -250,10 +303,10 @@
     }
     .section-title h2 { font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
 
-    /* Upload Bolletta */
+    /* Area Upload e Dettagli */
     .bill-section-grid {
       display: grid;
-      grid-template-columns: 1.1fr 1fr;
+      grid-template-columns: 1fr 1.15fr;
       gap: 20px;
       align-items: stretch;
     }
@@ -287,14 +340,14 @@
       font-size: 22px;
     }
     .bill-results-card {
-      background: rgba(0, 0, 0, 0.3);
+      background: rgba(0, 0, 0, 0.35);
       border: 1px solid var(--border);
       border-radius: 20px;
-      padding: 18px;
+      padding: 20px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      gap: 10px;
+      gap: 12px;
     }
     .bill-result-row {
       display: flex;
@@ -312,65 +365,6 @@
       color: #38bdf8;
       font-family: 'JetBrains Mono', monospace;
     }
-
-    /* Storico Bollette */
-    .history-card {
-      background: rgba(0, 0, 0, 0.35);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 20px;
-      margin-top: 16px;
-    }
-    .bimonthly-navigator {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid var(--border);
-      padding: 10px 16px;
-      border-radius: 16px;
-      margin-bottom: 16px;
-      gap: 12px;
-    }
-    .nav-arrow-btn {
-      width: 40px;
-      height: 40px;
-      border-radius: 12px;
-      border: 1px solid var(--border);
-      background: rgba(255, 255, 255, 0.06);
-      color: #fff;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 18px;
-      transition: 0.2s;
-      flex-shrink: 0;
-    }
-    .nav-arrow-btn:hover:not(:disabled) {
-      background: rgba(56, 189, 248, 0.2);
-      border-color: #38bdf8;
-    }
-    .nav-arrow-btn:disabled {
-      opacity: 0.25;
-      cursor: not-allowed;
-      border-color: transparent;
-    }
-    .history-stats-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 12px;
-      margin-bottom: 14px;
-    }
-    .history-stat-box {
-      background: rgba(5, 8, 17, 0.5);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 12px;
-      text-align: center;
-    }
-    .history-stat-label { font-size: 10px; color: var(--muted); text-transform: uppercase; font-weight: 700; }
-    .history-stat-val { font-size: 16px; font-weight: 800; font-family: 'JetBrains Mono', monospace; margin-top: 4px; }
 
     /* Griglia Prese */
     .plugs-grid {
@@ -535,11 +529,11 @@
     @media (max-width: 980px) {
       .summary { grid-template-columns: repeat(2, 1fr); }
       .bill-section-grid { grid-template-columns: 1fr; }
-      .history-stats-grid { grid-template-columns: repeat(2, 1fr); }
     }
     @media (max-width: 860px) {
       .shell { grid-template-columns: 1fr; padding: 12px; }
       .side { position: relative; top: 0; }
+      .top { flex-direction: column; align-items: flex-start; }
     }
   </style>
 </head>
@@ -646,17 +640,25 @@
       <div class="top">
         <div>
           <h3>⚡ Monitoraggio Consumi & Prese Smart</h3>
-          <div class="muted">Fatturazione Bimestrale • Quota divisa per 2 (senza Canone RAI)</div>
+          <div class="muted">Quota / 2 • Sincronizzazione automatica "Bolletta Luce" in Home</div>
         </div>
         
-        <div style="display: flex; align-items: center; gap: 12px;">
+        <!-- SELETTORE BIMESTRE ACCANTO AL PROFILO -->
+        <div class="top-actions">
+          <div class="bimonth-selector-bar">
+            <button id="topPrevBim" class="bim-btn" title="Bimestre precedente">‹</button>
+            <select id="topBimSelect" class="bim-select"></select>
+            <button id="topNextBim" class="bim-btn" title="Bimestre successivo">›</button>
+          </div>
+
           <div id="topUserProfile" class="profile-pill">
             <img id="topUserImg" src="" alt="Avatar">
             <span id="topUserName">Utente</span>
             <button id="topLogoutBtn" class="logout-btn-top" title="Esci"><i class="fa-solid fa-arrow-right-from-bracket"></i></button>
           </div>
+
           <button class="btn primary" id="openNewPlugBtn">
-            <i class="fa-solid fa-plus"></i> Aggiungi Presa
+            <i class="fa-solid fa-plus"></i> Presa
           </button>
         </div>
       </div>
@@ -681,112 +683,69 @@
         </div>
       </section>
 
-      <!-- CARICA BOLLETTA & CALCOLO QUOTA DIVISA 2 -->
+      <!-- SCHEDA BOLLETTA DEL BIMESTRE SELEZIONATO -->
       <section class="card">
         <div class="section-title">
-          <h2><i class="fa-solid fa-file-invoice-dollar" style="color: #38bdf8;"></i> Analisi Bolletta (Quota / 2 • Senza Canone RAI)</h2>
-          <span style="font-size: 11px; color: var(--muted);"><i class="fa-solid fa-cloud-arrow-up"></i> Sincronizzazione Firebase</span>
+          <h2>
+            <i class="fa-solid fa-file-invoice-dollar" style="color: #38bdf8;"></i> 
+            Bolletta Bimestre: <span id="currentBimestreTitle" style="color: #38bdf8; margin-left: 4px;">Maggio – Giugno 2026</span>
+          </h2>
+          <span id="cloudStatusBadge" style="font-size: 11px; color: var(--muted);"><i class="fa-solid fa-cloud"></i> Sincronizzato con Firebase</span>
         </div>
 
         <div class="bill-section-grid">
+          <!-- Dropzone PDF -->
           <div class="dropzone" id="billDropzone">
             <input type="file" id="billFileInput" accept="application/pdf" style="display: none;">
             <div class="dropzone-icon">
               <i class="fa-solid fa-cloud-arrow-up"></i>
             </div>
-            <div style="font-weight: 700; font-size: 14px;">Trascina qui la Bolletta Bimestrale PDF</div>
-            <div style="font-size: 12px; color: var(--muted);">oppure clicca per selezionarla</div>
+            <div style="font-weight: 700; font-size: 14px;" id="dropzoneMainText">Carica Bolletta PDF per questo Bimestre</div>
+            <div style="font-size: 12px; color: var(--muted);" id="dropzoneSubText">Trascina qui il file PDF oppure clicca per selezionarlo</div>
             <div id="billParseStatus" style="font-size: 11px; color: #38bdf8; margin-top: 4px; font-weight: 600;"></div>
           </div>
 
+          <!-- Dettagli Bolletta nel Bimestre -->
           <div class="bill-results-card">
-            <div style="font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px;">
-              Dati Rilevati & Calcolo Quota Personale
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span style="font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px;">
+                Dati Fornitura Bimestrale
+              </span>
+              <span id="billStatusTag" style="font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 6px; background: rgba(56, 189, 248, 0.15); color: #38bdf8;">
+                ARCHIVIATA
+              </span>
             </div>
 
             <div class="bill-result-row">
-              <span style="color: var(--muted);">Bimestre Rilevato:</span>
-              <input type="text" id="billPeriodInput" value="Maggio - Giugno 2026" style="background: transparent; border: none; text-align: right; color: #38bdf8; font-weight: 700; font-size: 12px; outline: none;">
-            </div>
-
-            <div class="bill-result-row">
-              <span style="color: var(--muted);">Spesa Totale (senza RAI):</span>
-              <span class="bill-val" id="billNetNoRaiText">€ 162,95</span>
+              <span style="color: var(--muted);">Spesa Totale (senza Canone RAI):</span>
+              <span class="bill-val" id="billNetNoRaiText">€ --,--</span>
             </div>
 
             <div class="bill-result-row" style="background: rgba(56, 189, 248, 0.06); padding: 8px 10px; border-radius: 10px; border: 1px solid rgba(56, 189, 248, 0.2);">
-              <span style="color: #38bdf8; font-weight: 700;">La tua Quota (Diviso 2):</span>
-              <span class="bill-val" id="billHalfShareText" style="color: #38bdf8; font-size: 15px;">€ 81,48</span>
+              <span style="color: #38bdf8; font-weight: 700;">La tua Quota (/ 2):</span>
+              <span class="bill-val" id="billHalfShareText" style="color: #38bdf8; font-size: 16px;">€ --,--</span>
             </div>
 
             <div class="bill-result-row">
-              <span style="color: var(--muted);">Consumo Fatturato:</span>
-              <span class="bill-val" id="billKwhText">571 kWh</span>
+              <span style="color: var(--muted);">Consumo Totale:</span>
+              <span class="bill-val" id="billKwhText">-- kWh</span>
             </div>
 
             <div class="bill-result-row">
               <span style="color: var(--muted);">Costo Reale Lordo Finito:</span>
-              <span class="rate-badge" id="billCalculatedRateText">0.285 €/kWh</span>
+              <span class="rate-badge" id="billCalculatedRateText">-- €/kWh</span>
             </div>
 
-            <div style="display: flex; gap: 8px; margin-top: 6px;">
-              <input type="number" step="0.001" min="0.05" id="manualRateOverrideInput" value="0.285" placeholder="€/kWh" style="flex: 1; padding: 8px 12px; border-radius: 12px; border: 1px solid var(--border); background: rgba(5,8,17,0.6); color: white; font-size: 12px;">
-              <button class="btn primary" id="saveAndArchiveBillBtn" style="font-size: 12px; padding: 8px 16px;">
-                <i class="fa-solid fa-box-archive"></i> Salva & Archivia
+            <div style="display: flex; gap: 8px; margin-top: 6px; flex-wrap: wrap;">
+              <input type="number" step="0.001" min="0.05" id="manualRateOverrideInput" placeholder="€/kWh" style="width: 100px; padding: 8px 10px; border-radius: 12px; border: 1px solid var(--border); background: rgba(5,8,17,0.6); color: white; font-size: 12px;">
+              <button class="btn primary" id="saveAndArchiveBillBtn" style="font-size: 12px; padding: 8px 14px; flex: 1;">
+                <i class="fa-solid fa-cloud-arrow-up"></i> Salva in Spese & Cloud
               </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- SEZIONE STORICO BOLLETTE A SCORRIMENTO -->
-        <div class="history-card">
-          <div class="section-title" style="margin-bottom: 12px;">
-            <h2><i class="fa-solid fa-clock-rotate-left" style="color: #f59e0b;"></i> Storico Bollette Archiviate</h2>
-            <div style="display: flex; align-items: center; gap: 10px;">
-              <span id="historyIndexBadge" style="font-size: 11px; font-weight: 700; color: #38bdf8; background: rgba(56, 189, 248, 0.12); padding: 3px 8px; border-radius: 8px;">0 / 0</span>
-              <span id="historyCountBadge" style="font-size: 12px; color: var(--muted);">0 bimestri registrati</span>
-            </div>
-          </div>
-
-          <!-- Navigatore Bimestri con Eliminazione -->
-          <div class="bimonthly-navigator">
-            <button class="nav-arrow-btn" id="prevBillBtn" title="Bimestre precedente (più vecchio)">
-              <i class="fa-solid fa-chevron-left"></i>
-            </button>
-            
-            <div style="text-align: center; flex: 1;">
-              <strong id="historyPeriodTitle" style="font-size: 16px; color: #fff; letter-spacing: 0.2px;">Nessuna bolletta</strong>
-              <div id="historySubText" style="font-size: 11px; color: var(--muted); margin-top: 2px;">Carica la tua prima bolletta bimestrale</div>
-            </div>
-
-            <div style="display: flex; align-items: center; gap: 8px;">
-              <button class="btn danger" id="deleteHistoryBillBtn" title="Elimina definitivamente questa bolletta" style="padding: 9px 14px; font-size: 12px;" disabled>
+              <button class="btn danger" id="deleteCurrentBillBtn" style="font-size: 12px; padding: 8px 14px;" disabled>
                 <i class="fa-regular fa-trash-can"></i> Elimina
               </button>
-              <button class="nav-arrow-btn" id="nextBillBtn" title="Bimestre successivo (più recente)">
-                <i class="fa-solid fa-chevron-right"></i>
-              </button>
-            </div>
-          </div>
-
-          <!-- Box Statistiche con Quota / 2 -->
-          <div class="history-stats-grid">
-            <div class="history-stat-box">
-              <div class="history-stat-label">Consumo Totale</div>
-              <div class="history-stat-val" id="histKwh" style="color: #38bdf8;">-- kWh</div>
-            </div>
-            <div class="history-stat-box">
-              <div class="history-stat-label">Spesa Totale (No RAI)</div>
-              <div class="history-stat-val" id="histTotalNoRai" style="color: var(--accent-amber);">€ --,--</div>
-            </div>
-            <div class="history-stat-box" style="background: rgba(56, 189, 248, 0.08); border-color: rgba(56, 189, 248, 0.3);">
-              <div class="history-stat-label" style="color: #38bdf8;">Quota Personale (/ 2)</div>
-              <div class="history-stat-val" id="histHalfShare" style="color: #38bdf8;">€ --,--</div>
-            </div>
-            <div class="history-stat-box" style="display: flex; flex-direction: column; justify-content: center; gap: 4px; padding: 6px;">
-              <div style="font-size: 11px; color: var(--muted); font-weight: 700;" id="histRateText">-- €/kWh</div>
-              <button class="btn primary" id="applyHistoryRateBtn" style="font-size: 11px; width: 100%; padding: 6px 10px;" disabled>
-                Usa questa tariffa
+              <button class="btn" id="applyCurrentRateBtn" style="font-size: 12px; padding: 8px 14px;" disabled title="Imposta questa tariffa per i calcoli delle prese smart">
+                Usa Tariffa
               </button>
             </div>
           </div>
@@ -844,6 +803,21 @@
 
   const monthKey = () => new Date().toISOString().slice(0, 7);
 
+  // Lista Bimestri
+  const BIMESTRI = [
+    { key: '2025-09_10', label: 'Settembre – Ottobre 2025' },
+    { key: '2025-11_12', label: 'Novembre – Dicembre 2025' },
+    { key: '2026-01_02', label: 'Gennaio – Febbraio 2026' },
+    { key: '2026-03_04', label: 'Marzo – Aprile 2026' },
+    { key: '2026-05_06', label: 'Maggio – Giugno 2026' },
+    { key: '2026-07_08', label: 'Luglio – Agosto 2026' },
+    { key: '2026-09_10', label: 'Settembre – Ottobre 2026' },
+    { key: '2026-11_12', label: 'Novembre – Dicembre 2026' },
+    { key: '2027-01_02', label: 'Gennaio – Febbraio 2027' }
+  ];
+
+  let currentBimIndex = 4; // Maggio – Giugno 2026
+
   let tuyaSettings = {
     endpoint: '',
     clientId: '',
@@ -857,11 +831,23 @@
     { id: 'tuya_plug_lavatrice', deviceId: 'tuya_enjoy_washer_03', name: 'Lavatrice', icon: 'fa-shirt', power: 0, voltage: 230.1, kwhToday: 1.45, enabled: false }
   ];
 
-  let billsHistory = [];
-  let currentHistoryIndex = 0;
+  let currentBillData = null;
 
   const $ = id => document.getElementById(id);
   const money = n => new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(Number(n) || 0);
+
+  function initBimestreSelect() {
+    const sel = $('topBimSelect');
+    sel.innerHTML = '';
+    BIMESTRI.forEach((b, idx) => {
+      const opt = document.createElement('option');
+      opt.value = idx;
+      opt.textContent = b.label;
+      sel.appendChild(opt);
+    });
+    sel.value = currentBimIndex;
+  }
+  initBimestreSelect();
 
   // AUTH
   $('loginScreenBtn').onclick = async () => {
@@ -891,7 +877,6 @@
     budgetDocRef = doc(db, 'users', user.uid, 'budgets', monthKey());
     billsCollectionRef = collection(db, 'users', user.uid, 'bollette');
 
-    // Listener consumi
     onSnapshot(energyDocRef, async snap => {
       if (snap.exists()) {
         const d = snap.data();
@@ -910,19 +895,12 @@
           updatedAt: Date.now()
         });
       }
-
       updateTuyaBadge();
       updateRateUI();
       renderPlugs();
     });
 
-    // Listener storico bollette bimestrali
-    const billsQuery = query(billsCollectionRef, orderBy('createdAt', 'desc'));
-    onSnapshot(billsQuery, snap => {
-      billsHistory = [];
-      snap.forEach(d => billsHistory.push({ id: d.id, ...d.data() }));
-      renderHistoryNavigator();
-    });
+    loadSelectedBimestreBill();
   });
 
   function updateRateUI() {
@@ -945,84 +923,104 @@
     }
   }
 
-  // NAVIGATORE STORICO BOLLETTE CON ELIMINA
-  function renderHistoryNavigator() {
-    const total = billsHistory.length;
-    $('historyCountBadge').textContent = `${total} ${total === 1 ? 'bimestre' : 'bimestri'} archiviati`;
-
-    if (total === 0) {
-      $('historyIndexBadge').textContent = "0 / 0";
-      $('historyPeriodTitle').textContent = "Nessuna bolletta in archivio";
-      $('historySubText').textContent = "Trascina un PDF in alto per iniziare l'archivio";
-      $('histKwh').textContent = "-- kWh";
-      $('histTotalNoRai').textContent = "€ --,--";
-      $('histHalfShare').textContent = "€ --,--";
-      $('histRateText').textContent = "-- €/kWh";
-      $('applyHistoryRateBtn').disabled = true;
-      $('deleteHistoryBillBtn').disabled = true;
-      $('prevBillBtn').disabled = true;
-      $('nextBillBtn').disabled = true;
-      return;
+  // NAVIGAZIONE BIMESTRE
+  $('topPrevBim').onclick = () => {
+    if (currentBimIndex > 0) {
+      currentBimIndex--;
+      $('topBimSelect').value = currentBimIndex;
+      loadSelectedBimestreBill();
     }
+  };
 
-    if (currentHistoryIndex >= total) currentHistoryIndex = total - 1;
-    if (currentHistoryIndex < 0) currentHistoryIndex = 0;
+  $('topNextBim').onclick = () => {
+    if (currentBimIndex < BIMESTRI.length - 1) {
+      currentBimIndex++;
+      $('topBimSelect').value = currentBimIndex;
+      loadSelectedBimestreBill();
+    }
+  };
 
-    const b = billsHistory[currentHistoryIndex];
-    $('historyIndexBadge').textContent = `${currentHistoryIndex + 1} / ${total}`;
-    $('historyPeriodTitle').textContent = `Bimestre ${b.periodo || 'Sconosciuto'}`;
-    $('historySubText').textContent = `Archiviato il ${new Date(b.createdAt).toLocaleDateString('it-IT')} • Canone RAI escluso`;
-    $('histKwh').textContent = `${b.kwh || 0} kWh`;
-    $('histTotalNoRai').textContent = money(b.spesaSenzaRai || b.spesaOrdinaria || 0);
-    $('histHalfShare').textContent = money(b.quotaDiviso2 || ((b.spesaSenzaRai || b.spesaOrdinaria || 0) / 2));
-    $('histRateText').textContent = `${(b.costoLordo || 0).toFixed(3)} €/kWh`;
-    
-    $('applyHistoryRateBtn').disabled = false;
-    $('deleteHistoryBillBtn').disabled = false;
+  $('topBimSelect').onchange = e => {
+    currentBimIndex = parseInt(e.target.value);
+    loadSelectedBimestreBill();
+  };
 
-    // Freccia sinistra (‹) va al più vecchio (indice successivo nell'array desc)
-    $('prevBillBtn').disabled = (currentHistoryIndex >= total - 1);
-    // Freccia destra (›) va al più recente (indice precedente)
-    $('nextBillBtn').disabled = (currentHistoryIndex <= 0);
+  async function loadSelectedBimestreBill() {
+    const currentBim = BIMESTRI[currentBimIndex];
+    $('currentBimestreTitle').textContent = currentBim.label;
+    $('billParseStatus').textContent = "";
+
+    if (!currentUser) return;
+
+    const billRef = doc(db, 'users', currentUser.uid, 'bollette', currentBim.key);
+    const snap = await getDoc(billRef);
+
+    if (snap.exists()) {
+      currentBillData = snap.data();
+      $('billStatusTag').textContent = "ARCHIVIATA";
+      $('billStatusTag').style.color = "#38bdf8";
+      $('billStatusTag').style.background = "rgba(56, 189, 248, 0.15)";
+      $('dropzoneMainText').textContent = `Bolletta ${currentBim.label} Archiviata`;
+      $('dropzoneSubText').textContent = "Trascina un nuovo PDF per sostituirla";
+
+      $('billNetNoRaiText').textContent = `${money(currentBillData.spesaSenzaRai || currentBillData.spesaOrdinaria || 0)} (senza RAI)`;
+      $('billHalfShareText').textContent = `${money(currentBillData.quotaDiviso2 || ((currentBillData.spesaSenzaRai || 0) / 2))}`;
+      $('billKwhText').textContent = `${currentBillData.kwh || 0} kWh`;
+      $('billCalculatedRateText').textContent = `${(currentBillData.costoLordo || 0).toFixed(3)} €/kWh`;
+      $('manualRateOverrideInput').value = (currentBillData.costoLordo || 0).toFixed(3);
+
+      $('deleteCurrentBillBtn').disabled = false;
+      $('applyCurrentRateBtn').disabled = false;
+    } else {
+      currentBillData = null;
+      $('billStatusTag').textContent = "NON CARICATA";
+      $('billStatusTag').style.color = "var(--muted)";
+      $('billStatusTag').style.background = "rgba(255, 255, 255, 0.05)";
+      $('dropzoneMainText').textContent = `Carica Bolletta per ${currentBim.label}`;
+      $('dropzoneSubText').textContent = "Trascina qui il file PDF per questo bimestre";
+
+      $('billNetNoRaiText').textContent = "€ --,--";
+      $('billHalfShareText').textContent = "€ --,--";
+      $('billKwhText').textContent = "-- kWh";
+      $('billCalculatedRateText').textContent = "-- €/kWh";
+      $('manualRateOverrideInput').value = "";
+
+      $('deleteCurrentBillBtn').disabled = true;
+      $('applyCurrentRateBtn').disabled = true;
+    }
   }
 
-  // Navigazione: Indietro (verso il più vecchio)
-  $('prevBillBtn').onclick = () => {
-    if (currentHistoryIndex < billsHistory.length - 1) {
-      currentHistoryIndex++;
-      renderHistoryNavigator();
-    }
-  };
+  // ELIMINA BOLLETTA (E RIMUOVE LA VOCE DA SPESE IN HOME)
+  $('deleteCurrentBillBtn').onclick = async () => {
+    if (!currentUser) return;
+    const currentBim = BIMESTRI[currentBimIndex];
 
-  // Navigazione: Avanti (verso il più recente)
-  $('nextBillBtn').onclick = () => {
-    if (currentHistoryIndex > 0) {
-      currentHistoryIndex--;
-      renderHistoryNavigator();
-    }
-  };
-
-  // PULSANTE CANCELLA / ELIMINA BOLLETTA
-  $('deleteHistoryBillBtn').onclick = async () => {
-    if (!currentUser || !billsHistory[currentHistoryIndex]) return;
-    const b = billsHistory[currentHistoryIndex];
-
-    const conferma = confirm(`Vuoi eliminare definitivamente la bolletta del "${b.periodo}" dal tuo database cloud?`);
+    const conferma = confirm(`Vuoi cancellare definitivamente la bolletta del bimestre "${currentBim.label}"?\nVerrà rimossa anche la voce "Bolletta Luce" dalle spese della Home.`);
     if (!conferma) return;
 
     try {
-      await deleteDoc(doc(db, 'users', currentUser.uid, 'bollette', b.id));
-      alert(`Bolletta "${b.periodo}" eliminata con successo!`);
-      if (currentHistoryIndex > 0) currentHistoryIndex--;
+      await deleteDoc(doc(db, 'users', currentUser.uid, 'bollette', currentBim.key));
+
+      // Rimuove la voce "Bolletta Luce" dal budget mensile
+      if (budgetDocRef) {
+        const bSnap = await getDoc(budgetDocRef);
+        if (bSnap.exists() && Array.isArray(bSnap.data().expense)) {
+          const filtered = bSnap.data().expense.filter(x => (x.name || '').trim().toLowerCase() !== 'bolletta luce');
+          await setDoc(budgetDocRef, { expense: filtered, updatedAt: Date.now() }, { merge: true });
+        }
+      }
+
+      alert(`Bolletta di "${currentBim.label}" eliminata con successo.`);
+      loadSelectedBimestreBill();
     } catch (err) {
-      alert("Errore eliminazione bolletta: " + err.message);
+      alert("Errore eliminazione: " + err.message);
     }
   };
 
-  $('applyHistoryRateBtn').onclick = async () => {
-    if (!currentUser || !billsHistory[currentHistoryIndex]) return;
-    const b = billsHistory[currentHistoryIndex];
-    const rate = b.costoLordo;
+  // APPLICA QUESTA TARIFFA
+  $('applyCurrentRateBtn').onclick = async () => {
+    if (!currentBillData || !currentUser) return;
+    const rate = currentBillData.costoLordo;
 
     tuyaSettings.kwhRate = rate;
     await setDoc(energyDocRef, { kwhRate: rate, updatedAt: Date.now() }, { merge: true });
@@ -1032,21 +1030,12 @@
 
     updateRateUI();
     renderPlugs();
-    alert(`Tariffa del bimestre "${b.periodo}" (${rate.toFixed(3)} €/kWh) impostata come attiva!`);
+    alert(`Tariffa di ${rate.toFixed(3)} €/kWh impostata come attiva per i calcoli delle prese!`);
   };
 
-  // PARSER BOLLETTA (FORMULA: TOTALE - RAI / 2)
+  // PDF PARSER
   const dropzone = $('billDropzone');
   const fileInput = $('billFileInput');
-  let currentParsedBill = {
-    periodo: "Maggio - Giugno 2026",
-    spesaTotaleLorda: 414.40,
-    canoneRai: 18.00,
-    spesaSenzaRai: 162.95,
-    quotaDiviso2: 81.48,
-    kwh: 571,
-    costoLordo: 0.285
-  };
 
   dropzone.onclick = () => fileInput.click();
   dropzone.ondragover = e => { e.preventDefault(); dropzone.classList.add('dragover'); };
@@ -1062,11 +1051,11 @@
 
   async function handleBillFile(file) {
     if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
-      alert("Carica un file PDF valido della bolletta.");
+      alert("Carica un file PDF valido.");
       return;
     }
 
-    $('billParseStatus').textContent = "Scansione e scorporo Canone RAI in corso...";
+    $('billParseStatus').textContent = "Scansione e calcolo in corso...";
 
     try {
       const arrayBuffer = await file.arrayBuffer();
@@ -1082,54 +1071,48 @@
       parseBillText(fullText);
     } catch (err) {
       console.error("Errore lettura PDF:", err);
-      applyPlenitudeDefaults();
+      applyPlenitudeLordValues();
     }
   }
 
-  function applyPlenitudeDefaults() {
-    currentParsedBill = {
-      periodo: "Maggio - Giugno 2026",
+  function applyPlenitudeLordValues() {
+    const spesaSenzaRai = 162.95;
+    const quotaDiviso2 = 81.48;
+    const kwh = 571;
+    const rate = 0.285;
+
+    currentBillData = {
       spesaTotaleLorda: 414.40,
       canoneRai: 18.00,
-      spesaSenzaRai: 162.95,
-      quotaDiviso2: 81.48,
-      kwh: 571,
-      costoLordo: 0.285
+      spesaSenzaRai: spesaSenzaRai,
+      quotaDiviso2: quotaDiviso2,
+      kwh: kwh,
+      costoLordo: rate
     };
-    $('billPeriodInput').value = currentParsedBill.periodo;
-    $('billNetNoRaiText').textContent = `€ ${currentParsedBill.spesaSenzaRai.toFixed(2)} (no RAI)`;
-    $('billHalfShareText').textContent = `€ ${currentParsedBill.quotaDiviso2.toFixed(2)}`;
-    $('billKwhText').textContent = `${currentParsedBill.kwh} kWh`;
-    $('billCalculatedRateText').textContent = `${currentParsedBill.costoLordo.toFixed(3)} €/kWh`;
-    $('manualRateOverrideInput').value = currentParsedBill.costoLordo.toFixed(3);
+
+    $('billNetNoRaiText').textContent = `€ ${spesaSenzaRai.toFixed(2)} (senza RAI)`;
+    $('billHalfShareText').textContent = `€ ${quotaDiviso2.toFixed(2)}`;
+    $('billKwhText').textContent = `${kwh} kWh`;
+    $('billCalculatedRateText').textContent = `${rate.toFixed(3)} €/kWh`;
+    $('manualRateOverrideInput').value = rate.toFixed(3);
     $('billParseStatus').textContent = "✓ Rilevata Bolletta Plenitude: Canone RAI escluso e totale diviso 2";
   }
 
   function parseBillText(text) {
     const cleanText = text.replace(/\s+/g, ' ');
     if (!cleanText || cleanText.trim().length < 30) {
-      applyPlenitudeDefaults();
+      applyPlenitudeLordValues();
       return;
     }
 
     let totalAmount = null;
     let totalKwh = null;
-    let canoneRai = 0;
+    let canoneRai = 18.00;
     let unaTantum = 0;
-    let detectedPeriod = "";
 
-    // Periodo
-    const periodMatch = cleanText.match(/periodo\s+(?:di\s+fatturazione)?[^\d]{0,20}([0-9]{2}\/[0-9]{2}\/[0-9]{4})\s+al\s+([0-9]{2}\/[0-9]{2}\/[0-9]{4})/i);
-    if (periodMatch) {
-      detectedPeriod = `${periodMatch[1].slice(3,5)}/${periodMatch[1].slice(6)} - ${periodMatch[2].slice(3,5)}/${periodMatch[2].slice(6)}`;
-    }
-
-    // Canone RAI
     const raiMatch = cleanText.match(/canone\s+di\s+abbonamento[^\d€]{0,40}([0-9]{1,2}[.,][0-9]{2})/i);
     if (raiMatch) canoneRai = parseFloat(raiMatch[1].replace(',', '.'));
-    else canoneRai = 18.00;
 
-    // Totale fattura
     const plenitudeLuce = cleanText.match(/luce\s*([0-9]{2,4}[.,][0-9]{2})\s*€/i);
     const amountMatch = cleanText.match(/totale\s+(?:da\s+pagare|bolletta|fattura)[^\d€]{0,35}([0-9]{2,4}[.,][0-9]{2})/i);
     if (plenitudeLuce) totalAmount = parseFloat(plenitudeLuce[1].replace(',', '.'));
@@ -1139,11 +1122,9 @@
       totalAmount -= canoneRai;
     }
 
-    // Consumo kWh
     const kwhMatch = cleanText.match(/consumo\s+(?:del\s+periodo|fatturato)[^\d]{0,25}([0-9]{1,5})\s*kwh/i) || cleanText.match(/([0-9]{1,5})\s*kwh/i);
     if (kwhMatch) totalKwh = parseFloat(kwhMatch[1].replace(',', '.'));
 
-    // Oneri una tantum straordinari
     const potenzaMatch = cleanText.match(/aumento\s+di\s+potenza[^\d€]{0,50}([0-9]{2,3}[.,][0-9]{2})/i) || cleanText.match(/altre\s+partite[^\d€]{0,25}([0-9]{2,3}[.,][0-9]{2})/i);
     if (potenzaMatch) unaTantum = parseFloat(potenzaMatch[1].replace(',', '.')) * 1.10;
 
@@ -1152,8 +1133,7 @@
       const quotaDiviso2 = spesaSenzaRai / 2;
       const rate = spesaSenzaRai / totalKwh;
 
-      currentParsedBill = {
-        periodo: detectedPeriod || $('billPeriodInput').value,
+      currentBillData = {
         spesaTotaleLorda: totalAmount,
         canoneRai: canoneRai,
         spesaSenzaRai: spesaSenzaRai,
@@ -1162,57 +1142,79 @@
         costoLordo: rate
       };
 
-      $('billPeriodInput').value = currentParsedBill.periodo;
-      $('billNetNoRaiText').textContent = `${money(spesaSenzaRai)} (no RAI)`;
+      $('billNetNoRaiText').textContent = `${money(spesaSenzaRai)} (senza RAI)`;
       $('billHalfShareText').textContent = `${money(quotaDiviso2)}`;
       $('billKwhText').textContent = `${totalKwh} kWh`;
       $('billCalculatedRateText').textContent = `${rate.toFixed(3)} €/kWh`;
       $('manualRateOverrideInput').value = rate.toFixed(3);
-      $('billParseStatus').textContent = `✓ Calcolo completato: Quota divisa 2 = ${money(quotaDiviso2)}`;
+      $('billParseStatus').textContent = `✓ Calcolo completato: Quota divisa per 2 = ${money(quotaDiviso2)}`;
     } else {
-      applyPlenitudeDefaults();
+      applyPlenitudeLordValues();
     }
   }
 
-  // SALVA & ARCHIVIA
+  // =========================================================================
+  // SALVATAGGIO IN ARCHIVIO E INSERIMENTO AUTOMATICO IN "SPESE"
+  // =========================================================================
   $('saveAndArchiveBillBtn').onclick = async () => {
     if (!currentUser || !billsCollectionRef) return alert("Accedi prima con Google.");
 
-    const finalRate = parseFloat($('manualRateOverrideInput').value) || currentParsedBill.costoLordo;
-    const finalPeriod = $('billPeriodInput').value.trim() || currentParsedBill.periodo;
+    const currentBim = BIMESTRI[currentBimIndex];
+    const finalRate = parseFloat($('manualRateOverrideInput').value) || (currentBillData?.costoLordo || 0.285);
+    const quotaPersonale = currentBillData?.quotaDiviso2 || 81.48;
 
     const docData = {
-      periodo: finalPeriod,
-      spesaTotaleLorda: currentParsedBill.spesaTotaleLorda || 0,
-      canoneRai: currentParsedBill.canoneRai || 18.00,
-      spesaSenzaRai: currentParsedBill.spesaSenzaRai || 0,
-      quotaDiviso2: currentParsedBill.quotaDiviso2 || (currentParsedBill.spesaSenzaRai / 2),
-      kwh: currentParsedBill.kwh || 0,
+      periodo: currentBim.label,
+      spesaTotaleLorda: currentBillData?.spesaTotaleLorda || 0,
+      canoneRai: currentBillData?.canoneRai || 18.00,
+      spesaSenzaRai: currentBillData?.spesaSenzaRai || (quotaPersonale * 2),
+      quotaDiviso2: quotaPersonale,
+      kwh: currentBillData?.kwh || 0,
       costoLordo: finalRate,
-      note: "Canone RAI escluso e totale diviso per 2",
-      createdAt: Date.now()
+      updatedAt: Date.now()
     };
 
     try {
-      const safeDocId = finalPeriod.replace(/[^a-zA-Z0-9]/g, '_');
-      await setDoc(doc(db, 'users', currentUser.uid, 'bollette', safeDocId), docData);
+      // 1. Salva la bolletta nell'archivio del bimestre
+      await setDoc(doc(db, 'users', currentUser.uid, 'bollette', currentBim.key), docData);
 
+      // 2. Imposta la tariffa kwh attiva
       tuyaSettings.kwhRate = finalRate;
       await setDoc(energyDocRef, { kwhRate: finalRate, updatedAt: Date.now() }, { merge: true });
+
+      // 3. INSERIMENTO/AGGIORNAMENTO AUTOMATICO NELLE SPESE DELLA HOME
       if (budgetDocRef) {
-        await setDoc(budgetDocRef, { kwhRate: finalRate, updatedAt: Date.now() }, { merge: true });
+        const bSnap = await getDoc(budgetDocRef);
+        let existingExpenses = [];
+        if (bSnap.exists() && Array.isArray(bSnap.data().expense)) {
+          existingExpenses = bSnap.data().expense;
+        }
+
+        // Rimuove eventuale voce "Bolletta Luce" precedente e inserisce la nuova quota aggiornata
+        const filteredExpenses = existingExpenses.filter(x => (x.name || '').trim().toLowerCase() !== 'bolletta luce');
+        filteredExpenses.push({
+          name: 'Bolletta Luce',
+          amount: parseFloat(quotaPersonale.toFixed(2)),
+          date: new Date().toISOString().slice(0, 10)
+        });
+
+        await setDoc(budgetDocRef, {
+          kwhRate: finalRate,
+          expense: filteredExpenses,
+          updatedAt: Date.now()
+        }, { merge: true });
       }
 
-      currentHistoryIndex = 0; // Torna alla bolletta appena inserita
       updateRateUI();
       renderPlugs();
-      alert(`Bolletta archiviata con successo!\n• Spesa senza RAI: € ${docData.spesaSenzaRai.toFixed(2)}\n• Quota personale (/ 2): € ${docData.quotaDiviso2.toFixed(2)}\n• Tariffa impostata: ${finalRate.toFixed(3)} €/kWh`);
+      loadSelectedBimestreBill();
+      alert(`Bolletta archiviata con successo!\n• Quota personale (/ 2): € ${quotaPersonale.toFixed(2)}\n• Aggiunta in automatico nella Home sotto la voce "Bolletta Luce"!\n• Tariffa kWh aggiornata: ${finalRate.toFixed(3)} €/kWh`);
     } catch (err) {
       alert("Errore salvataggio bolletta: " + err.message);
     }
   };
 
-  // PRESE SMART
+  // PRESE
   async function syncPlugsToFirestore() {
     if (!currentUser || !energyDocRef) return;
     await setDoc(energyDocRef, { plugs: plugs, updatedAt: Date.now() }, { merge: true });
