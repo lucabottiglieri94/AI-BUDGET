@@ -183,7 +183,6 @@
     .menu { display: flex; flex-direction: column; gap: 8px; }
     .nav { width: 100%; justify-content: flex-start; padding: 12px 16px; border-radius: 14px; }
 
-    /* Contenitore Principale con Transizione Swipe Fluida */
     .main { 
       display: flex; 
       flex-direction: column; 
@@ -192,14 +191,8 @@
       transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.22s ease;
       will-change: transform, opacity;
     }
-    .main.swipe-left {
-      transform: translateX(-35px);
-      opacity: 0.3;
-    }
-    .main.swipe-right {
-      transform: translateX(35px);
-      opacity: 0.3;
-    }
+    .main.swipe-left { transform: translateX(-35px); opacity: 0.3; }
+    .main.swipe-right { transform: translateX(35px); opacity: 0.3; }
 
     .top {
       padding: 16px 24px;
@@ -438,6 +431,31 @@
     .ai-output-box p:last-child { margin-bottom: 0; }
     .ai-output-box strong { color: #38bdf8; font-weight: 700; }
 
+    /* Pulsante Microfono Registrazione Vocale */
+    .mic-btn {
+      background: rgba(168, 85, 247, 0.15);
+      border: 1px solid rgba(168, 85, 247, 0.4);
+      color: #c084fc;
+      border-radius: 12px;
+      padding: 10px 14px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+    .mic-btn:hover { background: rgba(168, 85, 247, 0.3); color: #fff; }
+    .mic-btn.listening {
+      background: var(--accent-red);
+      color: #fff;
+      border-color: var(--accent-red);
+      animation: pulseMic 1.2s infinite;
+    }
+    @keyframes pulseMic {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.05); opacity: 0.7; }
+    }
+
     .grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -503,6 +521,7 @@
     .add { width: 100%; border-radius: 12px; margin-top: 6px; }
 
     .collapsed #incomeList, .collapsed #expenseList, .collapsed .add { display: none; }
+    .collapsed #recurringList, .collapsed #recurringActions { display: none; }
 
     .linkcard { text-decoration: none; color: inherit; display: block; margin-bottom: 14px; }
     .linkcard strong { font-size: 16px; display: inline-flex; align-items: center; gap: 6px; }
@@ -732,7 +751,7 @@
 
     .status { font-size: 12px; color: var(--muted); text-align: right; padding: 4px 10px; }
 
-    /* Indicatore Swipe Toast Mobile */
+    /* Toast Swipe */
     .swipe-indicator {
       position: fixed;
       top: 18px;
@@ -759,22 +778,18 @@
       opacity: 1;
     }
 
-    /* Bottom Nav Mobile Touch Bar */
-    .mobile-bottom-bar {
-      display: none;
-    }
+    .mobile-bottom-bar { display: none; }
 
     @media (max-width: 980px) {
       .grid-halves { grid-template-columns: 1fr; }
     }
 
-    /* Ottimizzazioni Responsive Smartphone */
     @media (max-width: 860px) {
       .shell { 
         grid-template-columns: 1fr; 
-        padding: 10px 10px 85px 10px; /* Spazio per la bottom bar */
+        padding: 10px 10px 85px 10px;
       }
-      .side { display: none; } /* Su mobile usiamo la bottom bar */
+      .side { display: none; }
       .summary, .grid { grid-template-columns: 1fr; }
       .entry { grid-template-columns: 1fr 1fr; }
       .ampolla-card { flex-direction: column; text-align: center; }
@@ -782,7 +797,6 @@
       .top { flex-direction: column; align-items: stretch; gap: 12px; }
       .top-actions { justify-content: space-between; }
 
-      /* Visualizzazione Barra Inferiore Smartphone */
       .mobile-bottom-bar {
         display: flex;
         position: fixed;
@@ -908,7 +922,7 @@
       </div>
     </aside>
 
-    <!-- AREA PRINCIPALE (CON TOUCH SWIPE) -->
+    <!-- AREA PRINCIPALE -->
     <main class="main" id="mainContainer">
       <div class="top">
         <div>
@@ -925,12 +939,10 @@
         </div>
 
         <div class="top-actions">
-          <!-- Configurazione Gemini AI Key -->
           <button id="openGeminiModalBtn" class="btn calc-toggle-btn" title="Configura Gemini AI" style="color: #c084fc;">
             <i class="fa-solid fa-wand-magic-sparkles"></i>
           </button>
 
-          <!-- Calcolatrice -->
           <button id="calcToggleBtn" class="btn calc-toggle-btn" title="Apri Calcolatrice">
             <i class="fa-solid fa-calculator"></i>
           </button>
@@ -960,7 +972,7 @@
         </div>
       </div>
 
-      <!-- SEZIONE AI FINANCIAL COACH -->
+      <!-- SEZIONE AI FINANCIAL COACH & INPUT VOCALE -->
       <section class="card ai-coach-card">
         <div class="section-title" style="margin-bottom: 8px;">
           <div style="display: flex; align-items: center; gap: 10px;">
@@ -972,18 +984,37 @@
           </button>
         </div>
 
+        <!-- Barra di input + Microfono Vocale -->
         <div style="display: flex; gap: 8px; margin-top: 10px;">
-          <input type="text" id="aiUserQuestionInput" placeholder="Fai una domanda al Coach (es: Posso spendere 150 € per un weekend?)..." 
+          <input type="text" id="aiUserQuestionInput" placeholder="Chiedi al Coach o detta una spesa (es: 'Ho speso 34 euro per il cibo dei gatti')..." 
                  style="flex: 1; padding: 10px 14px; border-radius: 12px; border: 1px solid rgba(168, 85, 247, 0.3); background: rgba(5, 8, 17, 0.7); color: #fff; font-size: 13px;">
+          <button id="micVoiceBtn" class="mic-btn" title="Detta spesa o domanda a voce">
+            <i class="fa-solid fa-microphone"></i>
+          </button>
           <button id="sendAiQuestionBtn" class="btn primary" style="padding: 10px 16px; font-size: 13px;">
-            <i class="fa-solid fa-paper-plane"></i> Chiedi
+            <i class="fa-solid fa-paper-plane"></i> Invia
           </button>
         </div>
 
         <div id="aiCoachText" class="ai-output-box">
           <span style="color: var(--muted); font-style: italic;">
-            Fai una domanda specifica nella barra qui sopra oppure premi su "Analisi Completa" per ricevere un resoconto del mese selezionato.
+            Usa il microfono per dettare una spesa al volo (es: "Aggiungi 45 euro di benzina") oppure chiedi un consiglio finanziario.
           </span>
+        </div>
+      </section>
+
+      <!-- SEZIONE Uscite Fisse Ricorrenti / Abbonamenti -->
+      <section id="recurringCard" class="card">
+        <div class="section-title">
+          <h2>🔁 Uscite Fisse & Abbonamenti</h2>
+          <button class="section-toggle" type="button" onclick="toggleCollapse('recurringCard',this)">−</button>
+        </div>
+        <div id="recurringList"></div>
+        <button class="btn primary add" onclick="addRecurringRow()">+ Aggiungi Uscita Fissa</button>
+        <div id="recurringActions" style="margin-top: 12px; display: flex; justify-content: flex-end;">
+          <button class="btn ai-btn" id="importRecurringBtn" style="font-size: 12px; padding: 8px 14px;">
+            <i class="fa-solid fa-file-arrow-down"></i> 📥 Importa fisse nel mese corrente
+          </button>
         </div>
       </section>
 
@@ -1106,7 +1137,7 @@
     </main>
   </div>
 
-  <!-- BARRA INFERIORE SMARTPHONE (MOBILE BOTTOM BAR) -->
+  <!-- BARRA INFERIORE SMARTPHONE -->
   <nav class="mobile-bottom-bar">
     <button class="mobile-tab-btn active" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">
       <i class="fa-solid fa-house"></i>
@@ -1152,14 +1183,12 @@
   const provider = new GoogleAuthProvider();
   provider.setCustomParameters({ prompt: 'select_account' });
 
-  // FUNZIONE HAPTIC FEEDBACK (VIBRAZIONE SMARTPHONE)
   function triggerHaptic(ms = 18) {
     if ('vibrate' in navigator) {
       try { navigator.vibrate(ms); } catch (e) {}
     }
   }
 
-  // GESTIONE DINAMICA DEL MESE SELEZIONATO
   let selectedDate = new Date();
   selectedDate.setDate(1);
 
@@ -1179,9 +1208,10 @@
     return `${selMKey}-01`;
   }
 
-  let ref = null, refVacanze = null, refGemini = null;
-  let unsubBudget = null, unsubVacanze = null;
+  let ref = null, refVacanze = null, refGemini = null, refRecurring = null;
+  let unsubBudget = null, unsubVacanze = null, unsubRecurring = null;
   let state = { income: [], expense: [] };
+  let recurringList = [];
   let saveTimer = null, editing = false, monthlyChart = null, allWeeks = {}, selectedWeekOffset = 0;
   let lastBudgetDoc = {}, lastVacanzeDoc = {};
   let userGeminiApiKey = "";
@@ -1252,17 +1282,11 @@
     }
   }
 
-  // =========================================================================
-  // GESTIONE TOUCH SWIPE MOBILE (SCORRIMENTO CON IL DITO)
-  // =========================================================================
-  let touchStartX = 0;
-  let touchStartY = 0;
-  let touchEndX = 0;
-  let touchEndY = 0;
-  const minSwipeDistance = 55; // soglia minima pixel
+  // TOUCH SWIPE MOBILE
+  let touchStartX = 0, touchStartY = 0, touchEndX = 0, touchEndY = 0;
+  const minSwipeDistance = 55;
 
   document.addEventListener('touchstart', e => {
-    // Non attiva swipe se l'utente tocca modali, input o canvas
     if (e.target.closest('.calc-modal, input, button, select, canvas')) return;
     touchStartX = e.changedTouches[0].screenX;
     touchStartY = e.changedTouches[0].screenY;
@@ -1278,16 +1302,9 @@
   function handleTouchSwipe() {
     const deltaX = touchEndX - touchStartX;
     const deltaY = touchEndY - touchStartY;
-
-    // Assicuriamoci che il movimento sia orizzontale e non verticale (scroll della pagina)
     if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > minSwipeDistance) {
-      if (deltaX < 0) {
-        // Swipe verso Sinistra -> Mese successivo
-        changeMonth(1, 'left');
-      } else {
-        // Swipe verso Destra -> Mese precedente
-        changeMonth(-1, 'right');
-      }
+      if (deltaX < 0) changeMonth(1, 'left');
+      else changeMonth(-1, 'right');
     }
   }
 
@@ -1423,6 +1440,50 @@
     drawMonthly();
   }
 
+  function renderRecurring() {
+    const el = $('recurringList');
+    el.innerHTML = '';
+    recurringList.forEach((x, i) => {
+      const d = document.createElement('div');
+      d.className = 'entry';
+      
+      const name = document.createElement('input');
+      name.placeholder = 'Nome (es. Mutuo, Fibra)';
+      name.value = x.name || '';
+      
+      const amount = document.createElement('input');
+      amount.type = 'number';
+      amount.step = '0.01';
+      amount.placeholder = '€';
+      amount.value = x.amount ?? '';
+      
+      const day = document.createElement('input');
+      day.type = 'number';
+      day.min = '1';
+      day.max = '31';
+      day.placeholder = 'Giorno';
+      day.value = x.day || '1';
+      
+      const del = document.createElement('button');
+      del.className = 'smallbtn';
+      del.textContent = '✕';
+      
+      name.oninput = () => { recurringList[i].name = name.value; saveRecurringNow(); };
+      amount.oninput = () => { recurringList[i].amount = amount.value; saveRecurringNow(); };
+      day.oninput = () => { recurringList[i].day = day.value; saveRecurringNow(); };
+      
+      del.onclick = () => {
+        triggerHaptic(15);
+        recurringList.splice(i, 1);
+        renderRecurring();
+        saveRecurringNow();
+      };
+      
+      d.append(name, amount, day, del);
+      el.appendChild(d);
+    });
+  }
+
   function finishEdit() {
     editing = false;
     clearTimeout(saveTimer);
@@ -1449,6 +1510,13 @@
     setTimeout(() => $(type === 'income' ? 'incomeList' : 'expenseList').lastElementChild?.querySelector('input')?.focus(), 50);
   };
 
+  window.addRecurringRow = () => {
+    triggerHaptic(15);
+    recurringList.push({ name: '', amount: '', day: '1' });
+    renderRecurring();
+    saveRecurringNow();
+  };
+
   window.toggleCollapse = (id, btn) => {
     triggerHaptic(10);
     const card = $(id);
@@ -1465,6 +1533,42 @@
       $('syncStatus').textContent = 'Errore di sincronizzazione: ' + e.message;
     }
   }
+
+  async function saveRecurringNow() {
+    if (!refRecurring || !auth.currentUser) return;
+    try {
+      await setDoc(refRecurring, { recurring: recurringList, updatedAt: Date.now() }, { merge: true });
+    } catch (e) {
+      console.error("Errore salvataggio ricorrenti:", e);
+    }
+  }
+
+  // Importa le uscite fisse nel mese corrente
+  $('importRecurringBtn').onclick = async () => {
+    if (!recurringList.length) return alert("Nessuna spesa fissa configurata.");
+    triggerHaptic(20);
+
+    const selMKey = getMonthKey(selectedDate);
+    recurringList.forEach(rec => {
+      if (!rec.name || !num(rec.amount)) return;
+      const dayStr = String(rec.day || 1).padStart(2, '0');
+      const dateStr = `${selMKey}-${dayStr}`;
+
+      // Evita duplicati identici nel mese
+      const exists = state.expense.some(x => (x.name || '').trim().toLowerCase() === rec.name.trim().toLowerCase());
+      if (!exists) {
+        state.expense.push({
+          name: rec.name,
+          amount: num(rec.amount),
+          date: dateStr
+        });
+      }
+    });
+
+    render('expense');
+    await saveNow();
+    alert(`Importate ${recurringList.length} uscite fisse nel mese di ${selMKey}!`);
+  };
 
   function drawMonthly() {
     const y = selectedDate.getFullYear();
@@ -1553,14 +1657,10 @@
     });
   }
 
-  /* --- ONDE LIQUIDE CANVAS OTTIMIZZATE --- */
+  // Onde Liquide Canvas
   const canvas = $('waveCanvas');
   const ctx = canvas ? canvas.getContext('2d') : null;
-
-  let targetFillLevel = 0.05;
-  let currentFillLevel = 0.05;
-  let waveStep = 0;
-  let animationId = null;
+  let targetFillLevel = 0.05, currentFillLevel = 0.05, waveStep = 0, animationId = null;
 
   if (canvas && ctx) {
     const dpr = window.devicePixelRatio || 1;
@@ -1571,10 +1671,8 @@
 
   function drawWave() {
     if (!ctx) return;
-    const w = 125;
-    const h = 175;
+    const w = 125, h = 175;
     ctx.clearRect(0, 0, w, h);
-
     currentFillLevel += (targetFillLevel - currentFillLevel) * 0.04;
     const baseHeight = h - (h * Math.max(0.04, Math.min(0.96, currentFillLevel)));
 
@@ -1607,77 +1705,42 @@
     waveStep++;
     animationId = requestAnimationFrame(drawWave);
   }
-
-  document.addEventListener('visibilitychange', () => {
-    if (document.hidden) {
-      if (animationId) cancelAnimationFrame(animationId);
-    } else {
-      drawWave();
-    }
-  });
   drawWave();
 
   function calculateVacanzaSaved(d1, d2) {
-    let target = 120;
-    let saved = 0;
-    let foundWeeksSum = 0;
-    let hasWeeklyEntries = false;
-
+    let target = 120, saved = 0, foundWeeksSum = 0, hasWeeklyEntries = false;
     const docs = [d1, d2].filter(Boolean);
     for (const d of docs) {
       if (d.vacanzaTarget) target = num(d.vacanzaTarget);
       if (d.target) target = num(d.target);
-      if (d.obiettivo) target = num(d.obiettivo);
-
       if (d.vacanzaAccantonato !== undefined) saved = Math.max(saved, num(d.vacanzaAccantonato));
       if (d.totaleVersato !== undefined) saved = Math.max(saved, num(d.totaleVersato));
-      if (d.versato !== undefined && typeof d.versato === 'number') saved = Math.max(saved, num(d.versato));
-
-      const weekContainers = [d.weeks, d.settimane, d.vacanze, d.vacanzeWeeks, d.vacanzaSettimane, d];
+      
+      const weekContainers = [d.weeks, d.settimane, d.vacanze, d];
       for (const container of weekContainers) {
         if (!container || typeof container !== 'object') continue;
-        
         const items = Array.isArray(container) ? container : Object.values(container);
         items.forEach(item => {
           if (item && typeof item === 'object') {
-            const isChecked = item.versato === true || item.checked === true || item.status === 'versato';
-            const val = num(item.amount ?? item.importo ?? item.val ?? item.value ?? item.valore);
-            if (isChecked) {
-              foundWeeksSum += val;
-              hasWeeklyEntries = true;
-            }
+            const isChecked = item.versato === true || item.checked === true;
+            const val = num(item.amount ?? item.importo ?? item.val);
+            if (isChecked) { foundWeeksSum += val; hasWeeklyEntries = true; }
           }
         });
-
-        for (let i = 1; i <= 5; i++) {
-          const isCheck = container[`settimana${i}_versato`] || container[`s${i}_versato`] || container[`w${i}_checked`] || container[`settimana${i}_checked`] || (container[`settimana${i}`] && container[`settimana${i}`].versato);
-          const val = num(container[`settimana${i}`]?.amount || container[`settimana${i}`]?.importo || container[`settimana${i}`] || container[`s${i}`] || container[`w${i}`]);
-          if (isCheck && val > 0) {
-            foundWeeksSum += val;
-            hasWeeklyEntries = true;
-          }
-        }
       }
     }
-
-    if (hasWeeklyEntries && foundWeeksSum > 0) {
-      saved = foundWeeksSum;
-    }
-
+    if (hasWeeklyEntries && foundWeeksSum > 0) saved = foundWeeksSum;
     return { saved, target: target || 120 };
   }
 
   function updateAmpolla(d) {
     const saved = num(d?.vacanzaAccantonato), target = num(d?.vacanzaTarget) || 120;
     const pct = Math.min(100, (saved / target) * 100);
-    
     $('ampollaEuro').textContent = money(saved);
     $('ampollaInside').textContent = money(saved);
     $('ampollaPercent').textContent = Math.round(pct) + '% dell\'obiettivo di ' + money(target);
-    
     const badge = $('ampollaPercentBadge');
     if (badge) badge.textContent = Math.round(pct) + '%';
-
     targetFillLevel = Math.max(0.04, Math.min(1, saved / target));
   }
 
@@ -1690,8 +1753,8 @@
     if (!auth.currentUser || !ref) return;
     const amount = num($('depositAmount').value);
     if (!amount || amount <= 0) return;
-    
     triggerHaptic(25);
+    
     const snap = await getDoc(ref), d = snap.exists() ? snap.data() : {};
     const snapV = refVacanze ? await getDoc(refVacanze) : null;
     const dV = snapV && snapV.exists() ? snapV.data() : {};
@@ -1700,28 +1763,12 @@
     const saved = currentData.saved + amount;
     const target = currentData.target || 120;
     
-    state.expense.push({
-      name: 'Versamento Salvadanaio Vacanze',
-      amount: amount,
-      date: defaultDateForSelectedMonth()
-    });
-    
-    await setDoc(ref, { 
-      vacanzaAccantonato: saved, 
-      vacanzaTarget: target, 
-      expense: state.expense,
-      updatedAt: Date.now() 
-    }, { merge: true });
+    state.expense.push({ name: 'Versamento Salvadanaio Vacanze', amount: amount, date: defaultDateForSelectedMonth() });
+    await setDoc(ref, { vacanzaAccantonato: saved, vacanzaTarget: target, expense: state.expense, updatedAt: Date.now() }, { merge: true });
 
     if (refVacanze) {
-      await setDoc(refVacanze, {
-        totaleVersato: saved,
-        vacanzaAccantonato: saved,
-        target: target,
-        updatedAt: Date.now()
-      }, { merge: true });
+      await setDoc(refVacanze, { totaleVersato: saved, vacanzaAccantonato: saved, target: target, updatedAt: Date.now() }, { merge: true });
     }
-    
     $('depositAmount').value = '';
     render('expense');
     updateAmpolla({ vacanzaAccantonato: saved, vacanzaTarget: target });
@@ -1729,15 +1776,13 @@
 
   async function svuotaSalvadanaio() {
     if (!auth.currentUser || !ref) return;
-    if (!confirm("Sei sicuro di voler azzerare il salvadanaio vacanze per questo mese?")) return;
-    
+    if (!confirm("Azzerare il salvadanaio vacanze per questo mese?")) return;
     triggerHaptic(35);
-    const target = 120;
-    await setDoc(ref, { vacanzaAccantonato: 0, vacanzaTarget: target, updatedAt: Date.now() }, { merge: true });
+    await setDoc(ref, { vacanzaAccantonato: 0, vacanzaTarget: 120, updatedAt: Date.now() }, { merge: true });
     if (refVacanze) {
-      await setDoc(refVacanze, { totaleVersato: 0, vacanzaAccantonato: 0, target: target, updatedAt: Date.now() }, { merge: true });
+      await setDoc(refVacanze, { totaleVersato: 0, vacanzaAccantonato: 0, target: 120, updatedAt: Date.now() }, { merge: true });
     }
-    updateAmpolla({ vacanzaAccantonato: 0, vacanzaTarget: target });
+    updateAmpolla({ vacanzaAccantonato: 0, vacanzaTarget: 120 });
   }
 
   $('openVacanze').onclick = () => location.href = 'vacanze.html';
@@ -1766,7 +1811,6 @@
 
     const photo = user.photoURL || 'https://via.placeholder.com/32';
     const name = user.displayName || user.email || 'Utente';
-    
     $('userInfo').innerHTML = `<img src="${photo}" class="user-avatar-small" alt="Avatar"> <span>${user.email || ''}</span>`;
     $('topUserImg').src = photo;
     $('topUserName').textContent = name;
@@ -1781,11 +1825,24 @@
       }
     });
 
+    // Riferimento Uscite Fisse globali dell'utente
+    refRecurring = doc(db, 'users', user.uid, 'settings', 'recurring');
+    onSnapshot(refRecurring, s => {
+      if (s.exists() && Array.isArray(s.data().recurring)) {
+        recurringList = s.data().recurring;
+      } else {
+        recurringList = [
+          { name: 'Affitto / Mutuo', amount: 650, day: 1 },
+          { name: 'Fibra Internet', amount: 26.90, day: 15 }
+        ];
+      }
+      renderRecurring();
+    });
+
     updateMonthHeader();
     subscribeSelectedMonth();
   });
 
-  // GESTIONE GEMINI MODAL
   const geminiModal = $('geminiModal');
   $('openGeminiModalBtn').onclick = () => { triggerHaptic(12); geminiModal.classList.add('open'); };
   $('closeGeminiModalBtn').onclick = () => geminiModal.classList.remove('open');
@@ -1795,7 +1852,6 @@
     if (!auth.currentUser || !refGemini) return;
     const k = $('geminiApiKeyInput').value.trim();
     if (!k) return alert("Inserisci una chiave valida.");
-
     try {
       await setDoc(refGemini, { apiKey: k, updatedAt: Date.now() }, { merge: true });
       userGeminiApiKey = k;
@@ -1806,8 +1862,10 @@
     }
   };
 
-  // INTEGRAZIONE AI FINANCIAL COACH (GEMINI 3.6 FLASH)
-  async function queryAiCoach(customQuestion = null) {
+  // =========================================================================
+  // AI COACH + SPEECH-TO-TEXT VOCALE INTEGRATO
+  // =========================================================================
+  async function queryAiCoach(customQuestion = null, isVoiceExpense = false) {
     if (!userGeminiApiKey) {
       geminiModal.classList.add('open');
       return alert("Inserisci prima la tua chiave gratuita di Gemini per attivare il Coach!");
@@ -1818,7 +1876,7 @@
     const mName = $('currentMonthDisplay').textContent;
     
     out.innerHTML = `<div style="display: flex; align-items: center; gap: 8px; color: #38bdf8;">
-      <i class="fa-solid fa-spinner fa-spin"></i> Gemini sta analizzando i dati finanziari di ${mName}...
+      <i class="fa-solid fa-spinner fa-spin"></i> ${isVoiceExpense ? 'Elaborazione spesa vocale con AI...' : `Gemini sta analizzando i dati di ${mName}...`}
     </div>`;
 
     const incTot = state.income.reduce((s, x) => s + num(x.amount), 0);
@@ -1833,30 +1891,37 @@
 Quadro finanziario del mese di ${mName}:
 - Entrate complessive: € ${incTot.toFixed(2)}
 - Spese complessive: € ${expTot.toFixed(2)}
-- Risparmio Netto disponibile: € ${netBal.toFixed(2)}
-- Fondo Vacanze accantonato: € ${savedVacanza.toFixed(2)} (Target mensile: € 120,00)
-- Voci di spesa registrate: ${state.expense.map(x => `${x.name}: €${x.amount}`).join(', ') || 'Nessuna spesa manuale'}`;
+- Risparmio Netto: € ${netBal.toFixed(2)}
+- Fondo Vacanze: € ${savedVacanza.toFixed(2)} (Target: € 120,00)`;
 
     let promptText = "";
 
-    if (customQuestion) {
+    if (isVoiceExpense) {
+      promptText = `${baseContext}
+
+L'utente ha pronunciato a voce la seguente frase per registrare una spesa:
+"${customQuestion}"
+
+Estrai dalla frase il **nome della spesa/categoria** e l'**importo in euro (numero puro)**.
+Restituisci la risposta ESATTAMENTE in questo formato JSON valido, senza altri commenti o markdown aggiuntivi:
+{"name": "Nome spesa", "amount": 00.00}`;
+    } else if (customQuestion) {
       promptText = `${baseContext}
 
 Domanda dell'utente:
 "${customQuestion}"
 
-Rispondi in modo diretto, concreto e senza convenevoli. Basa la risposta sui numeri reali forniti, indicando cifre e percentuali d'impatto.`;
+Rispondi in modo diretto, concreto e senza convenevoli.`;
     } else {
       promptText = `${baseContext}
 
-Fornisci un'analisi generale del mese in 3 punti sintetici e diretti (stile fintech, senza convenevoli):
-1. **Stato Finanziario**: giudizio rapido sul bilancio entrate/uscite del mese.
-2. **Consiglio Pratico**: una mossa pratica per ottimizzare i costi o gestire la liquidità residua.
-3. **Obiettivo Vacanze**: raccomandazione sull'accantonamento per il salvadanaio vacanze.`;
+Fornisci un'analisi generale del mese in 3 punti sintetici e diretti:
+1. **Stato Finanziario**: bilancio entrate/uscite.
+2. **Consiglio Pratico**: ottimizzazione costi.
+3. **Obiettivo Vacanze**: raccomandazione accantonamento.`;
     }
 
     const modelsToTry = ['gemini-3.6-flash', 'gemini-2.5-flash'];
-    let lastError = null;
     let reply = null;
 
     for (const model of modelsToTry) {
@@ -1864,27 +1929,44 @@ Fornisci un'analisi generale del mese in 3 punti sintetici e diretti (stile fint
         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(userGeminiApiKey)}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: promptText }] }]
-          })
+          body: JSON.stringify({ contents: [{ parts: [{ text: promptText }] }] })
         });
-
         const data = await response.json();
-        if (data.error) {
-          lastError = data.error.message || "Errore API";
-          continue;
+        if (!data.error) {
+          reply = data.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (reply) break;
         }
-
-        reply = data.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (reply) break;
-      } catch (err) {
-        lastError = err.message;
-      }
+      } catch (err) {}
     }
 
     if (!reply) {
-      out.innerHTML = `<span style="color: var(--accent-red);"><i class="fa-solid fa-triangle-exclamation"></i> Errore Coach AI: ${lastError}</span>`;
+      out.innerHTML = `<span style="color: var(--accent-red);"><i class="fa-solid fa-triangle-exclamation"></i> Errore elaborazione AI.</span>`;
       return;
+    }
+
+    // Se era una spesa vocale, interpreta il JSON restituito da Gemini
+    if (isVoiceExpense) {
+      try {
+        const cleanJson = reply.replace(/```json/g, '').replace(/```/g, '').trim();
+        const parsed = JSON.parse(cleanJson);
+        if (parsed.name && parsed.amount) {
+          state.expense.push({
+            name: parsed.name,
+            amount: num(parsed.amount),
+            date: defaultDateForSelectedMonth()
+          });
+          render('expense');
+          await saveNow();
+          triggerHaptic(30);
+          out.innerHTML = `<div style="color: var(--accent-green); font-weight: 700;">
+            <i class="fa-solid fa-circle-check"></i> Spesa registrata con successo: ${parsed.name} (${money(parsed.amount)})
+          </div>`;
+          return;
+        }
+      } catch (e) {
+        out.innerHTML = `<span style="color: var(--accent-red);">Non sono riuscito a interpretare la spesa vocale. Riprova.</span>`;
+        return;
+      }
     }
 
     const formatted = reply
@@ -1909,7 +1991,48 @@ Fornisci un'analisi generale del mese in 3 punti sintetici e diretti (stile fint
     if (e.key === 'Enter') handleSendUserQuestion();
   });
 
-  /* Logica Calcolatrice Apple + Modal Popup */
+  // GESTIONE MICROFONO (WEB SPEECH API)
+  const micBtn = $('micVoiceBtn');
+  const speechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+  if (speechRecognition) {
+    const recognition = new speechRecognition();
+    recognition.lang = 'it-IT';
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    micBtn.onclick = () => {
+      triggerHaptic(20);
+      try {
+        recognition.start();
+        micBtn.classList.add('listening');
+        $('aiCoachText').innerHTML = `<span style="color: #38bdf8;"><i class="fa-solid fa-microphone fa-beat"></i> Ti sto ascoltando... Detta la spesa (es: "Ho speso 20 euro di caffè")</span>`;
+      } catch (e) {
+        micBtn.classList.remove('listening');
+      }
+    };
+
+    recognition.onresult = event => {
+      micBtn.classList.remove('listening');
+      const speechText = event.results[0][0].transcript;
+      $('aiUserQuestionInput').value = speechText;
+      // Invia direttamente come spesa vocale interpretata da AI
+      queryAiCoach(speechText, true);
+    };
+
+    recognition.onerror = () => {
+      micBtn.classList.remove('listening');
+      $('aiCoachText').innerHTML = `<span style="color: var(--accent-red);">Errore microfono o riconoscimento vocale non disponibile.</span>`;
+    };
+
+    recognition.onend = () => {
+      micBtn.classList.remove('listening');
+    };
+  } else {
+    micBtn.onclick = () => alert("Il tuo browser non supporta le API di riconoscimento vocale native.");
+  }
+
+  // Calcolatrice Apple
   const calcModal = $('calcModal');
   $('calcToggleBtn').onclick = () => { triggerHaptic(12); calcModal.classList.add('open'); };
   $('closeCalcBtn').onclick = () => calcModal.classList.remove('open');
@@ -1923,18 +2046,14 @@ Fornisci un'analisi generale del mese in 3 punti sintetici e diretti (stile fint
   }
   window.appleCalcNumber = n => {
     triggerHaptic(8);
-    if (appleCalcCurrent === '0' || appleCalcWaitingForNewNumber) {
-      appleCalcCurrent = n;
-      appleCalcWaitingForNewNumber = false;
-    } else appleCalcCurrent += n;
+    if (appleCalcCurrent === '0' || appleCalcWaitingForNewNumber) { appleCalcCurrent = n; appleCalcWaitingForNewNumber = false; }
+    else appleCalcCurrent += n;
     appleCalcUpdateDisplay();
   };
   window.appleCalcDecimal = () => {
     triggerHaptic(8);
-    if (appleCalcWaitingForNewNumber) {
-      appleCalcCurrent = '0.';
-      appleCalcWaitingForNewNumber = false;
-    } else if (!appleCalcCurrent.includes('.')) appleCalcCurrent += '.';
+    if (appleCalcWaitingForNewNumber) { appleCalcCurrent = '0.'; appleCalcWaitingForNewNumber = false; }
+    else if (!appleCalcCurrent.includes('.')) appleCalcCurrent += '.';
     appleCalcUpdateDisplay();
   };
   window.appleCalcClear = () => {
@@ -1942,16 +2061,8 @@ Fornisci un'analisi generale del mese in 3 punti sintetici e diretti (stile fint
     appleCalcCurrent = '0'; appleCalcPrevious = null; appleCalcOperatorValue = null; appleCalcWaitingForNewNumber = false;
     appleCalcUpdateDisplay();
   };
-  window.appleCalcPlusMinus = () => {
-    triggerHaptic(10);
-    if (appleCalcCurrent !== '0') appleCalcCurrent = String(Number(appleCalcCurrent) * -1);
-    appleCalcUpdateDisplay();
-  };
-  window.appleCalcPercent = () => {
-    triggerHaptic(10);
-    appleCalcCurrent = String(Number(appleCalcCurrent) / 100);
-    appleCalcUpdateDisplay();
-  };
+  window.appleCalcPlusMinus = () => { triggerHaptic(10); if (appleCalcCurrent !== '0') appleCalcCurrent = String(Number(appleCalcCurrent) * -1); appleCalcUpdateDisplay(); };
+  window.appleCalcPercent = () => { triggerHaptic(10); appleCalcCurrent = String(Number(appleCalcCurrent) / 100); appleCalcUpdateDisplay(); };
   window.appleCalcOperator = op => {
     triggerHaptic(12);
     if (appleCalcOperatorValue && !appleCalcWaitingForNewNumber) window.appleCalcEquals();
@@ -1969,17 +2080,13 @@ Fornisci un'analisi generale del mese in 3 punti sintetici e diretti (stile fint
     if (appleCalcOperatorValue === '×') r = appleCalcPrevious * c;
     if (appleCalcOperatorValue === '÷') r = c === 0 ? 0 : appleCalcPrevious / c;
     appleCalcCurrent = String(Number(r.toFixed(8)));
-    appleCalcPrevious = null;
-    appleCalcOperatorValue = null;
-    appleCalcWaitingForNewNumber = true;
+    appleCalcPrevious = null; appleCalcOperatorValue = null; appleCalcWaitingForNewNumber = true;
     appleCalcUpdateDisplay();
   };
 
-  /* --- LOGICA CONSUMI TEMPO REALE PRESA SMART TUYA --- */
-  let currentWatts = 0;
-  let accumulatedKwh = 0;
+  // Consumi Live Tuya
+  let currentWatts = 0, accumulatedKwh = 0;
   const kwhRate = 0.28;
-
   const setWattBtn = $('setWattBtn');
   if (setWattBtn) {
     setWattBtn.onclick = () => {
