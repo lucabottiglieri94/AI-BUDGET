@@ -484,7 +484,7 @@
     }
     .section-toggle:hover { background: rgba(255, 255, 255, 0.1); }
 
-    /* Riga Spesa aggiornata con Pulsante Ricorrente (🔁) */
+    /* Riga Spesa con Pulsante Ricorrente (🔁) */
     .entry {
       display: grid;
       grid-template-columns: 1fr 100px 120px 36px 36px;
@@ -1311,10 +1311,8 @@
   async function checkAndApplyRecurringExpenses(budgetData, mKey) {
     if (!auth.currentUser) return;
     
-    // Controlla se abbiamo già applicato le ricorrenti per questo mese in questo documento
     if (budgetData.recurringApplied === mKey) return;
 
-    // Cerca nel mese precedente o estrae le ricorrenti salvate nei mesi passati
     const prevDate = new Date(selectedDate);
     prevDate.setMonth(prevDate.getMonth() - 1);
     const prevMKey = getMonthKey(prevDate);
@@ -1325,7 +1323,6 @@
       
       let recurringItems = [];
       if (prevSnap.exists() && Array.isArray(prevSnap.data().expense)) {
-        // Prende le spese che avevano il flag isRecurring: true nel mese precedente
         recurringItems = prevSnap.data().expense.filter(x => x.isRecurring === true);
       }
 
@@ -1346,7 +1343,6 @@
 
         await setDoc(ref, { expense: currentExpenses, recurringApplied: mKey, updatedAt: Date.now() }, { merge: true });
       } else {
-        // Segna comunque come controllato per evitare loop
         await setDoc(ref, { recurringApplied: mKey, updatedAt: Date.now() }, { merge: true });
       }
     } catch (e) {
@@ -1370,10 +1366,9 @@
       if (editing) return;
       const d = s.exists() ? s.data() : {};
       
-      // Controlla e applica in automatico le ricorrenti del mese se non fatto
       if (!s.exists() || !d.recurringApplied) {
         await checkAndApplyRecurringExpenses(d, mKey);
-        return; // l'onSnapshot si riattiverà subito dopo il salvataggio
+        return;
       }
 
       lastBudgetDoc = d;
@@ -1436,16 +1431,23 @@
     renderSelectedWeek();
   };
 
+  /* SOMMA DI TUTTE LE SETTIMANE REGISTRATE */
   function syncWeeklyExpenses() {
-    const food = weekValues(weekKey()).food, pets = weekValues(weekKey()).pets;
+    let totalFood = 0;
+    let totalPets = 0;
+    for (const k in allWeeks) {
+      const v = weekValues(k);
+      totalFood += v.food;
+      totalPets += v.pets;
+    }
     const manual = state.expense.filter(x => {
       const n = (x.name || '').trim().toLowerCase();
       return n !== 'spese alimentari luca e lisa' && n !== 'spese animali';
     });
     state.expense = [
       ...manual,
-      { name: 'Spese alimentari Luca e Lisa', amount: food, date: defaultDateForSelectedMonth() },
-      { name: 'Spese animali', amount: pets, date: defaultDateForSelectedMonth() }
+      { name: 'Spese alimentari Luca e Lisa', amount: totalFood, date: defaultDateForSelectedMonth() },
+      { name: 'Spese animali', amount: totalPets, date: defaultDateForSelectedMonth() }
     ];
   }
 
@@ -1470,7 +1472,7 @@
       date.type = 'date';
       date.value = x.date || defaultDateForSelectedMonth();
 
-      // Pulsante Ricorrente 🔁 (disponibile solo nelle spese)
+      // Pulsante Ricorrente 🔁
       const recBtn = document.createElement('button');
       recBtn.type = 'button';
       recBtn.className = `rec-toggle-btn ${x.isRecurring ? 'active' : ''}`;
