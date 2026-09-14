@@ -484,13 +484,18 @@
     }
     .section-toggle:hover { background: rgba(255, 255, 255, 0.1); }
 
-    /* Riga Spesa con Pulsante Ricorrente (🔁) */
+    /* Riga Entrate e Uscite con Pulsante Ricorrente e Durata Mesi */
     .entry {
       display: grid;
-      grid-template-columns: 1fr 100px 120px 36px 36px;
       gap: 6px;
       margin-bottom: 10px;
       align-items: center;
+    }
+    .income-entry {
+      grid-template-columns: 1fr 100px 120px 36px;
+    }
+    .expense-entry {
+      grid-template-columns: 1fr 100px 120px 36px 44px 36px;
     }
     .entry input {
       padding: 10px 14px;
@@ -537,6 +542,34 @@
       border-color: #c084fc;
       color: #c084fc;
       box-shadow: 0 0 10px rgba(168, 85, 247, 0.3);
+    }
+    /* Bottone Durata Mesi 📅 */
+    .rec-months-btn {
+      height: 36px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+      transition: 0.2s;
+      padding: 0 4px;
+      user-select: none;
+    }
+    .rec-months-btn:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
+    }
+    .rec-months-btn.active {
+      background: rgba(56, 189, 248, 0.15);
+      border-color: #38bdf8;
+      color: #38bdf8;
+      box-shadow: 0 0 10px rgba(56, 189, 248, 0.25);
     }
 
     .add { width: 100%; border-radius: 12px; margin-top: 6px; }
@@ -811,7 +844,8 @@
       }
       .side { display: none; }
       .summary, .grid { grid-template-columns: 1fr; }
-      .entry { grid-template-columns: 1fr 90px 110px 34px 34px; }
+      .entry.income-entry { grid-template-columns: 1fr 85px 105px 34px; }
+      .entry.expense-entry { grid-template-columns: 1fr 80px 95px 32px 38px 32px; }
       .ampolla-card { flex-direction: column; text-align: center; }
       .ampolla-actions { justify-content: center; }
       .top { flex-direction: column; align-items: stretch; gap: 12px; }
@@ -1307,12 +1341,14 @@
     }
   }
 
-  // CONTROLLO AUTOMATICO SPESE RICORRENTI AL CAMBIO MESE
+  // CONTROLLO AUTOMATICO SPESE RICORRENTI CON SCALATURA MESI
   async function checkAndApplyRecurringExpenses(budgetData, mKey) {
     if (!auth.currentUser) return;
     
+    // Controlla se abbiamo già applicato le ricorrenti per questo mese
     if (budgetData.recurringApplied === mKey) return;
 
+    // Cerca nel mese precedente
     const prevDate = new Date(selectedDate);
     prevDate.setMonth(prevDate.getMonth() - 1);
     const prevMKey = getMonthKey(prevDate);
@@ -1332,11 +1368,23 @@
         recurringItems.forEach(rec => {
           const exists = currentExpenses.some(x => (x.name || '').trim().toLowerCase() === rec.name.trim().toLowerCase());
           if (!exists) {
+            let nextMonths = null;
+            if (rec.recurringMonths !== undefined && rec.recurringMonths !== null && rec.recurringMonths !== '') {
+              const rem = parseInt(rec.recurringMonths, 10);
+              if (!isNaN(rem)) {
+                if (rem <= 1) {
+                  // Mesi terminati: non riportare nel nuovo mese
+                  return;
+                }
+                nextMonths = rem - 1;
+              }
+            }
             currentExpenses.push({
               name: rec.name,
               amount: num(rec.amount),
               date: `${mKey}-01`,
-              isRecurring: true
+              isRecurring: true,
+              recurringMonths: nextMonths
             });
           }
         });
@@ -1431,7 +1479,6 @@
     renderSelectedWeek();
   };
 
-  /* SOMMA DI TUTTE LE SETTIMANE REGISTRATE */
   function syncWeeklyExpenses() {
     let totalFood = 0;
     let totalPets = 0;
@@ -1456,7 +1503,7 @@
     el.innerHTML = '';
     state[type].forEach((x, i) => {
       const d = document.createElement('div');
-      d.className = 'entry';
+      d.className = `entry ${type === 'income' ? 'income-entry' : 'expense-entry'}`;
       
       const name = document.createElement('input');
       name.placeholder = 'Descrizione';
@@ -1478,6 +1525,17 @@
       recBtn.className = `rec-toggle-btn ${x.isRecurring ? 'active' : ''}`;
       recBtn.innerHTML = '<i class="fa-solid fa-rotate"></i>';
       recBtn.title = x.isRecurring ? 'Spesa ricorrente attiva (si ripeterà ogni mese)' : 'Attiva spesa ricorrente';
+
+      // Pulsante Durata Mesi (es: ∞, 3m, 6m)
+      const monthsBtn = document.createElement('button');
+      monthsBtn.type = 'button';
+      const mVal = x.recurringMonths;
+      const hasMonths = mVal !== undefined && mVal !== null && mVal !== '' && Number(mVal) > 0;
+      monthsBtn.className = `rec-months-btn ${x.isRecurring ? 'active' : ''}`;
+      monthsBtn.innerHTML = x.isRecurring ? (hasMonths ? `${mVal}m` : '∞') : 'Mesi';
+      monthsBtn.title = x.isRecurring 
+        ? (hasMonths ? `Ripeti per ancora ${mVal} mesi (clicca per modificare)` : 'Ripeti per sempre (clicca per impostare i mesi)') 
+        : 'Imposta per quanti mesi ripetere la spesa';
       
       const del = document.createElement('button');
       del.className = 'smallbtn';
@@ -1491,9 +1549,29 @@
         recBtn.onclick = () => {
           triggerHaptic(12);
           state[type][i].isRecurring = !state[type][i].isRecurring;
-          recBtn.classList.toggle('active', state[type][i].isRecurring);
-          recBtn.title = state[type][i].isRecurring ? 'Spesa ricorrente attiva' : 'Attiva spesa ricorrente';
+          render('expense');
           finishEdit();
+        };
+
+        monthsBtn.onclick = () => {
+          triggerHaptic(15);
+          const curr = state[type][i].recurringMonths || '';
+          const resp = prompt("Per quanti mesi deve ripetersi questa spesa?\n(Inserisci es. 3, 6, 12... oppure lascia vuoto/0 per infinito):", curr);
+          if (resp !== null) {
+            const trimmed = resp.trim();
+            const numVal = parseInt(trimmed, 10);
+            if (!isNaN(numVal) && numVal > 0) {
+              state[type][i].recurringMonths = numVal;
+              state[type][i].isRecurring = true;
+            } else {
+              delete state[type][i].recurringMonths;
+              if (trimmed === '0' || trimmed === '') {
+                state[type][i].isRecurring = true;
+              }
+            }
+            render('expense');
+            saveNow();
+          }
         };
       }
       
@@ -1506,7 +1584,10 @@
       };
       
       d.append(name, amount, date);
-      if (type === 'expense') d.appendChild(recBtn);
+      if (type === 'expense') {
+        d.appendChild(recBtn);
+        d.appendChild(monthsBtn);
+      }
       d.appendChild(del);
       el.appendChild(d);
     });
@@ -1535,7 +1616,7 @@
 
   window.addRow = type => {
     triggerHaptic(15);
-    state[type].push({ name: '', amount: '', date: defaultDateForSelectedMonth(), isRecurring: false });
+    state[type].push({ name: '', amount: '', date: defaultDateForSelectedMonth(), isRecurring: false, recurringMonths: null });
     render(type);
     setTimeout(() => $(type === 'income' ? 'incomeList' : 'expenseList').lastElementChild?.querySelector('input')?.focus(), 50);
   };
@@ -1924,7 +2005,8 @@ Fornisci un'analisi generale del mese in 3 punti sintetici e diretti (stile fint
             name: parsed.name,
             amount: num(parsed.amount),
             date: defaultDateForSelectedMonth(),
-            isRecurring: false
+            isRecurring: false,
+            recurringMonths: null
           });
           render('expense');
           await saveNow();
