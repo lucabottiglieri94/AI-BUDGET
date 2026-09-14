@@ -913,7 +913,7 @@
     </p>
     <div style="margin-bottom: 14px;">
       <label style="font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; display: block; margin-bottom: 6px;">Gemini API Key</label>
-      <input type="password" id="geminiApiKeyInput" placeholder="AIzaSy..." style="width: 100%; padding: 10px 14px; border-radius: 12px; border: 1px solid var(--border); background: rgba(5, 8, 17, 0.6); color: #fff; font-size: 13px;">
+      <input type="text" id="geminiApiKeyInput" autocomplete="off" data-lpignore="true" placeholder="AIzaSy..." style="width: 100%; padding: 10px 14px; border-radius: 12px; border: 1px solid var(--border); background: rgba(5, 8, 17, 0.6); color: #fff; font-size: 13px; -webkit-text-security: disc;">
     </div>
     <button class="btn ai-btn" id="saveGeminiKeyBtn" style="width: 100%;">
       <i class="fa-solid fa-cloud-arrow-up"></i> Salva su Firebase
@@ -1341,14 +1341,14 @@
     }
   }
 
-  // CONTROLLO AUTOMATICO SPESE RICORRENTI CON SCALATURA MESI
+  // CONTROLLO AUTOMATICO SPESE RICORRENTI AL CAMBIO MESE
   async function checkAndApplyRecurringExpenses(budgetData, mKey) {
     if (!auth.currentUser) return;
     
-    // Controlla se abbiamo già applicato le ricorrenti per questo mese
+    // Controlla se abbiamo già applicato le ricorrenti per questo mese in questo documento
     if (budgetData.recurringApplied === mKey) return;
 
-    // Cerca nel mese precedente
+    // Cerca nel mese precedente o estrae le ricorrenti salvate nei mesi passati
     const prevDate = new Date(selectedDate);
     prevDate.setMonth(prevDate.getMonth() - 1);
     const prevMKey = getMonthKey(prevDate);
@@ -1359,6 +1359,7 @@
       
       let recurringItems = [];
       if (prevSnap.exists() && Array.isArray(prevSnap.data().expense)) {
+        // Prende le spese che avevano il flag isRecurring: true nel mese precedente
         recurringItems = prevSnap.data().expense.filter(x => x.isRecurring === true);
       }
 
@@ -1391,6 +1392,7 @@
 
         await setDoc(ref, { expense: currentExpenses, recurringApplied: mKey, updatedAt: Date.now() }, { merge: true });
       } else {
+        // Segna comunque come controllato per evitare loop
         await setDoc(ref, { recurringApplied: mKey, updatedAt: Date.now() }, { merge: true });
       }
     } catch (e) {
@@ -1414,9 +1416,10 @@
       if (editing) return;
       const d = s.exists() ? s.data() : {};
       
+      // Controlla e applica in automatico le ricorrenti del mese se non fatto
       if (!s.exists() || !d.recurringApplied) {
         await checkAndApplyRecurringExpenses(d, mKey);
-        return;
+        return; // l'onSnapshot si riattiverà subito dopo il salvataggio
       }
 
       lastBudgetDoc = d;
@@ -1519,7 +1522,7 @@
       date.type = 'date';
       date.value = x.date || defaultDateForSelectedMonth();
 
-      // Pulsante Ricorrente 🔁
+      // Pulsante Ricorrente 🔁 (disponibile solo nelle spese)
       const recBtn = document.createElement('button');
       recBtn.type = 'button';
       recBtn.className = `rec-toggle-btn ${x.isRecurring ? 'active' : ''}`;
