@@ -1,2 +1,595 @@
 <!DOCTYPE html>
-<html lang="it"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Spesa settimanale</title><style>*{box-sizing:border-box}body{margin:0;min-height:100vh;background:linear-gradient(135deg,#0b1020,#111827);color:#f1f3fa;font-family:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-weight:550;letter-spacing:.1px}.top{display:flex;justify-content:space-between;align-items:center;padding:20px 28px;border-bottom:1px solid #293247;gap:15px;flex-wrap:wrap}.title{font-size:25px;font-weight:850;letter-spacing:-.4px}.sub,.muted,.hint{font-size:14px;color:#aeb6c9;margin-top:7px;font-weight:550}.back,.weekbtn{border:1px solid #39445b;background:#202a3b;color:#eef2fb;padding:11px 16px;border-radius:12px;font-weight:750;cursor:pointer}.weeknav{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.weeklabel{min-width:190px;text-align:center;font-weight:800;background:#171f31;border:1px solid #39445b;padding:11px 14px;border-radius:12px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;padding:18px}.category{background:#0e1626;border:1px solid #2b354b;border-radius:20px;padding:16px}.cathead,.phead{display:flex;justify-content:space-between;align-items:center}.cathead{padding:4px 4px 14px;font-weight:800;font-size:16px}.period{background:#1a2234;border:1px solid #354057;border-radius:16px;padding:18px;margin-top:14px}.phead{font-weight:750;margin-bottom:12px}.total{font-size:14px;color:#b9c1d2;font-weight:700}.totalInput{width:100%;border:1px solid #46526b;background:#111827;color:#fff;border-radius:12px;padding:15px;font:inherit;font-size:20px;font-weight:650;outline:none}.totalInput:focus{border-color:#8b5cf6;box-shadow:0 0 0 3px #8b5cf633}.status{text-align:center;color:#aeb6c9;font-size:13px;padding:12px;font-weight:600}.ok{color:#37d98b}.err{color:#ff7186}@media(max-width:800px){.grid{grid-template-columns:1fr}.top{padding:16px}}</style></head><body><header class="top"><div><div class="title">🛒 Spesa settimanale</div><div class="sub">Inserisci direttamente il totale speso per ciascun periodo.</div></div><div class="weeknav"><button class="weekbtn" id="prevWeek">←</button><div class="weeklabel" id="weekLabel">Settimana corrente</div><button class="weekbtn" id="nextWeek">→</button><button class="weekbtn" id="todayWeek">Oggi</button><button class="back" onclick="location.href='index.html'">← Home</button></div></header><div id="status" class="status">Connessione a Firebase in corso...</div><main class="grid"><section class="category"><div class="cathead"><span>🧑‍🤝‍🧑 Luca e Lisa</span><span class="muted">Spese alimentari</span></div><div class="period"><div class="phead"><span>🗓️ Lunedì–Giovedì</span><span class="total" id="foodTotal1">€ 0,00</span></div><input class="totalInput" id="food1" type="number" min="0" step="0.01" placeholder="Totale"></div><div class="period"><div class="phead"><span>🗓️ Venerdì–Domenica</span><span class="total" id="foodTotal2">€ 0,00</span></div><input class="totalInput" id="food2" type="number" min="0" step="0.01" placeholder="Totale"></div></section><section class="category"><div class="cathead"><span>🐈 Gatti</span><span class="muted">Spese animali</span></div><div class="period"><div class="phead"><span>🗓️ Lunedì–Giovedì</span><span class="total" id="petTotal1">€ 0,00</span></div><input class="totalInput" id="pet1" type="number" min="0" step="0.01" placeholder="Totale"></div><div class="period"><div class="phead"><span>🗓️ Venerdì–Domenica</span><span class="total" id="petTotal2">€ 0,00</span></div><input class="totalInput" id="pet2" type="number" min="0" step="0.01" placeholder="Totale"></div></section></main><script type="module">import{initializeApp}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';import{getAuth,onAuthStateChanged}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';import{getFirestore,doc,onSnapshot,setDoc}from'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';const cfg={apiKey:'AIzaSyAdZbBv6JYbYnl6CxuFVfHhSftvIxwf2DY',authDomain:'budget-luca.firebaseapp.com',projectId:'budget-luca',storageBucket:'budget-luca.firebasestorage.app',messagingSenderId:'67496424698',appId:'1:67496424698:web:b1822e04ef4efc07408543'};const app=initializeApp(cfg),auth=getAuth(app),db=getFirestore(app);let ref,allWeeks={},state={food1:'',food2:'',pet1:'',pet2:''},offset=0,timer;const ids=['food1','food2','pet1','pet2'],monthKey=new Date().toISOString().slice(0,7),$=id=>document.getElementById(id),money=n=>new Intl.NumberFormat('it-IT',{style:'currency',currency:'EUR'}).format(Number(n)||0);function monday(d){let x=new Date(d);x.setHours(0,0,0,0);let day=x.getDay()||7;x.setDate(x.getDate()-day+1);return x}function key(){let d=monday(new Date());d.setDate(d.getDate()+offset*7);return d.toISOString().slice(0,10)}function label(k){let a=new Date(k+'T00:00:00'),b=new Date(a);b.setDate(a.getDate()+6);return a.toLocaleDateString('it-IT')+' – '+b.toLocaleDateString('it-IT')}function load(){state=allWeeks[key()]||{food1:'',food2:'',pet1:'',pet2:''};$('weekLabel').textContent=(offset===0?'Settimana corrente · ':'')+label(key());ids.forEach(id=>{$(id).value=state[id]??'';$(id.replace('food','foodTotal').replace('pet','petTotal')).textContent=money(state[id])})}function update(id){state[id]=$(id).value;$(id.replace('food','foodTotal').replace('pet','petTotal')).textContent=money(state[id])}async function save(){if(!ref)return;allWeeks[key()]={...state};let f=+state.food1||0,g=+state.food2||0,p=+state.pet1||0,q=+state.pet2||0;try{await setDoc(ref,{spesaSettimanale:{weeks:allWeeks,activeWeek:key(),foodTotal:f+g,animalTotal:p+q,weeklyTotal:f+g+p+q,updatedAt:Date.now()}},{merge:true});setStatus('Salvato e sincronizzato con Firebase ✓',true)}catch(e){setStatus('Errore Firebase',false,true)}}function setStatus(t,ok,err){$('status').textContent=t;$('status').className='status '+(ok?'ok':err?'err':'')}ids.forEach(id=>{$(id).oninput=()=>update(id);$(id).onblur=()=>{clearTimeout(timer);timer=setTimeout(save,200)}});$('prevWeek').onclick=async()=>{await save();offset--;load()};$('nextWeek').onclick=async()=>{await save();offset++;load()};$('todayWeek').onclick=async()=>{await save();offset=0;load()};onAuthStateChanged(auth,u=>{if(!u){setStatus('Effettua prima il login dalla Dashboard.',false,true);return}ref=doc(db,'users',u.uid,'budgets',monthKey);onSnapshot(ref,s=>{let d=s.exists()?s.data().spesaSettimanale||{}:{};allWeeks=d.weeks&&typeof d.weeks==='object'?d.weeks:{};load();setStatus('Sincronizzato con Firebase ✓',true)},()=>setStatus('Firebase non disponibile',false,true))});</script></body></html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Spesa Settimanale</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --bg: #0b1020;
+      --card-bg: #0e1626;
+      --card-sub: #1a2234;
+      --border: #2b354b;
+      --border-focus: #8b5cf6;
+      --text: #f1f3fa;
+      --muted: #aeb6c9;
+      --accent-green: #37d98b;
+      --accent-red: #ff7186;
+      --accent-cyan: #38bdf8;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, var(--bg), #111827);
+      color: var(--text);
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      font-weight: 500;
+      letter-spacing: .1px;
+    }
+
+    .top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 28px;
+      border-bottom: 1px solid #293247;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+    .title { font-size: 24px; font-weight: 800; letter-spacing: -.4px; }
+    .sub { font-size: 13px; color: var(--muted); margin-top: 4px; }
+
+    .back, .weekbtn {
+      border: 1px solid #39445b;
+      background: #202a3b;
+      color: #eef2fb;
+      padding: 10px 16px;
+      border-radius: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 13px;
+      transition: all 0.2s;
+    }
+    .back:hover, .weekbtn:hover { background: #28354c; border-color: #4b5a77; }
+
+    .weeknav {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .weeklabel {
+      min-width: 220px;
+      text-align: center;
+      font-weight: 700;
+      font-size: 13px;
+      background: #171f31;
+      border: 1px solid #39445b;
+      padding: 10px 14px;
+      border-radius: 12px;
+      color: var(--accent-cyan);
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* Sezione Registrazione Veloce Giornaliera */
+    .daily-box {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 22px;
+    }
+    .daily-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .daily-header h2 { font-size: 17px; font-weight: 800; display: flex; align-items: center; gap: 8px; }
+    
+    .date-control-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--card-sub);
+      padding: 6px 12px;
+      border-radius: 12px;
+      border: 1px solid #354057;
+    }
+    .date-input {
+      background: transparent;
+      border: none;
+      color: #fff;
+      font-family: inherit;
+      font-weight: 700;
+      font-size: 13px;
+      outline: none;
+      color-scheme: dark;
+      cursor: pointer;
+    }
+    .day-badge {
+      background: rgba(56, 189, 248, 0.15);
+      color: var(--accent-cyan);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      padding: 4px 10px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .daily-inputs-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+    .mini-input-card {
+      background: var(--card-sub);
+      border: 1px solid #354057;
+      border-radius: 14px;
+      padding: 14px;
+    }
+    .mini-input-card label {
+      display: block;
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 700;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .mini-input-card input {
+      width: 100%;
+      background: #111827;
+      border: 1px solid #46526b;
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 18px;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      color: #fff;
+      outline: none;
+    }
+    .mini-input-card input:focus {
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
+    }
+
+    .btn-add-daily {
+      width: 100%;
+      background: linear-gradient(135deg, #6366f1 0%, #38bdf8 100%);
+      color: #fff;
+      border: none;
+      padding: 12px;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: opacity 0.2s;
+    }
+    .btn-add-daily:active { opacity: 0.85; transform: scale(0.99); }
+
+    /* Le 2 sole categorie della settimana */
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+    .category {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .cathead {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .cathead-title { font-weight: 800; font-size: 18px; display: flex; align-items: center; gap: 8px; }
+    
+    .period {
+      background: var(--card-sub);
+      border: 1px solid #354057;
+      border-radius: 16px;
+      padding: 18px;
+    }
+    .phead {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+    .total {
+      font-size: 15px;
+      color: var(--accent-green);
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+    }
+    .totalInput {
+      width: 100%;
+      border: 1px solid #46526b;
+      background: #111827;
+      color: #fff;
+      border-radius: 12px;
+      padding: 15px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 24px;
+      font-weight: 700;
+      outline: none;
+      transition: all 0.15s;
+    }
+    .totalInput:focus {
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
+    }
+
+    .week-summary-box {
+      background: rgba(14, 22, 38, 0.7);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .status {
+      text-align: center;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .ok { color: var(--accent-green); }
+    .err { color: var(--accent-red); }
+
+    @media (max-width: 800px) {
+      .grid, .daily-inputs-grid { grid-template-columns: 1fr; }
+      .top { padding: 16px; }
+      .weeknav { width: 100%; justify-content: space-between; }
+      .weeklabel { flex: 1; min-width: auto; }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="top">
+    <div>
+      <div class="title">🛒 Spesa Settimanale</div>
+      <div class="sub">Gestisci solo le 2 categorie: alimentari e animali con supporto data automatica o manuale.</div>
+    </div>
+    <div class="weeknav">
+      <button class="weekbtn" id="prevWeek" title="Settimana precedente">←</button>
+      <div class="weeklabel" id="weekLabel">Settimana corrente</div>
+      <button class="weekbtn" id="nextWeek" title="Settimana successiva">→</button>
+      <button class="weekbtn" id="todayWeek">Oggi</button>
+      <button class="back" onclick="location.href='index.html'">← Home</button>
+    </div>
+  </header>
+
+  <div class="container">
+    <div id="status" class="status">Connessione a Firebase in corso...</div>
+
+    <!-- BOX REGISTRAZIONE GIORNALIERA CON RICONOSCIMENTO AUTOMATICO DATA -->
+    <section class="daily-box">
+      <div class="daily-header">
+        <h2><i class="fa-solid fa-calendar-day" style="color: var(--accent-cyan);"></i> Registra Spesa per Data</h2>
+        <div class="date-control-group">
+          <input type="date" id="dailyDateInput" class="date-input">
+          <span class="day-badge" id="dayNameBadge">Mercoledì</span>
+        </div>
+      </div>
+
+      <div class="daily-inputs-grid">
+        <div class="mini-input-card">
+          <label>🧑‍🤝‍🧑 Spesa Luca-Lisa</label>
+          <input type="number" id="dailyFoodInput" step="0.01" min="0" placeholder="0.00">
+        </div>
+        <div class="mini-input-card">
+          <label>🐈 Spesa Animali</label>
+          <input type="number" id="dailyPetInput" step="0.01" min="0" placeholder="0.00">
+        </div>
+      </div>
+
+      <button id="addDailyExpenseBtn" class="btn-add-daily">
+        <i class="fa-solid fa-plus-circle"></i> Aggiungi alla Settimana Corrispondente
+      </button>
+    </section>
+
+    <!-- LE SOLE DUE CATEGORIE SETTIMANALI -->
+    <main class="grid">
+      <!-- Categoria 1: Luca e Lisa -->
+      <section class="category">
+        <div class="cathead">
+          <div class="cathead-title"><span>🧑‍🤝‍🧑</span> Spesa Luca-Lisa</div>
+          <span class="sub">Spese alimentari</span>
+        </div>
+        <div class="period">
+          <div class="phead">
+            <span>Totale Settimana</span>
+            <span class="total" id="foodTotalDisplay">€ 0,00</span>
+          </div>
+          <input class="totalInput" id="foodInput" type="number" min="0" step="0.01" placeholder="0.00">
+        </div>
+      </section>
+
+      <!-- Categoria 2: Spesa Animali -->
+      <section class="category">
+        <div class="cathead">
+          <div class="cathead-title"><span>🐈</span> Spesa Animali</div>
+          <span class="sub">Cura e cibo animali</span>
+        </div>
+        <div class="period">
+          <div class="phead">
+            <span>Totale Settimana</span>
+            <span class="total" id="petTotalDisplay">€ 0,00</span>
+          </div>
+          <input class="totalInput" id="petInput" type="number" min="0" step="0.01" placeholder="0.00">
+        </div>
+      </section>
+    </main>
+
+    <!-- Riepilogo totale della settimana selezionata -->
+    <div class="week-summary-box">
+      <span style="font-weight: 700; color: var(--muted);">Totale Complessivo Settimana:</span>
+      <span id="weekGrandTotal" style="font-size: 20px; font-weight: 800; font-family: 'JetBrains Mono', monospace; color: var(--accent-green);">€ 0,00</span>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+    import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+    import { getFirestore, doc, onSnapshot, setDoc } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+
+    const cfg = {
+      apiKey: 'AIzaSyAdZbBv6JYbYnl6CxuFVfHhSftvIxwf2DY',
+      authDomain: 'budget-luca.firebaseapp.com',
+      projectId: 'budget-luca',
+      storageBucket: 'budget-luca.firebasestorage.app',
+      messagingSenderId: '67496424698',
+      appId: '1:67496424698:web:b1822e04ef4efc07408543'
+    };
+
+    const app = initializeApp(cfg);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    let ref = null;
+    let allWeeks = {};
+    let offset = 0;
+    let saveTimer = null;
+
+    const $ = id => document.getElementById(id);
+    const money = n => new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(Number(n) || 0);
+    const num = v => Number(String(v ?? '').replace(',', '.')) || 0;
+
+    const daysOfWeek = ['Domenica', 'Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato'];
+
+    // Calcolo del Lunedì della settimana
+    function getMonday(d) {
+      let x = new Date(d);
+      x.setHours(0, 0, 0, 0);
+      let day = x.getDay() || 7; // domenica = 7
+      x.setDate(x.getDate() - day + 1);
+      return x;
+    }
+
+    // Chiave ISO YYYY-MM-DD del lunedì selezionato tramite offset
+    function currentWeekKey() {
+      let d = getMonday(new Date());
+      d.setDate(d.getDate() + offset * 7);
+      return d.toISOString().slice(0, 10);
+    }
+
+    // Chiave ISO del lunedì calcolato da una data specifica
+    function getWeekKeyFromDate(dateStr) {
+      let d = getMonday(new Date(dateStr + 'T00:00:00'));
+      return d.toISOString().slice(0, 10);
+    }
+
+    function getWeekLabel(k) {
+      let start = new Date(k + 'T00:00:00');
+      let end = new Date(start);
+      end.setDate(start.getDate() + 6);
+      return start.toLocaleDateString('it-IT') + ' – ' + end.toLocaleDateString('it-IT');
+    }
+
+    // Estrae i valori puliti supportando anche retrocompatibilità con i vecchi food1/food2/pet1/pet2
+    function getCleanWeekValues(k) {
+      const w = allWeeks[k] || {};
+      const food = w.food !== undefined ? num(w.food) : (num(w.food1) + num(w.food2));
+      const pets = w.pets !== undefined ? num(w.pets) : (num(w.pet1) + num(w.pet2));
+      return { food, pets };
+    }
+
+    function setStatus(t, ok, err) {
+      const s = $('status');
+      s.textContent = t;
+      s.className = 'status ' + (ok ? 'ok' : err ? 'err' : '');
+    }
+
+    function loadWeekView() {
+      const k = currentWeekKey();
+      const vals = getCleanWeekValues(k);
+
+      $('weekLabel').textContent = (offset === 0 ? 'Settimana corrente · ' : '') + getWeekLabel(k);
+      
+      $('foodInput').value = vals.food ? vals.food : '';
+      $('petInput').value = vals.pets ? vals.pets : '';
+
+      $('foodTotalDisplay').textContent = money(vals.food);
+      $('petTotalDisplay').textContent = money(vals.pets);
+      $('weekGrandTotal').textContent = money(vals.food + vals.pets);
+    }
+
+    async function saveCurrentWeek() {
+      if (!ref) return;
+      const k = currentWeekKey();
+      const f = num($('foodInput').value);
+      const p = num($('petInput').value);
+
+      const existingWeek = allWeeks[k] || {};
+      allWeeks[k] = {
+        ...existingWeek,
+        food: f,
+        pets: p,
+        // Mantieni campi legacy per retrocompatibilità completa
+        food1: f,
+        food2: 0,
+        pet1: p,
+        pet2: 0
+      };
+
+      try {
+        await setDoc(ref, {
+          spesaSettimanale: {
+            weeks: allWeeks,
+            activeWeek: k,
+            foodTotal: f,
+            animalTotal: p,
+            weeklyTotal: f + p,
+            updatedAt: Date.now()
+          }
+        }, { merge: true });
+
+        $('foodTotalDisplay').textContent = money(f);
+        $('petTotalDisplay').textContent = money(p);
+        $('weekGrandTotal').textContent = money(f + p);
+        setStatus('Sincronizzato con Firebase ✓', true);
+      } catch (e) {
+        setStatus('Errore durante il salvataggio: ' + e.message, false, true);
+      }
+    }
+
+    // Gestione giorno automatico e manuale
+    const dailyDateInput = $('dailyDateInput');
+    const dayNameBadge = $('dayNameBadge');
+
+    function updateDayLabelFromInput() {
+      const val = dailyDateInput.value;
+      if (!val) return;
+      const d = new Date(val + 'T00:00:00');
+      const isToday = new Date().toISOString().slice(0, 10) === val;
+      dayNameBadge.textContent = daysOfWeek[d.getDay()] + (isToday ? ' (Oggi)' : '');
+    }
+
+    // Inizializza data ad oggi
+    const todayISO = new Date().toISOString().slice(0, 10);
+    dailyDateInput.value = todayISO;
+    updateDayLabelFromInput();
+
+    dailyDateInput.addEventListener('change', updateDayLabelFromInput);
+
+    // Aggiunta spesa da modulo giornaliero
+    $('addDailyExpenseBtn').onclick = async () => {
+      if (!ref) return alert("Firebase non ancora connesso.");
+      
+      const chosenDate = dailyDateInput.value || todayISO;
+      const addFood = num($('dailyFoodInput').value);
+      const addPet = num($('dailyPetInput').value);
+
+      if (addFood <= 0 && addPet <= 0) {
+        alert("Inserisci almeno un importo per la spesa o per gli animali.");
+        return;
+      }
+
+      const targetWeekKey = getWeekKeyFromDate(chosenDate);
+      const currentVals = getCleanWeekValues(targetWeekKey);
+      const newFood = currentVals.food + addFood;
+      const newPet = currentVals.pets + addPet;
+
+      const existingWeek = allWeeks[targetWeekKey] || {};
+      allWeeks[targetWeekKey] = {
+        ...existingWeek,
+        food: newFood,
+        pets: newPet,
+        food1: newFood,
+        food2: 0,
+        pet1: newPet,
+        pet2: 0
+      };
+
+      try {
+        await setDoc(ref, {
+          spesaSettimanale: {
+            weeks: allWeeks,
+            updatedAt: Date.now()
+          }
+        }, { merge: true });
+
+        $('dailyFoodInput').value = '';
+        $('dailyPetInput').value = '';
+        
+        // Se la spesa inserita ricade nella settimana correntemente visualizzata, aggiorna la vista
+        if (targetWeekKey === currentWeekKey()) {
+          loadWeekView();
+        }
+
+        setStatus(`Spesa di ${dayNameBadge.textContent} aggiunta con successo! ✓`, true);
+      } catch (e) {
+        setStatus('Errore salvataggio: ' + e.message, false, true);
+      }
+    };
+
+    // Input diretti totali
+    $('foodInput').oninput = () => {
+      $('foodTotalDisplay').textContent = money($('foodInput').value);
+      $('weekGrandTotal').textContent = money(num($('foodInput').value) + num($('petInput').value));
+    };
+    $('petInput').oninput = () => {
+      $('petTotalDisplay').textContent = money($('petInput').value);
+      $('weekGrandTotal').textContent = money(num($('foodInput').value) + num($('petInput').value));
+    };
+
+    $('foodInput').onblur = () => { clearTimeout(saveTimer); saveTimer = setTimeout(saveCurrentWeek, 250); };
+    $('petInput').onblur = () => { clearTimeout(saveTimer); saveTimer = setTimeout(saveCurrentWeek, 250); };
+
+    // Navigazione settimane
+    $('prevWeek').onclick = async () => { await saveCurrentWeek(); offset--; loadWeekView(); };
+    $('nextWeek').onclick = async () => { await saveCurrentWeek(); offset++; loadWeekView(); };
+    $('todayWeek').onclick = async () => { await saveCurrentWeek(); offset = 0; loadWeekView(); };
+
+    // Connessione Firebase
+    onAuthStateChanged(auth, u => {
+      if (!u) {
+        setStatus('Effettua prima il login dalla Dashboard principale.', false, true);
+        return;
+      }
+
+      const monthKey = new Date().toISOString().slice(0, 7);
+      ref = doc(db, 'users', u.uid, 'budgets', monthKey);
+
+      onSnapshot(ref, s => {
+        const d = s.exists() ? s.data().spesaSettimanale || {} : {};
+        allWeeks = d.weeks && typeof d.weeks === 'object' ? d.weeks : {};
+        loadWeekView();
+        setStatus('Sincronizzato con Firebase ✓', true);
+      }, () => setStatus('Errore connessione Firebase', false, true));
+    });
+  </script>
+</body>
+</html>
