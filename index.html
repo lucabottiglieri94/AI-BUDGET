@@ -1,2266 +1,2078 @@
 <!DOCTYPE html>
-<html lang="it" class="dark">
+<html lang="it">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>ICON RECOMP • Gym Floor & Nutrition Dashboard</title>
+  <title>AI-BUDGET</title>
 
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="ICON RECOMP">
-  <meta name="theme-color" content="#080a0d">
+  <meta name="apple-mobile-web-app-title" content="AI-BUDGET">
+  <meta name="theme-color" content="#0b0f19">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800;900&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
-
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          colors: {
-            app: {
-              black: '#080a0d',
-              dark: '#0e1217',
-              card: '#141922',
-              cardSubtle: '#1b222e',
-              border: 'rgba(255, 255, 255, 0.08)',
-              borderFocus: 'rgba(16, 185, 129, 0.5)',
-              sage: '#10b981',
-              sageLight: '#34d399',
-              textMuted: '#94a3b8',
-              textSecondary: '#e2e8f0'
-            }
-          },
-          fontFamily: {
-            sans: ['Inter', '-apple-system', 'sans-serif'],
-            display: ['Plus Jakarta Sans', '-apple-system', 'sans-serif'],
-            mono: ['JetBrains Mono', 'monospace']
-          }
-        }
-      }
-    }
-  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js"></script>
 
   <style>
-    body {
-      -webkit-font-smoothing: antialiased;
-      background-color: #080a0d;
-      color: #f1f5f9;
-      touch-action: manipulation;
-      font-size: 15px;
+    :root {
+      --bg: #0b0f19;
+      --card-bg: rgba(17, 24, 39, 0.75);
+      --border: rgba(255, 255, 255, 0.08);
+      --border-focus: #6366f1;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --primary-grad: linear-gradient(135deg, #6366f1 0%, #38bdf8 100%);
+      --ai-grad: linear-gradient(135deg, #a855f7 0%, #38bdf8 100%);
+      --accent-green: #10b981;
+      --accent-green-bg: rgba(16, 185, 129, 0.12);
+      --accent-red: #f43f5e;
+      --accent-red-bg: rgba(244, 63, 94, 0.12);
+      --radius: 24px;
     }
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-track { background: #080a0d; }
-    ::-webkit-scrollbar-thumb { background: #1b222e; border-radius: 9999px; }
 
-    .apple-glass-card {
-      background: rgba(20, 25, 34, 0.78);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border: 1px solid rgba(255, 255, 255, 0.07);
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+    body {
+      background-color: var(--bg);
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(56, 189, 248, 0.10) 0, transparent 50%),
+        radial-gradient(at 50% 50%, rgba(15, 23, 42, 0.5) 0, transparent 100%);
+      background-attachment: fixed;
+      color: var(--text);
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+      overscroll-behavior-y: contain;
     }
-    .apple-nav {
-      background: rgba(8, 10, 13, 0.96);
-      backdrop-filter: blur(24px);
-      -webkit-backdrop-filter: blur(24px);
-      border-top: 1px solid rgba(255, 255, 255, 0.08);
-    }
-    .water-droplet-glow {
-      box-shadow: 0 0 16px rgba(45, 212, 191, 0.5), inset 0 0 8px rgba(45, 212, 191, 0.3);
-      border-color: #2dd4bf !important;
-      background: rgba(20, 184, 166, 0.25) !important;
-    }
-    .login-overlay {
+
+    button, a, input { font: inherit; outline: none; }
+
+    .login {
       position: fixed;
       inset: 0;
       display: flex;
       align-items: center;
       justify-content: center;
-      background: rgba(8, 10, 13, 0.94);
+      background: rgba(11, 15, 25, 0.88);
       backdrop-filter: blur(25px);
-      z-index: 999;
+      z-index: 99;
+    }
+    .loginbox {
+      width: min(420px, 90%);
+      padding: 40px;
+      border: 1px solid var(--border);
+      border-radius: 28px;
+      background: var(--card-bg);
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+      text-align: center;
+    }
+    .loginbox h1 { font-size: 28px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 8px; }
+    .loginbox p { color: var(--muted); font-size: 14px; margin-bottom: 24px; }
+
+    .btn {
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 10px 16px;
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text);
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 13px;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      user-select: none;
+    }
+    .btn:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.18);
+      transform: translateY(-1px);
+    }
+    .btn:active { transform: scale(0.97); }
+    .btn.primary {
+      background: var(--primary-grad);
+      color: #fff;
+      border: none;
+      box-shadow: 0 4px 18px rgba(99, 102, 241, 0.35);
+    }
+    .btn.primary:hover {
+      box-shadow: 0 6px 24px rgba(99, 102, 241, 0.5);
+    }
+    .btn.ai-btn {
+      background: var(--ai-grad);
+      color: #fff;
+      border: none;
+      box-shadow: 0 4px 18px rgba(168, 85, 247, 0.35);
+    }
+    .btn.ai-btn:hover {
+      box-shadow: 0 6px 24px rgba(168, 85, 247, 0.5);
+    }
+    .btn.danger {
+      background: var(--accent-red-bg);
+      color: var(--accent-red);
+      border-color: rgba(244, 63, 94, 0.3);
+    }
+    .btn.danger:hover {
+      background: var(--accent-red);
+      color: #fff;
+    }
+
+    .app { display: none; }
+    .shell {
+      display: grid;
+      grid-template-columns: 280px minmax(0, 1fr);
+      gap: 20px;
+      padding: 20px;
+      max-width: 1440px;
+      margin: 0 auto;
+    }
+
+    .side, .top, .card, .sum {
+      background: var(--card-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+    }
+
+    .side {
+      position: sticky;
+      top: 20px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      height: fit-content;
+    }
+    .side-brand {
+      font-size: 22px;
+      font-weight: 800;
+      background: var(--primary-grad);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .user-tag {
+      font-size: 12px;
+      color: var(--muted);
+      background: rgba(255, 255, 255, 0.03);
+      padding: 8px 12px;
+      border-radius: 100px;
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .user-avatar-small {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+    .menu { display: flex; flex-direction: column; gap: 8px; }
+    .nav { width: 100%; justify-content: flex-start; padding: 12px 16px; border-radius: 14px; }
+
+    .main { 
+      display: flex; 
+      flex-direction: column; 
+      gap: 20px; 
+      min-width: 0; 
+      transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.22s ease;
+      will-change: transform, opacity;
+    }
+    .main.swipe-left { transform: translateX(-35px); opacity: 0.3; }
+    .main.swipe-right { transform: translateX(35px); opacity: 0.3; }
+
+    .top {
+      padding: 16px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .top h3 { font-size: 18px; font-weight: 800; letter-spacing: -0.3px; }
+    .top .muted { font-size: 13px; margin-top: 2px; }
+
+    .month-navigator {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      padding: 3px 8px;
+    }
+    .month-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.06);
+      color: #fff;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      font-weight: 700;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      padding: 0;
+      line-height: 1;
+    }
+    .month-btn:hover {
+      background: rgba(56, 189, 248, 0.25);
+      border-color: #38bdf8;
+      color: #38bdf8;
+    }
+    .month-btn:active { transform: scale(0.9); }
+    #currentMonthDisplay {
+      font-size: 13px;
+      font-weight: 700;
+      color: #38bdf8;
+      padding: 0 6px;
+      min-width: 128px;
+      text-align: center;
+      letter-spacing: 0.2px;
+      cursor: pointer;
+      user-select: none;
+    }
+    #currentMonthDisplay:hover { text-decoration: underline; }
+
+    .top-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+    .calc-toggle-btn {
+      width: 38px;
+      height: 38px;
+      padding: 0;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      color: var(--muted);
+    }
+    .calc-toggle-btn:hover { color: #fff; }
+    
+    .profile-pill {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 4px 6px 4px 12px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+    }
+    .profile-pill img {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      border: 1.5px solid #6366f1;
+    }
+    .profile-pill span {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      max-width: 140px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .logout-btn-top {
+      background: none;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      padding: 6px;
+      font-size: 14px;
+      border-radius: 50%;
+      transition: 0.15s;
+    }
+    .logout-btn-top:hover { color: var(--accent-red); }
+
+    /* Modali */
+    .calc-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.65);
+      backdrop-filter: blur(12px);
+      z-index: 100;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .calc-modal.open { display: flex; }
+    .calc-popup-content {
+      width: min(350px, 95%);
+      background: rgba(13, 20, 36, 0.95);
+      border: 1px solid var(--border);
+      border-radius: 28px;
+      padding: 20px;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6);
+    }
+    .calc-popup-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .apple-calc-display {
+      height: 52px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: flex-end;
+      color: #fff;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 26px;
+      padding: 0 8px 6px;
+      overflow: hidden;
+      background: rgba(0, 0, 0, 0.35);
+      border-radius: 14px;
+      margin-bottom: 12px;
+      border: 1px solid var(--border);
+    }
+    .apple-calc-buttons {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+    .calc-btn {
+      aspect-ratio: 1;
+      border: 0;
+      border-radius: 14px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+    }
+    .calc-btn:active { transform: scale(0.95); opacity: 0.7; }
+    .calc-number { background: rgba(255, 255, 255, 0.07); color: #fff; }
+    .calc-function { background: rgba(255, 255, 255, 0.14); color: #fff; }
+    .calc-operator { background: #f59e0b; color: #fff; font-size: 19px; }
+    .calc-special { background: rgba(255, 255, 255, 0.07); color: var(--muted); }
+
+    /* Dashboard Cards */
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+    .sum { padding: 22px; border-radius: var(--radius); }
+    .label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--muted);
+      font-weight: 700;
+    }
+    .value {
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      margin-top: 6px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .positive { color: var(--accent-green); }
+    .negative { color: var(--accent-red); }
+
+    /* AI Coach Card */
+    .ai-coach-card {
+      border: 1px solid rgba(168, 85, 247, 0.3);
+      background: linear-gradient(135deg, rgba(168, 85, 247, 0.06) 0%, rgba(56, 189, 248, 0.04) 100%), rgba(17, 24, 39, 0.85);
+      position: relative;
+      overflow: hidden;
+    }
+    .ai-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #c084fc;
+      background: rgba(168, 85, 247, 0.15);
+      border: 1px solid rgba(168, 85, 247, 0.3);
+      padding: 4px 10px;
+      border-radius: 100px;
+      letter-spacing: 0.5px;
+    }
+    .ai-output-box {
+      background: rgba(5, 8, 17, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 16px;
+      padding: 16px;
+      font-size: 13px;
+      line-height: 1.6;
+      color: #e2e8f0;
+      min-height: 70px;
+      margin-top: 14px;
+    }
+    .ai-output-box p { margin-bottom: 8px; }
+    .ai-output-box p:last-child { margin-bottom: 0; }
+    .ai-output-box strong { color: #38bdf8; font-weight: 700; }
+
+    /* Pulsante Microfono */
+    .mic-btn {
+      background: rgba(168, 85, 247, 0.15);
+      border: 1px solid rgba(168, 85, 247, 0.4);
+      color: #c084fc;
+      border-radius: 12px;
+      padding: 10px 14px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+    .mic-btn:hover { background: rgba(168, 85, 247, 0.3); color: #fff; }
+    .mic-btn.listening {
+      background: var(--accent-red);
+      color: #fff;
+      border-color: var(--accent-red);
+      animation: pulseMic 1.2s infinite;
     }
     @keyframes pulseMic {
-      0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6); }
-      50% { transform: scale(1.08); box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.05); opacity: 0.7; }
     }
-    .mic-active {
-      animation: pulseMic 1.2s infinite;
-      background-color: #ef4444 !important;
-      color: #ffffff !important;
-      border-color: #f87171 !important;
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      align-items: start;
+    }
+    .card { padding: 24px; border-radius: var(--radius); }
+    .section-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .section-title h2 { font-size: 16px; font-weight: 700; }
+    .section-toggle {
+      width: 32px;
+      height: 32px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.05);
+      color: #fff;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      transition: 0.15s;
+    }
+    .section-toggle:hover { background: rgba(255, 255, 255, 0.1); }
+
+    /* Riga Spesa aggiornata con Pulsante Ricorrente (🔁) */
+    .entry {
+      display: grid;
+      grid-template-columns: 1fr 100px 120px 36px 36px;
+      gap: 6px;
+      margin-bottom: 10px;
+      align-items: center;
+    }
+    .entry input {
+      padding: 10px 14px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: rgba(5, 8, 17, 0.5);
+      color: #fff;
+      font-size: 13px;
+    }
+    .entry input:focus {
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+    }
+    .smallbtn {
+      width: 36px;
+      height: 36px;
+      border: none;
+      border-radius: 10px;
+      background: var(--accent-red-bg);
+      color: var(--accent-red);
+      font-weight: bold;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    /* Bottone Ricorrente 🔁 */
+    .rec-toggle-btn {
+      width: 36px;
+      height: 36px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      transition: 0.2s;
+    }
+    .rec-toggle-btn.active {
+      background: rgba(168, 85, 247, 0.2);
+      border-color: #c084fc;
+      color: #c084fc;
+      box-shadow: 0 0 10px rgba(168, 85, 247, 0.3);
+    }
+
+    .add { width: 100%; border-radius: 12px; margin-top: 6px; }
+
+    .collapsed #incomeList, .collapsed #expenseList, .collapsed .add { display: none; }
+
+    .linkcard { text-decoration: none; color: inherit; display: block; margin-bottom: 14px; }
+    .linkcard strong { font-size: 16px; display: inline-flex; align-items: center; gap: 6px; }
+    .weekbox {
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 18px;
+    }
+    .week-selector {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .week-selector button {
+      width: 32px;
+      height: 32px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.05);
+      color: #fff;
+      cursor: pointer;
+    }
+    .weekrow {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      font-size: 13px;
+    }
+    .weekamount { font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+    .chartwrap { height: 260px; margin-top: 14px; }
+
+    /* Griglia Metà e Metà */
+    .grid-halves {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      align-items: stretch;
+    }
+
+    .energy-live-card {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 24px;
+    }
+    .live-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--accent-green);
+      background: var(--accent-green-bg);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      padding: 4px 10px;
+      border-radius: 100px;
+      letter-spacing: 0.5px;
+    }
+    .live-dot {
+      width: 7px;
+      height: 7px;
+      background: var(--accent-green);
+      border-radius: 50%;
+      box-shadow: 0 0 8px var(--accent-green);
+      animation: pulseDot 1.8s infinite;
+    }
+    @keyframes pulseDot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.85); }
+    }
+    .energy-main-stat {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      background: rgba(0, 0, 0, 0.25);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 14px;
+    }
+    .energy-watts-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-width: 95px;
+      padding: 12px;
+      border-radius: 14px;
+      background: rgba(99, 102, 241, 0.08);
+      border: 1px solid rgba(99, 102, 241, 0.2);
+    }
+    .energy-val {
+      font-size: 30px;
+      font-weight: 800;
+      font-family: 'JetBrains Mono', monospace;
+      color: #38bdf8;
+      line-height: 1;
+    }
+    .energy-unit {
+      font-size: 11px;
+      color: var(--muted);
+      font-weight: 700;
+      margin-top: 4px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .energy-substats {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      font-size: 12px;
+    }
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .stat-label { color: var(--muted); }
+    .stat-value { font-weight: 600; font-family: 'JetBrains Mono', monospace; }
+    .energy-footer-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    /* Ampolla Wave */
+    .ampolla-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      padding: 24px;
+    }
+    .ampolla-container {
+      position: relative;
+      width: 140px;
+      height: 190px;
+      flex-shrink: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .ampolla-flask {
+      position: relative;
+      width: 125px;
+      height: 175px;
+      border-radius: 65px 65px 35px 35px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 2px solid rgba(255, 255, 255, 0.18);
+      box-shadow: 
+        0 15px 35px rgba(0, 0, 0, 0.5),
+        inset 0 0 20px rgba(255, 255, 255, 0.05),
+        inset 2px 2px 5px rgba(255, 255, 255, 0.2);
+      overflow: hidden;
+      backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .ampolla-flask::after {
+      content: '';
+      position: absolute;
+      top: 15px;
+      right: 12px;
+      width: 6px;
+      height: 60px;
+      background: linear-gradient(to bottom, rgba(255, 255, 255, 0.35), transparent);
+      border-radius: 10px;
+      z-index: 4;
+      pointer-events: none;
+    }
+    #waveCanvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+    }
+    .ampolla-center-text {
+      position: absolute;
+      inset: 0;
+      margin: auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 6;
+      pointer-events: none;
+      width: 100%;
+      padding: 0 6px;
+    }
+    .ampolla-center-text strong {
+      font-size: 15px;
+      font-weight: 800;
+      color: #fff;
+      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9);
+      font-family: 'JetBrains Mono', monospace;
+      white-space: nowrap;
+    }
+    .ampolla-center-text span {
+      font-size: 11px;
+      font-weight: 700;
+      color: #6ee7b7;
+      text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9);
+      margin-top: 3px;
+    }
+    .ampolla-info { flex: 1; min-width: 0; }
+    .ampolla-title { font-size: 17px; font-weight: 700; margin-bottom: 4px; }
+    .ampolla-euro { font-size: 28px; font-weight: 800; color: var(--accent-green); font-family: 'JetBrains Mono', monospace; }
+    .ampolla-percent { font-size: 12px; color: var(--muted); margin-bottom: 14px; }
+    .ampolla-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .deposit-input {
+      padding: 8px 12px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: rgba(5, 8, 17, 0.5);
+      color: #fff;
+      font-size: 13px;
+      width: 110px;
+    }
+
+    .status { font-size: 12px; color: var(--muted); text-align: right; padding: 4px 10px; }
+
+    /* Toast Swipe */
+    .swipe-indicator {
+      position: fixed;
+      top: 18px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-60px);
+      background: rgba(13, 20, 36, 0.92);
+      border: 1px solid #38bdf8;
+      color: #fff;
+      padding: 6px 14px;
+      border-radius: 100px;
+      font-size: 12px;
+      font-weight: 700;
+      z-index: 101;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s;
+      opacity: 0;
+      pointer-events: none;
+    }
+    .swipe-indicator.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    .mobile-bottom-bar { display: none; }
+
+    @media (max-width: 980px) {
+      .grid-halves { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 860px) {
+      .shell { 
+        grid-template-columns: 1fr; 
+        padding: 10px 10px 85px 10px;
+      }
+      .side { display: none; }
+      .summary, .grid { grid-template-columns: 1fr; }
+      .entry { grid-template-columns: 1fr 90px 110px 34px 34px; }
+      .ampolla-card { flex-direction: column; text-align: center; }
+      .ampolla-actions { justify-content: center; }
+      .top { flex-direction: column; align-items: stretch; gap: 12px; }
+      .top-actions { justify-content: space-between; }
+
+      .mobile-bottom-bar {
+        display: flex;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 64px;
+        background: rgba(11, 15, 25, 0.88);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-top: 1px solid var(--border);
+        justify-content: space-around;
+        align-items: center;
+        z-index: 95;
+        padding-bottom: env(safe-area-inset-bottom, 0);
+      }
+      .mobile-tab-btn {
+        background: none;
+        border: none;
+        color: var(--muted);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 3px;
+        font-size: 10px;
+        font-weight: 700;
+        cursor: pointer;
+        padding: 6px;
+      }
+      .mobile-tab-btn i { font-size: 16px; }
+      .mobile-tab-btn.active { color: #38bdf8; }
     }
   </style>
 </head>
+<body>
 
-<body class="font-sans min-h-screen pb-32">
+<div id="swipeToast" class="swipe-indicator">
+  <i class="fa-solid fa-arrows-left-right"></i> <span id="swipeToastText">Mese</span>
+</div>
 
-  <!-- OVERLAY ACCESSO GOOGLE CON OPZIONE LOCALE IMMEDIATA -->
-  <div id="loginOverlay" class="login-overlay hidden">
-    <div class="max-w-md w-11/12 p-8 rounded-3xl bg-app-card border border-app-border text-center space-y-5 shadow-2xl">
-      <div class="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-700 flex items-center justify-center text-black font-display font-black text-2xl">
-        IR
-      </div>
-      <div>
-        <h2 class="font-display font-black text-2xl text-white">ICON RECOMP</h2>
-        <p class="text-sm text-app-textMuted mt-2">
-          Accedi con il tuo account Google per sincronizzare carichi, dieta e deficit sul Cloud, oppure continua in modalità locale.
-        </p>
-      </div>
-      <div class="space-y-3">
-        <button id="loginBtn" onclick="window.handleGoogleLogin()" class="w-full py-4 rounded-2xl bg-white hover:bg-gray-100 text-black font-bold text-sm flex items-center justify-center gap-3 transition active:scale-95 shadow-md">
-          <svg class="w-5 h-5" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>
-          <span id="loginBtnLabel">Accedi con Google</span>
-        </button>
-        <button onclick="window.continueAsGuest()" class="w-full py-3.5 rounded-2xl bg-app-cardSubtle hover:bg-app-dark border border-app-border text-gray-300 font-semibold text-xs transition active:scale-95">
-          Continua senza login (Dati salvati in locale)
-        </button>
-      </div>
-      <div id="loginStatusMsg" class="text-xs text-red-400 hidden"></div>
+<!-- Login Overlay Iniziale -->
+<div id="login" class="login">
+  <div class="loginbox">
+    <h1>💰 AI-BUDGET</h1>
+    <p>Accedi con Google per sincronizzare i tuoi dati in tempo reale.</p>
+    <button id="loginScreenBtn" class="btn primary" style="width: 100%;">Accedi con Google</button>
+    <div id="loginError" class="status" style="margin-top: 14px; text-align: center;"></div>
+  </div>
+</div>
+
+<!-- Modal Configurazione Gemini API Key -->
+<div id="geminiModal" class="calc-modal">
+  <div class="calc-popup-content" style="width: min(420px, 95%);">
+    <div class="calc-popup-header">
+      <span><i class="fa-solid fa-wand-magic-sparkles" style="color: #c084fc;"></i> Chiave Gemini API</span>
+      <button class="btn" id="closeGeminiModalBtn" style="padding: 4px 8px; border-radius: 8px;"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <p style="font-size: 12px; color: var(--muted); margin-bottom: 14px; line-height: 1.5;">
+      La chiave è gratuita su <a href="https://aistudio.google.com/" target="_blank" style="color: #38bdf8; text-decoration: underline;">Google AI Studio</a>. Viene salvata nel tuo profilo Firebase privato senza comparire su GitHub.
+    </p>
+    <div style="margin-bottom: 14px;">
+      <label style="font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; display: block; margin-bottom: 6px;">Gemini API Key</label>
+      <input type="password" id="geminiApiKeyInput" placeholder="AIzaSy..." style="width: 100%; padding: 10px 14px; border-radius: 12px; border: 1px solid var(--border); background: rgba(5, 8, 17, 0.6); color: #fff; font-size: 13px;">
+    </div>
+    <button class="btn ai-btn" id="saveGeminiKeyBtn" style="width: 100%;">
+      <i class="fa-solid fa-cloud-arrow-up"></i> Salva su Firebase
+    </button>
+  </div>
+</div>
+
+<!-- Cassetto Calcolatrice Apple Modale -->
+<div id="calcModal" class="calc-modal">
+  <div class="calc-popup-content">
+    <div class="calc-popup-header">
+      <span>Calcolatrice</span>
+      <button class="btn" id="closeCalcBtn" style="padding: 4px 8px; border-radius: 8px;"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="apple-calc-display" id="appleCalcDisplay">0</div>
+    <div class="apple-calc-buttons">
+      <button class="calc-btn calc-function" onclick="appleCalcClear()">AC</button>
+      <button class="calc-btn calc-function" onclick="appleCalcPlusMinus()">+/-</button>
+      <button class="calc-btn calc-function" onclick="appleCalcPercent()">%</button>
+      <button class="calc-btn calc-operator" onclick="appleCalcOperator('÷')">÷</button>
+      
+      <button class="calc-btn calc-number" onclick="appleCalcNumber('7')">7</button>
+      <button class="calc-btn calc-number" onclick="appleCalcNumber('8')">8</button>
+      <button class="calc-btn calc-number" onclick="appleCalcNumber('9')">9</button>
+      <button class="calc-btn calc-operator" onclick="appleCalcOperator('×')">×</button>
+      
+      <button class="calc-btn calc-number" onclick="appleCalcNumber('4')">4</button>
+      <button class="calc-btn calc-number" onclick="appleCalcNumber('5')">5</button>
+      <button class="calc-btn calc-number" onclick="appleCalcNumber('6')">6</button>
+      <button class="calc-btn calc-operator" onclick="appleCalcOperator('-')">−</button>
+      
+      <button class="calc-btn calc-number" onclick="appleCalcNumber('1')">1</button>
+      <button class="calc-btn calc-number" onclick="appleCalcNumber('2')">2</button>
+      <button class="calc-btn calc-number" onclick="appleCalcNumber('3')">3</button>
+      <button class="calc-btn calc-operator" onclick="appleCalcOperator('+')">+</button>
+      
+      <button class="calc-btn calc-special" onclick="appleCalcClear()">▦</button>
+      <button class="calc-btn calc-number" onclick="appleCalcNumber('0')">0</button>
+      <button class="calc-btn calc-number" onclick="appleCalcDecimal()">,</button>
+      <button class="calc-btn calc-operator" onclick="appleCalcEquals()">=</button>
     </div>
   </div>
+</div>
 
-  <!-- BARRA RECUPERO LIVE (STICKY) -->
-  <div id="activeTimerBar" class="hidden sticky top-0 z-50 bg-gradient-to-r from-emerald-500 to-teal-400 text-black px-6 py-3 shadow-2xl flex items-center justify-between">
-    <div class="flex items-center gap-2.5">
-      <span class="inline-block w-3 h-3 rounded-full bg-black animate-ping"></span>
-      <span class="text-sm font-black uppercase tracking-wider font-display">Recupero:</span>
-      <span id="activeTimerValue" class="text-2xl font-mono font-black ml-1">01:30</span>
-    </div>
-    <div class="flex items-center gap-2">
-      <button onclick="window.addTimerSeconds(15)" class="px-3 py-1.5 bg-black/15 active:scale-90 rounded-lg text-xs font-bold transition">+15s</button>
-      <button onclick="window.stopDiscreetTimer()" class="px-3.5 py-1.5 bg-black text-emerald-400 active:scale-90 rounded-lg text-xs font-bold transition">Salta</button>
-    </div>
+<div id="app" class="app">
+  <div class="shell">
+    <aside class="side">
+      <div class="side-brand">💰 AI-BUDGET</div>
+      <div id="userInfo" class="user-tag"></div>
+      
+      <div class="menu">
+        <button class="btn nav" onclick="location.href='risparmi.html'">📊 Risparmi</button>
+        <button class="btn nav" onclick="location.href='vacanze.html'">🏖️ Vacanze</button>
+        <button class="btn nav" onclick="location.href='consumi.html'" style="border-color: rgba(56, 189, 248, 0.3);">⚡ Consumi tempo reale</button>
+        <button class="btn nav" onclick="location.href='comparatori.html'">🛒 Comparatori</button>
+        <button class="btn nav" onclick="location.href='spesa-settimanale.html'">🛒 Spesa settimanale</button>
+        <button id="logoutBtn" class="btn nav">🚪 Esci</button>
+      </div>
+    </aside>
+
+    <main class="main" id="mainContainer">
+      <div class="top">
+        <div>
+          <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+            <h3>Dashboard Mensile</h3>
+            <div class="month-navigator">
+              <button type="button" id="monthPrevBtn" class="month-btn" title="Mese precedente">‹</button>
+              <span id="currentMonthDisplay" title="Clicca per tornare al mese corrente">Settembre 2026</span>
+              <button type="button" id="monthNextBtn" class="month-btn" title="Mese successivo">›</button>
+            </div>
+          </div>
+          <div class="muted" id="currentMonthSubtext">Gestione flussi di cassa e risparmi (Swipe con il dito per cambiare mese)</div>
+        </div>
+
+        <div class="top-actions">
+          <button id="openGeminiModalBtn" class="btn calc-toggle-btn" title="Configura Gemini AI" style="color: #c084fc;">
+            <i class="fa-solid fa-wand-magic-sparkles"></i>
+          </button>
+
+          <button id="calcToggleBtn" class="btn calc-toggle-btn" title="Apri Calcolatrice">
+            <i class="fa-solid fa-calculator"></i>
+          </button>
+          
+          <div id="topUserProfile" class="profile-pill" style="display: none;">
+            <img id="topUserImg" src="" alt="Avatar">
+            <span id="topUserName">Utente</span>
+            <button id="topLogoutBtn" class="logout-btn-top" title="Esci"><i class="fa-solid fa-arrow-right-from-bracket"></i></button>
+          </div>
+
+          <button id="topLogin" class="btn primary">Accedi</button>
+        </div>
+      </div>
+
+      <div class="summary">
+        <div class="sum">
+          <div class="label">Entrate</div>
+          <div id="incomeTotal" class="value positive">€ 0,00</div>
+        </div>
+        <div class="sum">
+          <div class="label">Spese</div>
+          <div id="expenseTotal" class="value negative">€ 0,00</div>
+        </div>
+        <div class="sum">
+          <div class="label">Risparmio Netto</div>
+          <div id="balanceTotal" class="value">€ 0,00</div>
+        </div>
+      </div>
+
+      <!-- AI COACH + VOCALE -->
+      <section class="card ai-coach-card">
+        <div class="section-title" style="margin-bottom: 8px;">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <h2><i class="fa-solid fa-brain" style="color: #c084fc;"></i> AI Financial Coach</h2>
+            <span class="ai-badge"><i class="fa-solid fa-bolt"></i> Gemini 3.6 Flash</span>
+          </div>
+          <button id="askAiCoachBtn" class="btn ai-btn" style="padding: 7px 14px; font-size: 12px;">
+            <i class="fa-solid fa-sparkles"></i> Analisi Completa
+          </button>
+        </div>
+
+        <div style="display: flex; gap: 8px; margin-top: 10px;">
+          <input type="text" id="aiUserQuestionInput" placeholder="Chiedi al Coach o detta una spesa (es: 'Ho speso 34 euro per il cibo dei gatti')..." 
+                 style="flex: 1; padding: 10px 14px; border-radius: 12px; border: 1px solid rgba(168, 85, 247, 0.3); background: rgba(5, 8, 17, 0.7); color: #fff; font-size: 13px;">
+          <button id="micVoiceBtn" class="mic-btn" title="Detta spesa o domanda a voce">
+            <i class="fa-solid fa-microphone"></i>
+          </button>
+          <button id="sendAiQuestionBtn" class="btn primary" style="padding: 10px 16px; font-size: 13px;">
+            <i class="fa-solid fa-paper-plane"></i> Invia
+          </button>
+        </div>
+
+        <div id="aiCoachText" class="ai-output-box">
+          <span style="color: var(--muted); font-style: italic;">
+            Usa il microfono per dettare una spesa al volo (es: "Aggiungi 45 euro di benzina") oppure chiedi un consiglio finanziario.
+          </span>
+        </div>
+      </section>
+
+      <div class="grid">
+        <section id="incomeCard" class="card collapsed">
+          <div class="section-title">
+            <h2>📥 Entrate Fisse & Extra</h2>
+            <button class="section-toggle" type="button" onclick="toggleCollapse('incomeCard',this)">+</button>
+          </div>
+          <div id="incomeList"></div>
+          <button class="btn primary add" onclick="addRow('income')">+ Aggiungi Entrata</button>
+        </section>
+
+        <section id="expenseCard" class="card collapsed">
+          <div class="section-title">
+            <h2>📤 Uscite Programmate</h2>
+            <button class="section-toggle" type="button" onclick="toggleCollapse('expenseCard',this)">+</button>
+          </div>
+          <div id="expenseList"></div>
+          <button class="btn primary add" onclick="addRow('expense')">+ Aggiungi Spesa</button>
+        </section>
+      </div>
+
+      <section class="card">
+        <a class="linkcard" href="spesa-settimanale.html">
+          <strong>🛒 Monitoraggio Spese Settimanali →</strong>
+          <p class="muted">Sincronizzazione automatica alimentari e cura animali.</p>
+        </a>
+        <div class="weekbox">
+          <div class="week-selector">
+            <button type="button" onclick="changeWeek(-1)">‹</button>
+            <strong id="selectedWeekLabel">Settimana corrente</strong>
+            <button type="button" onclick="changeWeek(1)">›</button>
+          </div>
+          <div class="weekrow">
+            <span>🥗 Spese alimentari Luca e Lisa</span>
+            <span class="weekamount" id="weekFood">€ 0,00</span>
+          </div>
+          <div class="weekrow">
+            <span>🐈 Spese cura animali</span>
+            <span class="weekamount" id="weekPets">€ 0,00</span>
+          </div>
+          <div class="weekrow" style="margin-top: 4px; border-top: 1px solid var(--border);">
+            <strong style="color: var(--text);">📅 Totale settimana</strong>
+            <strong class="weekamount" style="color: var(--accent-green);" id="weekTotal">€ 0,00</strong>
+          </div>
+          <div class="muted" id="weekRange" style="margin-top: 8px; font-size: 11px;">Settimana corrente</div>
+          <div class="chartwrap"><canvas id="monthlyChart"></canvas></div>
+        </div>
+      </section>
+
+      <!-- SEZIONE METÀ E METÀ -->
+      <div class="grid-halves">
+        <section class="card energy-live-card">
+          <div class="section-title" style="margin-bottom: 4px;">
+            <h2>⚡ Consumi Live • Presa Clima</h2>
+            <span class="live-pill"><span class="live-dot"></span> LIVE TUYA</span>
+          </div>
+
+          <div class="energy-main-stat">
+            <div class="energy-watts-box">
+              <span class="energy-val" id="liveWattValue">0</span>
+              <span class="energy-unit">Watt</span>
+            </div>
+            <div class="energy-substats">
+              <div class="stat-row">
+                <span class="stat-label">Dispositivo:</span>
+                <span class="stat-value">Condizionatore Clima</span>
+              </div>
+              <div class="stat-row">
+                <span class="stat-label">Tensione / Rete:</span>
+                <span class="stat-value">228.6 V • 50 Hz</span>
+              </div>
+              <div class="stat-row">
+                <span class="stat-label">Energia Oggi:</span>
+                <span class="stat-value" id="liveKwhToday" style="color: var(--accent-green);">0.00 kWh</span>
+              </div>
+              <div class="stat-row">
+                <span class="stat-label">Costo Stimato:</span>
+                <span class="stat-value" id="liveCostToday" style="color: #f59e0b;">€ 0,00</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="energy-footer-actions">
+            <input type="number" id="simWattInput" placeholder="Simula W" class="deposit-input" style="width: 105px;">
+            <button class="btn" id="setWattBtn" style="padding: 7px 12px; font-size: 12px;">Imposta</button>
+            <button class="btn primary" onclick="location.href='consumi.html'" style="margin-left: auto; font-size: 12px; padding: 7px 14px;">
+              Dettagli Tuya →
+            </button>
+          </div>
+        </section>
+
+        <section class="card ampolla-card">
+          <div class="ampolla-container">
+            <div class="ampolla-flask">
+              <canvas id="waveCanvas" width="125" height="175"></canvas>
+              <div class="ampolla-center-text">
+                <strong id="ampollaInside">€ 0,00</strong>
+                <span id="ampollaPercentBadge">0%</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="ampolla-info">
+            <div class="ampolla-title">🏖️ Salvadanaio Vacanze</div>
+            <div id="ampollaEuro" class="ampolla-euro">€ 0,00</div>
+            <div id="ampollaPercent" class="ampolla-percent">0% dell'obiettivo di € 120,00</div>
+            <div class="ampolla-actions">
+              <input id="depositAmount" class="deposit-input" type="number" min="0.01" step="0.01" placeholder="Importo €">
+              <button class="btn primary" id="addVacanza">Versa +</button>
+              <button class="btn danger" id="resetVacanza">Svuota</button>
+              <button class="btn" id="openVacanze">Dettagli</button>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div id="syncStatus" class="status">In attesa di autenticazione...</div>
+    </main>
   </div>
 
-  <!-- HEADER APPLICAZIONE -->
-  <header class="bg-app-black/90 backdrop-blur-xl border-b border-app-border px-4 py-4 sticky z-40 top-0">
-    <div class="max-w-7xl mx-auto flex items-center justify-between">
-      <div class="flex items-center gap-3.5">
-        <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-700 flex items-center justify-center text-black font-display font-black text-lg">
-          IR
-        </div>
-        <div>
-          <div class="flex items-center gap-2">
-            <h1 class="font-display font-black text-lg sm:text-xl text-white tracking-tight">ICON RECOMP</h1>
-            <span class="text-xs font-bold uppercase px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-              32a • 95kg
-            </span>
-          </div>
-          <p class="text-xs sm:text-sm text-app-textMuted flex items-center gap-2 font-mono mt-0.5">
-            <span id="cloudStatusReadout" class="text-teal-400 font-semibold">Offline / Locale</span>
-            <span class="text-gray-600">•</span>
-            <span class="text-gray-300">Target Deficit 1.950 kcal</span>
-          </p>
-        </div>
-      </div>
-
-      <!-- SELETTORE GIORNO ATTIVO -->
-      <div class="flex items-center gap-2 bg-app-card px-2.5 py-1.5 rounded-2xl border border-app-border">
-        <button onclick="window.shiftSelectedDay(-1)" class="w-7 h-7 rounded-xl hover:bg-app-cardSubtle flex items-center justify-center text-sm text-app-textMuted hover:text-white transition">‹</button>
-        <span id="headerCurrentDateLabel" class="text-xs sm:text-sm font-mono font-bold text-emerald-400 px-1 select-none">Oggi</span>
-        <button onclick="window.shiftSelectedDay(1)" class="w-7 h-7 rounded-xl hover:bg-app-cardSubtle flex items-center justify-center text-sm text-app-textMuted hover:text-white transition">›</button>
-      </div>
-
-      <!-- COMANDI RAPIDI HEADER -->
-      <div class="flex items-center gap-2 sm:gap-3">
-        <button onclick="window.toggleTimerModal()" class="px-3.5 py-2 rounded-xl bg-app-card border border-app-border text-sm flex items-center gap-2 text-emerald-400 font-mono active:scale-95 transition">
-          <span>⏱️</span>
-          <span id="headerTimerReadout">00:00</span>
-        </button>
-        <button onclick="window.openApiKeyModal()" class="w-10 h-10 rounded-xl bg-app-card border border-app-border text-sm flex items-center justify-center text-gray-300 hover:border-emerald-500/40 transition" title="Configura Gemini API">
-          <span id="apiStatusDot" class="w-3 h-3 rounded-full bg-amber-500"></span>
-        </button>
-        <button id="headerLogoutBtn" onclick="window.logoutUser()" class="w-10 h-10 rounded-xl bg-app-card border border-app-border text-sm flex items-center justify-center text-gray-400 hover:text-red-400 transition" title="Esci / Cambio Utente">
-          ✕
-        </button>
-      </div>
-    </div>
-  </header>
-
-  <main class="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
-
-    <!-- ============================================================= -->
-    <!-- TAB 1: SCHEDA PALESTRA ICON (USO LIVE IN SALA)                -->
-    <!-- ============================================================= -->
-    <section id="view-workout" class="tab-view space-y-6">
-      
-      <!-- Day Switcher -->
-      <div class="grid grid-cols-4 gap-2.5 p-1.5 bg-app-dark rounded-2xl border border-app-border max-w-2xl mx-auto">
-        <button onclick="window.switchWorkoutDay('dayA')" id="btn-dayA" class="py-3 rounded-xl text-sm font-bold transition bg-emerald-500 text-black shadow-sm">Giorno A</button>
-        <button onclick="window.switchWorkoutDay('dayB')" id="btn-dayB" class="py-3 rounded-xl text-sm font-medium transition text-app-textMuted hover:text-white">Giorno B</button>
-        <button onclick="window.switchWorkoutDay('dayC')" id="btn-dayC" class="py-3 rounded-xl text-sm font-medium transition text-app-textMuted hover:text-white">Giorno C</button>
-        <button onclick="window.switchWorkoutDay('dayD')" id="btn-dayD" class="py-3 rounded-xl text-sm font-medium transition text-app-textMuted hover:text-white">Giorno D</button>
-      </div>
-
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        <!-- Borraccia 500ml & Drink Scanner -->
-        <div class="apple-glass-card p-5 rounded-2xl border border-teal-500/30 bg-teal-500/[0.03] space-y-4">
-          <div class="flex items-center justify-between">
-            <div class="flex items-center gap-2.5">
-              <span class="text-2xl">💧</span>
-              <div>
-                <h3 class="font-display font-bold text-sm sm:text-base text-white uppercase tracking-wider">Borraccia Icon (500ml) & Drink</h3>
-                <p class="text-xs text-app-textMuted">Ricarica idrica & bevande dispenser</p>
-              </div>
-            </div>
-            <span id="gymBottleCountBadge" class="text-xs sm:text-sm font-mono font-bold text-teal-300 bg-teal-500/15 px-3 py-1.5 rounded-xl border border-teal-500/30">
-              0 Borracce (0.0 L)
-            </span>
-          </div>
-
-          <div class="grid grid-cols-2 gap-3">
-            <button onclick="window.addWaterLiters(0.5)" class="py-3.5 px-3 rounded-xl bg-gradient-to-r from-teal-500/20 to-emerald-500/20 hover:from-teal-500/30 hover:to-emerald-500/30 border border-teal-500/40 text-teal-300 font-bold text-sm flex items-center justify-center gap-2 active:scale-95 transition">
-              <span class="text-lg">🚰</span>
-              <span>+1 Borraccia (0.5L)</span>
-            </button>
-            <label class="cursor-pointer py-3.5 px-3 rounded-xl bg-app-card hover:bg-app-cardSubtle border border-app-border text-gray-200 font-semibold text-sm flex items-center justify-center gap-2 active:scale-95 transition">
-              <span class="text-lg">📸</span>
-              <span>Scan Drink Gym</span>
-              <input type="file" id="gymDrinkPhotoInput" accept="image/*" class="hidden" onchange="window.processGymDrinkPhoto(event)">
-            </label>
-          </div>
-
-          <div id="gymDrinkResultBox" class="hidden p-3.5 rounded-xl bg-app-dark border border-teal-500/30 space-y-2">
-            <div class="flex items-center gap-3">
-              <img id="gymDrinkPreviewImg" src="" alt="Drink" class="w-14 h-14 rounded-lg object-cover border border-app-border">
-              <div id="gymDrinkAnalysisText" class="text-xs text-app-textSecondary space-y-0.5"></div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Calorie Bruciate Sessione -->
-        <div class="apple-glass-card p-5 rounded-2xl border border-amber-500/30 bg-amber-500/[0.03] space-y-4">
-          <div class="flex items-center justify-between">
-            <div class="flex items-center gap-2.5">
-              <span class="text-2xl">🔥</span>
-              <div>
-                <h3 class="font-display font-bold text-sm sm:text-base text-white uppercase tracking-wider">Calorie Bruciate Attività</h3>
-                <p class="text-xs text-app-textMuted">Apple Watch / Technogym</p>
-              </div>
-            </div>
-            <div class="flex items-center gap-2">
-              <label class="cursor-pointer px-3 py-1.5 rounded-lg bg-amber-500/20 text-amber-300 border border-amber-500/40 text-xs font-bold flex items-center gap-1.5 transition hover:bg-amber-500/30">
-                <span>📸 Scan Orologio</span>
-                <input type="file" accept="image/*" class="hidden" onchange="window.scanWatchCalories(event)">
-              </label>
-              <button onclick="window.resetBurnedCalories()" class="text-xs text-app-textMuted hover:text-amber-400 px-2.5 py-1.5 rounded-lg bg-app-dark border border-app-border transition">
-                Azzera ↺
-              </button>
-            </div>
-          </div>
-
-          <div class="flex items-baseline justify-between bg-app-dark/80 p-4 rounded-xl border border-app-border">
-            <div>
-              <span class="text-xs uppercase font-bold text-app-textMuted block">Dispendio Attivo</span>
-              <div class="flex items-baseline gap-1.5 mt-0.5">
-                <span id="displayBurnedKcal" class="text-3xl font-display font-black text-amber-400">0</span>
-                <span class="text-sm font-mono font-bold text-app-textMuted">kcal attive</span>
-              </div>
-            </div>
-            <div class="text-right">
-              <span class="text-xs uppercase font-bold text-app-textMuted block">Deficit Reale Effettivo</span>
-              <div id="displayTotalDeficit" class="text-base sm:text-lg font-mono font-black text-emerald-400 mt-1">-0 kcal</div>
-            </div>
-          </div>
-
-          <div class="grid grid-cols-5 gap-2">
-            <button onclick="window.addBurnedCalories(50)" class="py-2.5 rounded-xl bg-app-card border border-app-border text-xs font-bold text-gray-200 active:scale-95 transition">+50</button>
-            <button onclick="window.addBurnedCalories(100)" class="py-2.5 rounded-xl bg-app-card border border-app-border text-xs font-bold text-gray-200 active:scale-95 transition">+100</button>
-            <button onclick="window.addBurnedCalories(200)" class="py-2.5 rounded-xl bg-app-card border border-app-border text-xs font-bold text-gray-200 active:scale-95 transition">+200</button>
-            <button onclick="window.addBurnedCalories(350)" class="py-2.5 rounded-xl bg-app-card border border-app-border text-xs font-bold text-amber-300 active:scale-95 transition">+350</button>
-            <div class="flex items-center gap-1">
-              <input type="number" id="customKcalInput" placeholder="420" class="w-full bg-app-dark border border-app-border rounded-xl px-2 py-2 text-xs text-center font-mono font-bold text-amber-400 focus:outline-none">
-              <button onclick="window.applyCustomKcal()" class="px-2.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-black text-xs active:scale-95 transition">OK</button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="apple-glass-card px-5 py-4 rounded-2xl flex items-center justify-between">
-        <div>
-          <h2 id="workoutTitle" class="text-base sm:text-lg font-display font-bold text-white leading-snug">Giorno A: Petto, Deltoidi & Tricipiti</h2>
-          <div id="workoutSubtitle" class="text-xs sm:text-sm text-app-textMuted mt-0.5">Pausa Pranzo 13:00 - 15:00 • 50 min Technogym</div>
-        </div>
-        <button onclick="window.resetCurrentDayChecks()" class="px-3.5 py-2 rounded-xl bg-app-card hover:bg-red-950/40 border border-app-border text-xs sm:text-sm text-app-textMuted hover:text-red-300 transition">
-          Azzera Spunte
-        </button>
-      </div>
-
-      <div id="exerciseList" class="grid grid-cols-1 lg:grid-cols-2 gap-4"></div>
-    </section>
-
-    <!-- ============================================================= -->
-    <!-- TAB: CAMMINATA & RECUPERO ATTIVO (OUTDOOR / GIORNI OFF)       -->
-    <!-- ============================================================= -->
-    <section id="view-walk" class="tab-view hidden space-y-6 max-w-4xl mx-auto">
-      
-      <div class="apple-glass-card p-6 rounded-3xl border border-teal-500/30 bg-teal-500/[0.03] space-y-4">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-3">
-            <div class="w-12 h-12 rounded-2xl bg-teal-500/15 border border-teal-500/30 flex items-center justify-center text-2xl">
-              👟
-            </div>
-            <div>
-              <div class="flex items-center gap-2">
-                <h2 class="text-base sm:text-lg font-display font-black text-white">Camminata & Recupero Attivo</h2>
-                <span class="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-teal-500/20 text-teal-300">NEAT • Giorni OFF</span>
-              </div>
-              <p class="text-xs sm:text-sm text-app-textMuted mt-0.5">Passeggiata di coppia • Brucia grassi in Zona 2</p>
-            </div>
-          </div>
-          <span class="text-xs font-mono font-bold text-teal-400 bg-teal-500/10 px-3 py-1.5 rounded-xl border border-teal-500/20">
-            Cardio Zona 2
-          </span>
-        </div>
-      </div>
-
-      <div class="apple-glass-card p-6 rounded-3xl border border-app-border space-y-5">
-        <h3 class="text-sm font-display font-black text-white uppercase tracking-wider">Registra Passeggiata</h3>
-
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
-          <div class="p-3.5 rounded-xl bg-app-card border border-app-border space-y-1">
-            <label class="text-[10px] uppercase font-bold text-app-textMuted block">Distanza (km)</label>
-            <input type="number" id="inputWalkKm" step="0.1" placeholder="5.0" oninput="window.updateEstimatedSteps()" class="w-full bg-app-dark border border-app-border rounded-lg px-2.5 py-2 text-base font-mono font-bold text-teal-300 text-center focus:outline-none">
-            <div id="displayEstimatedSteps" class="text-[10px] text-teal-400 font-mono text-center mt-1">~0 passi</div>
-          </div>
-
-          <div class="p-3.5 rounded-xl bg-app-card border border-app-border space-y-1">
-            <label class="text-[10px] uppercase font-bold text-app-textMuted block">Calorie (kcal)</label>
-            <input type="number" id="inputWalkKcal" placeholder="280" class="w-full bg-app-dark border border-app-border rounded-lg px-2.5 py-2 text-base font-mono font-bold text-amber-300 text-center focus:outline-none">
-            <div class="text-[10px] text-amber-400 font-mono text-center mt-1">Attive</div>
-          </div>
-
-          <div class="p-3.5 rounded-xl bg-app-card border border-app-border space-y-1">
-            <label class="text-[10px] uppercase font-bold text-app-textMuted block">Battito Medio</label>
-            <input type="number" id="inputWalkBpm" placeholder="112" oninput="window.updateHeartRateZoneBadge()" class="w-full bg-app-dark border border-app-border rounded-lg px-2.5 py-2 text-base font-mono font-bold text-red-300 text-center focus:outline-none">
-            <div id="bpmZoneStatus" class="text-[10px] text-emerald-400 font-mono text-center mt-1">Zona 2 (Ottimale)</div>
-          </div>
-
-          <div class="p-3.5 rounded-xl bg-app-card border border-teal-500/30 bg-teal-500/[0.04] space-y-1">
-            <label class="text-[10px] uppercase font-bold text-teal-300 block">Acqua al Rientro</label>
-            <input type="number" id="inputWalkWater" step="0.1" placeholder="0.5" class="w-full bg-app-dark border border-teal-500/40 rounded-lg px-2.5 py-2 text-base font-mono font-bold text-teal-200 text-center focus:outline-none">
-            <div class="text-[10px] text-teal-300 font-mono text-center mt-1">Reidratazione (L)</div>
-          </div>
-        </div>
-
-        <input type="text" id="inputWalkNotes" placeholder="Note (es. passeggiata al tramonto con la ragazza)..." class="w-full bg-app-dark border border-app-border rounded-xl px-4 py-3 text-xs sm:text-sm text-white placeholder-app-textMuted focus:outline-none">
-
-        <button onclick="window.saveWalkSession()" class="w-full py-4 rounded-xl bg-gradient-to-r from-teal-500 to-emerald-500 active:scale-95 text-black font-black text-sm transition shadow-lg flex items-center justify-center gap-2">
-          <span>👟</span>
-          <span>Salva Camminata & Sincronizza Acqua e Calorie</span>
-        </button>
-      </div>
-
-      <div class="apple-glass-card p-6 rounded-3xl space-y-4">
-        <div class="flex items-center justify-between">
-          <h4 class="font-display font-black text-xs uppercase tracking-wider text-app-textMuted">Storico Camminate</h4>
-          <button onclick="window.clearWalkLogs()" class="text-xs text-app-textMuted hover:text-red-400 transition">Azzera</button>
-        </div>
-        <div id="walkLogContainer" class="space-y-2.5"></div>
-      </div>
-    </section>
-
-    <!-- ============================================================= -->
-    <!-- TAB 2: ALIMENTAZIONE & DIETA (BILANCIO DEFICIT REALE)         -->
-    <!-- ============================================================= -->
-    <section id="view-nutrition" class="tab-view hidden space-y-7">
-      
-      <!-- Card Bilancio Calorico & Deficit Reale -->
-      <div class="apple-glass-card p-6 sm:p-7 rounded-3xl border border-emerald-500/30 bg-gradient-to-br from-emerald-500/[0.05] via-teal-500/[0.02] to-transparent space-y-5">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-app-border/60 pb-3">
-          <div>
-            <h3 class="font-display font-black text-lg sm:text-xl text-white flex items-center gap-2">
-              <span>⚖️</span> Bilancio Calorico & Deficit Reale Giornaliero
-            </h3>
-            <p class="text-xs sm:text-sm text-app-textMuted mt-1">
-              Spesa Totale (Riposo + Attive) - Cibo Assunto = Deficit Reale Effettivo
-            </p>
-          </div>
-          <div id="deficitSurplusBadge" class="self-start sm:self-auto px-4 py-2 rounded-xl font-mono font-black text-sm sm:text-base bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
-            DEFICIT ATTIVO
-          </div>
-        </div>
-
-        <div class="grid grid-cols-2 sm:grid-cols-5 gap-3.5">
-          <div class="p-4 rounded-2xl bg-app-card border border-app-border text-center">
-            <span class="text-xs uppercase font-bold text-app-textMuted block">Assunte (Cibo)</span>
-            <div id="summaryIntakeKcal" class="text-3xl font-mono font-black text-white mt-1">0</div>
-            <span class="text-xs text-teal-400 font-mono">kcal totale cibo</span>
-          </div>
-
-          <div class="p-4 rounded-2xl bg-app-card border border-teal-500/30 bg-teal-500/[0.03] text-center">
-            <span class="text-xs uppercase font-bold text-teal-300 block">Bruciate Riposo</span>
-            <div id="summaryRestingKcal" class="text-3xl font-mono font-black text-teal-300 mt-1">1.950</div>
-            <span class="text-xs text-app-textMuted font-mono">BMR / Orologio</span>
-          </div>
-
-          <div class="p-4 rounded-2xl bg-app-card border border-amber-500/30 bg-amber-500/[0.03] text-center">
-            <span class="text-xs uppercase font-bold text-amber-300 block">Bruciate Attività</span>
-            <div id="summaryBurnedKcal" class="text-3xl font-mono font-black text-amber-400 mt-1">0</div>
-            <span class="text-xs text-amber-300/80 font-mono">palestra / cammino</span>
-          </div>
-
-          <div class="p-4 rounded-2xl bg-app-card border border-app-border text-center">
-            <span class="text-xs uppercase font-bold text-app-textMuted block">Spesa Totale (TDEE)</span>
-            <div id="summaryTotalBurnedKcal" class="text-3xl font-mono font-black text-gray-200 mt-1">1.950</div>
-            <span class="text-xs text-app-textMuted font-mono">riposo + attive</span>
-          </div>
-
-          <div class="p-4 rounded-2xl bg-app-dark border border-emerald-500/40 text-center col-span-2 sm:col-span-1">
-            <span class="text-xs uppercase font-bold text-emerald-400 block">Deficit Reale Netto</span>
-            <div id="summaryNetBalance" class="text-3xl font-mono font-black text-emerald-300 mt-1">-1950</div>
-            <span id="summaryNetStatus" class="text-xs text-emerald-400 font-mono font-bold">in deficit calorico ✓</span>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 pt-1">
-          <div class="flex flex-wrap items-center justify-between gap-3 bg-app-dark/80 p-4 rounded-2xl border border-teal-500/30">
-            <div>
-              <span class="text-sm font-bold text-white block">Calorie a Riposo (BMR / Orologio):</span>
-              <span class="text-xs text-app-textMuted">Metabolismo basale giornaliero</span>
-            </div>
-            <div class="flex items-center gap-2">
-              <input type="number" id="nutritionRestingInput" placeholder="es. 1950" class="w-28 bg-app-card border border-app-border rounded-xl px-3 py-2 text-sm text-center font-mono font-bold text-teal-300 focus:outline-none">
-              <button onclick="window.updateRestingFromNutrition()" class="px-4 py-2 rounded-xl bg-teal-500 hover:bg-teal-400 text-black font-bold text-sm transition">
-                Salva
-              </button>
-            </div>
-          </div>
-
-          <div class="flex flex-wrap items-center justify-between gap-3 bg-app-dark/80 p-4 rounded-2xl border border-amber-500/30">
-            <div>
-              <span class="text-sm font-bold text-white block">Calorie Attive (Palestra / Camminata):</span>
-              <span class="text-xs text-app-textMuted">Dispendio da smartwatch</span>
-            </div>
-            <div class="flex items-center gap-2">
-              <input type="number" id="nutritionBurnedInput" placeholder="es. 450" class="w-28 bg-app-card border border-app-border rounded-xl px-3 py-2 text-sm text-center font-mono font-bold text-amber-300 focus:outline-none">
-              <button onclick="window.updateBurnedFromNutrition()" class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-sm transition">
-                Salva
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Idratazione 3.5L & Creatina -->
-      <div class="apple-glass-card p-6 sm:p-7 rounded-3xl border border-teal-500/30 bg-gradient-to-br from-teal-500/[0.06] to-transparent space-y-5">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-app-border/60 pb-3">
-          <div class="flex items-center gap-3">
-            <div class="w-12 h-12 rounded-2xl bg-teal-500/15 border border-teal-500/30 flex items-center justify-center text-2xl">
-              💧
-            </div>
-            <div>
-              <h3 class="font-display font-black text-lg text-white">Idratazione Giornaliera & Creatina</h3>
-              <p class="text-xs sm:text-sm text-app-textMuted">Target: 3.5 Litri al giorno (Supporto 5g Creatina)</p>
-            </div>
-          </div>
-          <div class="flex items-baseline gap-2 self-end sm:self-auto">
-            <span id="waterValueDisplayBig" class="text-4xl font-mono font-black text-teal-300">0.0</span>
-            <span class="text-base font-mono font-bold text-app-textMuted">/ 3.5 L</span>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 pt-1">
-          <button onclick="window.addWaterLiters(0.5)" class="py-3.5 px-3 rounded-2xl bg-teal-500 hover:bg-teal-400 text-black font-black text-sm active:scale-95 transition shadow-lg">
-            <span>+0.5 L (Borraccia)</span>
-          </button>
-          <button onclick="window.addWaterLiters(0.25)" class="py-3.5 px-3 rounded-2xl bg-app-card border border-teal-500/40 text-teal-300 font-bold text-sm active:scale-95 transition">
-            <span>+0.25 L</span>
-          </button>
-          <button onclick="window.addWaterLiters(1.0)" class="py-3.5 px-3 rounded-2xl bg-app-card border border-teal-500/40 text-teal-300 font-bold text-sm active:scale-95 transition">
-            <span>+1.0 L</span>
-          </button>
-          <button onclick="window.addWaterLiters(-0.5)" class="py-3.5 px-3 rounded-2xl bg-app-card border border-app-border text-gray-300 hover:text-red-300 font-semibold text-sm active:scale-95 transition">
-            <span>-0.5 L</span>
-          </button>
-          <button onclick="window.resetWaterLiters()" class="py-3.5 px-3 rounded-2xl bg-app-card border border-red-500/30 text-red-300 font-semibold text-sm active:scale-95 transition">
-            <span>Azzera</span>
-          </button>
-        </div>
-
-        <div class="pt-1">
-          <div class="grid grid-cols-7 gap-2.5" id="waterTrackerGrid"></div>
-        </div>
-      </div>
-
-      <!-- Spesa Lidl 45€ Settimanale Divisa in 2 Frazioni -->
-      <div class="apple-glass-card p-6 rounded-3xl border border-app-border space-y-4">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-2.5">
-            <span class="text-2xl">🛒</span>
-            <div>
-              <h4 class="font-display font-black text-base text-white">Spesa Lidl Essenziale (Budget 45€/sett)</h4>
-              <p class="text-xs text-app-textMuted">Salmone fresco, tonno fresco weekend, macinato magro, patate, riso express</p>
-            </div>
-          </div>
-          <span id="lidlTotalDisplay" class="font-mono font-bold text-sm text-emerald-400 bg-emerald-500/10 px-3 py-1.5 rounded-xl border border-emerald-500/20">
-            0.00 €
-          </span>
-        </div>
-
-        <div class="grid grid-cols-2 gap-2 p-1 bg-app-dark rounded-2xl border border-app-border">
-          <button onclick="window.switchLidlSlot('slot1')" id="btn-lidl-slot1" class="py-2.5 rounded-xl text-xs font-bold transition bg-emerald-500 text-black">Frazione 1: Lun - Gio (~23€)</button>
-          <button onclick="window.switchLidlSlot('slot2')" id="btn-lidl-slot2" class="py-2.5 rounded-xl text-xs font-medium transition text-app-textMuted hover:text-white">Frazione 2: Ven - Dom (~22€)</button>
-        </div>
-
-        <div id="lidlListContainer" class="space-y-2"></div>
-      </div>
-
-      <!-- Piano Pasti a Colonne -->
-      <div class="space-y-4">
-        <div class="flex items-center justify-between px-1">
-          <h3 id="currentDayTitle" class="font-display font-black text-xl text-white">Pasti Consumati Oggi</h3>
-          <span id="currentDayBadge" class="text-xs sm:text-sm font-bold px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Giorno Registrato</span>
-        </div>
-        <div id="dualColumnMealGrid" class="space-y-4"></div>
-      </div>
-    </section>
-
-    <!-- ============================================================= -->
-    <!-- TAB 3: SCANNER FOTO & TESTO CON VOCE RIPRISTINATA             -->
-    <!-- ============================================================= -->
-    <section id="view-scanner" class="tab-view hidden space-y-7">
-      
-      <div class="apple-glass-card p-6 sm:p-8 rounded-3xl border border-app-border text-center space-y-5 max-w-3xl mx-auto">
-        <div class="w-16 h-16 mx-auto rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-3xl text-emerald-400">
-          🍽️
-        </div>
-        <div>
-          <h3 class="font-display font-black text-xl sm:text-2xl text-white">Registra Cibo: Voce, Testo o Foto</h3>
-          <p class="text-sm text-app-textSecondary mt-1.5 max-w-lg mx-auto">
-            Detta al microfono, scrivi il piatto o scatta la foto per calcolare calorie e macro con Gemini Vision.
-          </p>
-        </div>
-
-        <!-- Selettore Slot Orario -->
-        <div class="bg-app-dark p-4 rounded-2xl border border-app-border flex flex-col sm:flex-row items-center justify-between gap-3 text-left">
-          <div class="flex items-center gap-3">
-            <span class="text-xl">🕒</span>
-            <div>
-              <span class="text-xs text-app-textMuted block font-bold uppercase">Rilevamento Orario:</span>
-              <span id="detectedSlotBadge" class="text-sm font-bold text-emerald-400">Cena</span>
-            </div>
-          </div>
-          <div class="flex items-center gap-2">
-            <label class="text-xs sm:text-sm text-app-textMuted">Pasto:</label>
-            <select id="scannerSlotSelect" class="bg-app-card border border-app-border rounded-xl text-xs sm:text-sm text-gray-200 px-3 py-2 focus:outline-none">
-              <option value="auto">Automatico (in base all'ora)</option>
-              <option value="Colazione">Colazione</option>
-              <option value="Spuntino">Spuntino</option>
-              <option value="Pranzo">Pranzo</option>
-              <option value="Merenda">Merenda</option>
-              <option value="Cena">Cena</option>
-              <option value="Spuntino notturno">Spuntino notturno</option>
-            </select>
-          </div>
-        </div>
-
-        <!-- Input Testo con Microfono Attivo -->
-        <div class="space-y-2 text-left">
-          <div class="flex gap-2">
-            <input type="text" id="manualDishTextInput" placeholder="es. 200g polpette manzo magro con patate al forno..." class="w-full bg-app-dark border border-app-border focus:border-emerald-500 rounded-2xl px-4 py-3.5 text-sm sm:text-base text-white placeholder-app-textMuted focus:outline-none">
-            <button id="voiceInputBtn" onclick="window.toggleVoiceInput()" class="px-4 py-3.5 rounded-2xl bg-app-card hover:bg-app-cardSubtle border border-emerald-500/40 text-emerald-300 font-bold text-lg flex items-center justify-center transition active:scale-95" title="Detta a voce">
-              🎙️
-            </button>
-            <button onclick="window.processManualFoodText()" class="px-6 py-3.5 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-black font-black text-sm active:scale-95 transition shrink-0 shadow-lg">
-              <span>Calcola</span>
-            </button>
-          </div>
-        </div>
-
-        <div class="flex items-center gap-3 my-2">
-          <div class="h-px flex-1 bg-app-border"></div>
-          <span class="text-xs text-app-textMuted font-mono uppercase font-bold">Oppure Foto Piatto o Etichetta</span>
-          <div class="h-px flex-1 bg-app-border"></div>
-        </div>
-
-        <!-- Scatta o Carica Foto -->
-        <label class="cursor-pointer inline-flex items-center gap-3 px-7 py-4 rounded-2xl bg-app-card hover:bg-app-cardSubtle border border-emerald-500/40 text-emerald-300 font-bold text-sm sm:text-base shadow-lg active:scale-95 transition">
-          <span class="text-xl">📸</span>
-          <span>Scatta o Carica Foto Piatto</span>
-          <input type="file" id="scannerPhotoInput" accept="image/*" class="hidden" onchange="window.processFoodPhoto(event)">
-        </label>
-
-        <!-- Box Risultati Analisi -->
-        <div id="scannerResultBox" class="hidden text-left pt-4 border-t border-app-border space-y-4">
-          <div class="relative w-full h-44 rounded-2xl overflow-hidden bg-app-black border border-app-border">
-            <img id="foodPreviewImg" src="" alt="Pasto" class="w-full h-full object-cover">
-            <div id="foodLoadingSpinner" class="hidden absolute inset-0 bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center p-4 text-center">
-              <div class="w-8 h-8 border-3 border-emerald-400 border-t-transparent rounded-full animate-spin mb-2"></div>
-              <span class="text-sm font-semibold text-emerald-400">Analisi nutrizionale Gemini Vision in corso...</span>
-            </div>
-          </div>
-          <div id="foodDetailsTarget" class="space-y-3"></div>
-        </div>
-      </div>
-
-      <!-- Diario Pasti con Eliminazione Singola -->
-      <div class="space-y-4">
-        <div class="flex items-center justify-between px-1">
-          <div>
-            <h4 class="font-display font-black text-lg sm:text-xl text-white">Diario Pasti del Giorno</h4>
-            <p class="text-xs sm:text-sm text-app-textMuted mt-0.5">Tocca il cestino 🗑️ per eliminare un singolo piatto</p>
-          </div>
-          <button onclick="window.clearFoodLog()" class="text-xs sm:text-sm text-app-textMuted hover:text-red-400 px-3.5 py-1.5 rounded-xl bg-app-card border border-app-border transition">
-            Azzera Giorno
-          </button>
-        </div>
-        <div id="groupedMealsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"></div>
-      </div>
-    </section>
-
-    <!-- ============================================================= -->
-    <!-- TAB 4: AI COACH & NUTRIZIONISTA CLINICO                      -->
-    <!-- ============================================================= -->
-    <section id="view-coach" class="tab-view hidden space-y-5 max-w-4xl mx-auto">
-      
-      <div class="apple-glass-card p-5 rounded-2xl border border-app-border flex items-center justify-between">
-        <div class="flex items-center gap-3.5">
-          <div class="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center text-2xl font-bold">🧬</div>
-          <div>
-            <h3 class="font-display font-bold text-base sm:text-lg text-white">Coach & Nutrizionista Sportivo</h3>
-            <p class="text-xs sm:text-sm text-teal-400 font-mono">Dati reali sincronizzati • Tono diretto</p>
-          </div>
-        </div>
-        <button onclick="window.resetCoachChat()" class="text-xs sm:text-sm text-app-textMuted px-3.5 py-2 rounded-xl bg-app-card border border-app-border hover:text-white transition">Azzera</button>
-      </div>
-
-      <!-- Quick prompts -->
-      <div class="flex gap-2 overflow-x-auto no-scrollbar py-1">
-        <button onclick="window.sendQuickCoachMessage('Come cuocere le polpette di manzo magro in friggitrice ad aria a 180°C morbidissime?')" class="whitespace-nowrap px-3.5 py-2 rounded-xl bg-app-card hover:bg-app-cardSubtle border border-app-border text-xs text-app-textSecondary transition">
-          🥩 Polpette Friggitrice Aria
-        </button>
-        <button onclick="window.sendQuickCoachMessage('Come posso preparare le patate croccanti in friggitrice ad aria senza eccedere nei grassi?')" class="whitespace-nowrap px-3.5 py-2 rounded-xl bg-app-card hover:bg-app-cardSubtle border border-app-border text-xs text-app-textSecondary transition">
-          🥔 Patate Friggitrice Aria
-        </button>
-        <button onclick="window.sendQuickCoachMessage('Cosa mi consigli per cena per chiudere al meglio i macro proteici oggi?')" class="whitespace-nowrap px-3.5 py-2 rounded-xl bg-app-card hover:bg-app-cardSubtle border border-app-border text-xs text-app-textSecondary transition">
-          🍽️ Consiglio Cena Stasera
-        </button>
-      </div>
-
-      <div id="coachChatBox" class="h-96 overflow-y-auto space-y-3.5 p-5 rounded-2xl bg-app-card/70 border border-app-border flex flex-col text-sm sm:text-base">
-        <div class="bg-app-dark p-4 rounded-2xl border border-app-border text-gray-200 leading-relaxed shadow-sm">
-          Bella Luca! Ho sott'occhio tutti i numeri di oggi: calorie assunte, spesa a riposo, calorie bruciate, litri d'acqua e scheda Icon. Puoi scrivermi o toccare il microfono per parlarmi direttamente!
-        </div>
-      </div>
-
-      <form onsubmit="window.handleCoachSubmit(event)" class="flex gap-2.5">
-        <input type="text" id="coachInputText" placeholder="Chiedi al coach (o tocca il microfono)..." class="w-full bg-app-card border border-app-border focus:border-emerald-500 rounded-xl px-4 py-3.5 text-sm text-white focus:outline-none">
-        <button type="button" id="coachVoiceBtn" onclick="window.toggleCoachVoiceInput()" class="px-4 py-3.5 rounded-xl bg-app-card hover:bg-app-cardSubtle border border-emerald-500/40 text-emerald-300 font-bold text-lg flex items-center justify-center transition active:scale-95" title="Parla al Coach">
-          🎙️
-        </button>
-        <button type="submit" class="px-6 py-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-black text-sm active:scale-95 transition shrink-0">Invia</button>
-      </form>
-    </section>
-
-    <!-- ============================================================= -->
-    <!-- TAB 5: PROGRESSI, PESO & GIRO VITA                           -->
-    <!-- ============================================================= -->
-    <section id="view-progress" class="tab-view hidden space-y-6 max-w-4xl mx-auto">
-      
-      <div class="apple-glass-card p-6 sm:p-8 rounded-3xl border border-app-border space-y-6">
-        <h3 class="font-display font-bold text-lg text-white uppercase tracking-wider">Misure Corporee</h3>
-        
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <div class="p-4 rounded-xl bg-app-card border border-app-border">
-            <div class="text-xs uppercase font-bold text-app-textMuted">Peso Start</div>
-            <div class="text-2xl font-display font-black text-white mt-0.5">95.0 <span class="text-xs font-normal text-app-textMuted">kg</span></div>
-          </div>
-          <div class="p-4 rounded-xl bg-app-card border border-app-border">
-            <div class="text-xs uppercase font-bold text-app-textMuted">Peso Oggi</div>
-            <div id="metricCurrentWeight" class="text-2xl font-display font-black text-emerald-400 mt-0.5">95.0 <span class="text-xs font-normal text-app-textMuted">kg</span></div>
-          </div>
-          <div class="p-4 rounded-xl bg-app-card border border-app-border">
-            <div class="text-xs uppercase font-bold text-app-textMuted">Giro Vita Start</div>
-            <div class="text-2xl font-display font-black text-white mt-0.5">104.0 <span class="text-xs font-normal text-app-textMuted">cm</span></div>
-          </div>
-          <div class="p-4 rounded-xl bg-app-card border border-app-border">
-            <div class="text-xs uppercase font-bold text-app-textMuted">Giro Vita Oggi</div>
-            <div id="metricCurrentWaist" class="text-2xl font-display font-black text-teal-400 mt-0.5">104.0 <span class="text-xs font-normal text-app-textMuted">cm</span></div>
-          </div>
-        </div>
-
-        <div class="p-5 rounded-2xl bg-app-dark border border-app-border space-y-3.5">
-          <div class="text-sm font-bold text-white">Aggiorna Misure Mattutine</div>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-            <input type="number" id="quickWeightInput" step="0.1" placeholder="Peso (kg)" class="w-full bg-app-card border border-app-border rounded-xl px-4 py-2.5 text-base text-emerald-400 font-mono text-center focus:outline-none">
-            <input type="number" id="quickWaistInput" step="0.5" placeholder="Vita (cm)" class="w-full bg-app-card border border-app-border rounded-xl px-4 py-2.5 text-base text-teal-400 font-mono text-center focus:outline-none">
-          </div>
-          <button onclick="window.saveBodyMeasurements()" class="w-full py-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black text-sm font-bold active:scale-95 transition">Salva Misure</button>
-        </div>
-      </div>
-    </section>
-
-  </main>
-
-  <!-- iOS BOTTOM BAR -->
-  <nav class="fixed bottom-0 left-0 right-0 z-40 apple-nav px-3 py-2.5">
-    <div class="max-w-md mx-auto grid grid-cols-6 gap-1 text-center">
-      <button onclick="window.navigateToTab('workout')" id="nav-workout" class="py-1 flex flex-col items-center text-emerald-400"><span class="text-lg">🏋️</span><span class="text-[10px] font-bold mt-0.5">Scheda</span></button>
-      <button onclick="window.navigateToTab('walk')" id="nav-walk" class="py-1 flex flex-col items-center text-app-textMuted hover:text-white"><span class="text-lg">👟</span><span class="text-[10px] font-medium mt-0.5">Cammino</span></button>
-      <button onclick="window.navigateToTab('nutrition')" id="nav-nutrition" class="py-1 flex flex-col items-center text-app-textMuted hover:text-white"><span class="text-lg">🥗</span><span class="text-[10px] font-medium mt-0.5">Dieta</span></button>
-      <button onclick="window.navigateToTab('scanner')" id="nav-scanner" class="py-1 flex flex-col items-center text-app-textMuted hover:text-white"><span class="text-lg">📷</span><span class="text-[10px] font-medium mt-0.5">Scanner</span></button>
-      <button onclick="window.navigateToTab('coach')" id="nav-coach" class="py-1 flex flex-col items-center text-app-textMuted hover:text-white"><span class="text-lg">🧬</span><span class="text-[10px] font-medium mt-0.5">Coach</span></button>
-      <button onclick="window.navigateToTab('progress')" id="nav-progress" class="py-1 flex flex-col items-center text-app-textMuted hover:text-white"><span class="text-lg">📈</span><span class="text-[10px] font-medium mt-0.5">Misure</span></button>
-    </div>
+  <!-- BARRA INFERIORE SMARTPHONE -->
+  <nav class="mobile-bottom-bar">
+    <button class="mobile-tab-btn active" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">
+      <i class="fa-solid fa-house"></i>
+      <span>Home</span>
+    </button>
+    <button class="mobile-tab-btn" onclick="location.href='consumi.html'">
+      <i class="fa-solid fa-bolt"></i>
+      <span>Consumi</span>
+    </button>
+    <button class="mobile-tab-btn" onclick="location.href='vacanze.html'">
+      <i class="fa-solid fa-umbrella-beach"></i>
+      <span>Vacanze</span>
+    </button>
+    <button class="mobile-tab-btn" onclick="location.href='spesa-settimanale.html'">
+      <i class="fa-solid fa-basket-shopping"></i>
+      <span>Spesa</span>
+    </button>
+    <button class="mobile-tab-btn" onclick="$('calcToggleBtn').click()">
+      <i class="fa-solid fa-calculator"></i>
+      <span>Calcola</span>
+    </button>
   </nav>
+</div>
 
-  <!-- MODAL: REST TIMER -->
-  <div id="restTimerModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
-    <div class="apple-glass max-w-xs w-full p-6 rounded-3xl border border-app-border text-center relative">
-      <button onclick="window.toggleTimerModal()" class="absolute top-3 right-4 text-app-textMuted text-xl">✕</button>
-      <h3 class="text-base font-bold text-white mb-1">Timer Recupero</h3>
-      <div id="modalTimerDigits" class="text-5xl font-mono font-black text-emerald-400 my-4">01:30</div>
-      <div class="grid grid-cols-3 gap-2 mb-3">
-        <button onclick="window.startDiscreetTimer(60)" class="py-2.5 rounded-xl bg-app-card border border-app-border text-xs font-bold">60s</button>
-        <button onclick="window.startDiscreetTimer(90)" class="py-2.5 rounded-xl bg-emerald-500 text-black text-xs font-black">90s</button>
-        <button onclick="window.startDiscreetTimer(120)" class="py-2.5 rounded-xl bg-app-card border border-app-border text-xs font-bold">120s</button>
-      </div>
-      <button onclick="window.stopDiscreetTimer()" class="w-full py-2.5 rounded-xl bg-red-950/40 text-red-300 text-xs font-bold border border-red-500/30">Ferma</button>
-    </div>
-  </div>
+<script type="module">
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js';
+  import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js';
+  import { getFirestore, doc, onSnapshot, setDoc, getDoc } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js';
 
-  <!-- MODAL: API KEY GEMINI -->
-  <div id="apiKeyModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
-    <div class="apple-glass max-w-sm w-full p-6 rounded-3xl border border-app-border space-y-4">
-      <h3 class="text-base font-bold text-white">Chiave Gemini API</h3>
-      <p class="text-xs text-app-textMuted leading-relaxed">
-        Inserisci la tua chiave API Google AI Studio per attivare l'analisi fotografica pasti e l'AI Coach.
-      </p>
-      <input type="password" id="userApiKeyInput" placeholder="AIzaSy..." class="w-full bg-app-dark border border-app-border rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500 font-mono">
-      <div class="flex gap-2 pt-1">
-        <button onclick="window.saveUserApiKey()" class="w-full py-2.5 bg-emerald-500 text-black font-bold rounded-xl text-sm">Salva</button>
-        <button onclick="window.closeApiKeyModal()" class="w-full py-2.5 bg-app-card text-white rounded-xl text-sm border border-app-border">Chiudi</button>
-      </div>
-    </div>
-  </div>
+  const firebaseConfig = {
+    apiKey: 'AIzaSyAdZbBv6JYbYnl6CxuFVfHhSftvIxwf2DY',
+    authDomain: 'budget-luca.firebaseapp.com',
+    projectId: 'budget-luca',
+    storageBucket: 'budget-luca.firebasestorage.app',
+    messagingSenderId: '67496424698',
+    appId: '1:67496424698:web:efc07408543',
+    measurementId: 'G-7LEYRZE9QN'
+  };
 
-  <script>
-    window.navigateToTab = function(tabId) {
-      ['workout', 'walk', 'nutrition', 'scanner', 'coach', 'progress'].forEach(t => {
-        const view = document.getElementById(`view-${t}`);
-        const navBtn = document.getElementById(`nav-${t}`);
-        if (view) view.classList.toggle('hidden', t !== tabId);
-        if (navBtn) {
-          navBtn.className = t === tabId
-            ? 'py-1 flex flex-col items-center text-emerald-400'
-            : 'py-1 flex flex-col items-center text-app-textMuted hover:text-white';
-        }
-      });
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    };
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+  const provider = new GoogleAuthProvider();
+  provider.setCustomParameters({ prompt: 'select_account' });
 
-    window.openApiKeyModal = () => document.getElementById('apiKeyModal').classList.remove('hidden');
-    window.closeApiKeyModal = () => document.getElementById('apiKeyModal').classList.add('hidden');
-
-    function showNotification(msg, isAlert = false) {
-      const old = document.getElementById('toast');
-      if (old) old.remove();
-      const toast = document.createElement('div');
-      toast.id = 'toast';
-      toast.className = `fixed bottom-20 left-1/2 -translate-x-1/2 z-50 px-5 py-3 rounded-2xl text-sm font-bold border transition duration-300 shadow-xl flex items-center gap-2.5 ${
-        isAlert ? 'bg-red-950 text-red-200 border-red-500/40' : 'bg-app-card text-emerald-400 border-emerald-500/30'
-      }`;
-      toast.innerHTML = `<span>${isAlert ? '⚠️' : '✓'}</span><span>${msg}</span>`;
-      document.body.appendChild(toast);
-      setTimeout(() => toast.remove(), 2800);
+  function triggerHaptic(ms = 18) {
+    if ('vibrate' in navigator) {
+      try { navigator.vibrate(ms); } catch (e) {}
     }
-  </script>
+  }
 
-  <script type="module">
-    import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js';
-    import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js';
-    import { getFirestore, doc, onSnapshot, setDoc } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js';
+  let selectedDate = new Date();
+  selectedDate.setDate(1);
 
-    const firebaseConfig = {
-      apiKey: 'AIzaSyAdZbBv6JYbYnl6CxuFVfHhSftvIxwf2DY',
-      authDomain: 'budget-luca.firebaseapp.com',
-      projectId: 'budget-luca',
-      storageBucket: 'budget-luca.firebasestorage.app',
-      messagingSenderId: '67496424698',
-      appId: '1:67496424698:web:efc07408543',
-      measurementId: 'G-7LEYRZE9QN'
-    };
+  function getMonthKey(d) {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    return `${y}-${m}`;
+  }
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
-    const provider = new GoogleAuthProvider();
-    provider.setCustomParameters({ prompt: 'select_account' });
+  const monthKey = () => getMonthKey(selectedDate);
+  const today = () => new Date().toISOString().slice(0, 10);
 
-    let currentUser = null;
-    let cloudDocRef = null;
-    let unsubCloud = null;
-    let cloudSaveTimeout = null;
+  function defaultDateForSelectedMonth() {
+    const currentMKey = new Date().toISOString().slice(0, 7);
+    const selMKey = getMonthKey(selectedDate);
+    if (selMKey === currentMKey) return today();
+    return `${selMKey}-01`;
+  }
 
-    // Modelli Gemini aggiornati ed operativi (allineati con AI-BUDGET, rimossi modelli deprecati)
-    const AI_MODELS = ['gemini-2.5-flash', 'gemini-3-flash-preview', 'gemini-2.0-flash'];
-    const MEAL_SLOTS = ["Colazione", "Spuntino", "Pranzo", "Merenda", "Cena", "Spuntino notturno"];
+  let ref = null, refVacanze = null, refGemini = null;
+  let unsubBudget = null, unsubVacanze = null;
+  let state = { income: [], expense: [] };
+  let saveTimer = null, editing = false, monthlyChart = null, allWeeks = {}, selectedWeekOffset = 0;
+  let lastBudgetDoc = {}, lastVacanzeDoc = {};
+  let userGeminiApiKey = "";
 
-    let selectedDate = new Date();
-    const getFormattedDateKey = d => d.toISOString().slice(0, 10);
+  const $ = id => document.getElementById(id);
+  const money = n => new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(Number(n) || 0);
 
-    let appData = {
-      userApiKey: localStorage.getItem('icon_gemini_key') || '',
-      dailyRecords: JSON.parse(localStorage.getItem('icon_daily_records') || '{}'),
-      defaultRestingCalories: parseInt(localStorage.getItem('icon_resting_calories') || '1950', 10),
-      weight: localStorage.getItem('icon_weight_record') || '95.0',
-      waist: localStorage.getItem('icon_waist_record') || '104.0',
-      workoutExercises: JSON.parse(localStorage.getItem('icon_workout_exercises') || '{}'),
-      walkLogs: JSON.parse(localStorage.getItem('icon_walk_logs') || '[]'),
-      currentLidlSlot: 'slot1'
-    };
+  function num(v) { return Number(String(v ?? '').replace(',', '.')) || 0; }
 
-    let currentWorkoutDay = 'dayA';
-    let timerCountdown = null;
-    let secondsRemaining = 0;
+  function showToast(text) {
+    const t = $('swipeToast');
+    $('swipeToastText').textContent = text;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 1200);
+  }
 
-    // Routines Technogym
-    const ROUTINES = {
-      dayA: {
-        title: "Giorno A: Petto, Deltoidi & Tricipiti",
-        subtitle: "Spinta • 50 min • Focus Tensione",
-        exercises: [
-          { id: "ex_A1", code: "M01", name: "Chest Press Orizzontale", model: "Technogym Selection 900", sets: 4, reps: "8-10", rest: 90, defaultKg: 65, seat: "Maniglie a metà altezza petto.", cue: "Scapole addotte. Spinta controllata." },
-          { id: "ex_A2", code: "M02", name: "Incline Chest Press 30°", model: "Technogym Pure Strength", sets: 3, reps: "10-12", rest: 75, defaultKg: 50, seat: "Impugnature ad altezza clavicole.", cue: "Gomiti a 45°." },
-          { id: "ex_A3", code: "M03", name: "Pectoral Machine", model: "Technogym Selection", sets: 3, reps: "12-15", rest: 60, defaultKg: 40, seat: "Gomiti al centro dei cuscinetti.", cue: "Petto aperto." },
-          { id: "ex_A4", code: "M04", name: "Shoulder Press Machine", model: "Technogym Selection", sets: 3, reps: "8-10", rest: 90, defaultKg: 45, seat: "Maniglie ad altezza orecchie.", cue: "Spingi senza inarcare la schiena." },
-          { id: "ex_A5", code: "M05", name: "Alzate Laterali Cavo Basso", model: "Technogym DAP Cavi", sets: 3, reps: "12-15", rest: 60, defaultKg: 7.5, seat: "Carrucola al foro più basso.", cue: "Guida con il gomito." },
-          { id: "ex_A6", code: "M06", name: "Pushdown Tricipiti Corda", model: "Technogym Ercolina", sets: 3, reps: "10-12", rest: 60, defaultKg: 22.5, seat: "Carrucola in alto.", cue: "Gomiti bloccati ai fianchi." }
-        ]
-      },
-      dayB: {
-        title: "Giorno B: Dorso, Spalle Post & Bicipiti",
-        subtitle: "Trazione • 50 min • Spessore V-Taper",
-        exercises: [
-          { id: "ex_B1", code: "M07", name: "Lat Machine Presa Larga", model: "Technogym Selection", sets: 4, reps: "8-10", rest: 90, defaultKg: 55, seat: "Rulli cosce ben saldi.", cue: "Gomiti ai fianchi." },
-          { id: "ex_B2", code: "M08", name: "Vertical Traction Divergente", model: "Technogym Selection", sets: 3, reps: "10-12", rest: 75, defaultKg: 50, seat: "Presa comoda.", cue: "Traiettoria convergente." },
-          { id: "ex_B3", code: "M09", name: "Pulley Basso", model: "Technogym Selection", sets: 3, reps: "10-12", rest: 75, defaultKg: 50, seat: "Ginocchia flesse.", cue: "Tira all'ombelico." },
-          { id: "ex_B4", code: "M10", name: "Reverse Fly", model: "Technogym Selection", sets: 3, reps: "12-15", rest: 60, defaultKg: 35, seat: "Petto contro il cuscino.", cue: "Apri a croce." },
-          { id: "ex_B5", code: "M11", name: "Arm Curl Panca Scott", model: "Technogym Selection", sets: 3, reps: "10-12", rest: 60, defaultKg: 30, seat: "Ascelle sul bordo.", cue: "Fletti isolando il bicipite." },
-          { id: "ex_B6", code: "M12", name: "Hammer Curl Cavo", model: "Technogym Ercolina", sets: 3, reps: "10-12", rest: 60, defaultKg: 20, seat: "Carrucola al suolo.", cue: "Presa neutra." }
-        ]
-      },
-      dayC: {
-        title: "Giorno C: Gambe, Polpacci & Addome",
-        subtitle: "Gambe & Core • 50 min",
-        exercises: [
-          { id: "ex_C1", code: "M13", name: "Leg Press 45° a Slitta", model: "Technogym Pure Strength", sets: 4, reps: "10-12", rest: 90, defaultKg: 130, seat: "Piedi a larghezza spalle.", cue: "Ginocchia a 90°." },
-          { id: "ex_C2", code: "M14", name: "Leg Extension Isolamento", model: "Technogym Selection", sets: 3, reps: "12-15", rest: 60, defaultKg: 40, seat: "Perno sul ginocchio.", cue: "1 secondo di tenuta." },
-          { id: "ex_C3", code: "M15", name: "Seated Leg Curl Femorali", model: "Technogym Selection", sets: 4, reps: "10-12", rest: 75, defaultKg: 45, seat: "Cuscino cosce bloccato.", cue: "Talloni sotto il sedile." },
-          { id: "ex_C4", code: "M16", name: "Calf Machine Polpacci", model: "Technogym Selection", sets: 4, reps: "15", rest: 45, defaultKg: 65, seat: "Solo avampiede sulla pedana.", cue: "Allungamento profondo." },
-          { id: "ex_C5", code: "M17", name: "Abdominal Crunch Machine", model: "Technogym Selection", sets: 3, reps: "15-20", rest: 60, defaultKg: 35, seat: "Piedi vincolati.", cue: "Arrotola la cassa toracica." }
-        ]
-      },
-      dayD: {
-        title: "Giorno D: Upper Body & Cardio",
-        subtitle: "Alta Densità • 50 min",
-        exercises: [
-          { id: "ex_D1", code: "M18", name: "Spinte Panca Inclinata 30°", model: "Technogym Pure Incline", sets: 3, reps: "8-10", rest: 75, defaultKg: 24, seat: "Seduta a 30°.", cue: "Focus parte alta petto." },
-          { id: "ex_D2", code: "M19", name: "Lat Machine Presa Inversa", model: "Technogym Selection", sets: 3, reps: "8-10", rest: 75, defaultKg: 60, seat: "Presa supina.", cue: "Tira fino alle clavicole." },
-          { id: "ex_D3", code: "M20", name: "Crossover Cavi Alti", model: "Technogym DAP Cavi", sets: 3, reps: "12-15", rest: 60, defaultKg: 15, seat: "Carrucole in alto.", cue: "Braccia quasi distese." },
-          { id: "ex_D4", code: "M21", name: "Superset Corda + Curl Cavo", model: "Technogym Ercolina", sets: 3, reps: "10 + 10", rest: 60, defaultKg: 20, seat: "Prima tricipiti, poi bicipiti.", cue: "Zero pause." }
-        ]
-      }
-    };
+  function updateMonthHeader() {
+    const monthNames = [
+      'Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno',
+      'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'
+    ];
+    const mName = monthNames[selectedDate.getMonth()] + ' ' + selectedDate.getFullYear();
+    $('currentMonthDisplay').textContent = mName;
 
-    // Lidl Grocery Data
-    const LIDL_GROCERY_DATA = {
-      slot1: {
-        title: "Frazione 1: Lunedì - Giovedì",
-        items: [
-          { name: "Macinato Magro di Manzo Lidl (500g)", price: 4.60 },
-          { name: "Trancio di Salmone Fresco Lidl (250g)", price: 4.80 },
-          { name: "Patate per friggitrice ad aria (1.5 kg)", price: 1.70 },
-          { name: "Peperoni dolci misti (3 pz)", price: 1.80 },
-          { name: "Cetrioli freschi (2 pz)", price: 1.20 },
-          { name: "Lenticchie in barattolo Campo Largo (2x400g)", price: 1.60 },
-          { name: "Uova medie da allevamento a terra (10 pz)", price: 1.90 },
-          { name: "Fiocchi d'avena Crownfield (500g)", price: 0.90 },
-          { name: "Yogurt greco magro 0% Milbona (500g)", price: 1.60 },
-          { name: "Mozzarella Light Milbona (2x125g)", price: 1.80 }
-        ]
-      },
-      slot2: {
-        title: "Frazione 2: Venerdì - Domenica (Weekend)",
-        items: [
-          { name: "Trancio di Tonno Fresco Lidl (250g)", price: 5.40 },
-          { name: "Gamberetti sgusciati Lidl (250g)", price: 3.80 },
-          { name: "Riso Basmati Express precotto in busta (2x250g)", price: 2.20 },
-          { name: "Macinato Magro di Manzo Lidl (500g)", price: 4.60 },
-          { name: "Mozzarella Light Milbona (2x125g)", price: 1.80 },
-          { name: "Patate per friggitrice ad aria (1 kg)", price: 1.20 },
-          { name: "Peperoni dolci & Cetrioli freschi", price: 2.00 }
-        ]
-      }
-    };
-
-    function getSelectedDayData() {
-      const key = getFormattedDateKey(selectedDate);
-      if (!appData.dailyRecords[key]) {
-        appData.dailyRecords[key] = {
-          foodLogs: [],
-          waterLiters: 0.0,
-          burnedCalories: 0,
-          restingCalories: appData.defaultRestingCalories || 1950,
-          gymBottles: 0
-        };
-      }
-      return appData.dailyRecords[key];
+    const currentMKey = new Date().toISOString().slice(0, 7);
+    const isCurrent = getMonthKey(selectedDate) === currentMKey;
+    if ($('currentMonthSubtext')) {
+      $('currentMonthSubtext').textContent = isCurrent 
+        ? 'Gestione flussi di cassa e risparmi (Mese corrente)' 
+        : `Gestione flussi di cassa e risparmi • Mese: ${mName}`;
     }
+  }
 
-    function triggerCloudSave() {
-      try {
-        localStorage.setItem('icon_daily_records', JSON.stringify(appData.dailyRecords));
-        localStorage.setItem('icon_resting_calories', (appData.defaultRestingCalories || 1950).toString());
-        localStorage.setItem('icon_weight_record', appData.weight);
-        localStorage.setItem('icon_waist_record', appData.waist);
-        localStorage.setItem('icon_workout_exercises', JSON.stringify(appData.workoutExercises));
-        localStorage.setItem('icon_walk_logs', JSON.stringify(appData.walkLogs));
-      } catch (e) {}
+  $('monthPrevBtn').onclick = () => changeMonth(-1);
+  $('monthNextBtn').onclick = () => changeMonth(1);
 
-      if (!currentUser || !cloudDocRef) return;
-      clearTimeout(cloudSaveTimeout);
-      cloudSaveTimeout = setTimeout(async () => {
-        try {
-          await setDoc(cloudDocRef, { ...appData, updatedAt: Date.now() }, { merge: true });
-        } catch (e) {
-          console.warn("Sync cloud differito:", e);
-        }
-      }, 300);
+  $('currentMonthDisplay').onclick = () => {
+    const now = new Date();
+    if (getMonthKey(selectedDate) !== getMonthKey(now)) {
+      triggerHaptic(25);
+      selectedDate = new Date();
+      selectedDate.setDate(1);
+      updateMonthHeader();
+      subscribeSelectedMonth();
+      showToast($('currentMonthDisplay').textContent);
     }
+  };
 
-    // Ridimensiona e converte QUALSIASI immagine in JPEG leggero (risolve errore HEIC e limiti di payload)
-    function prepareImageForAi(file) {
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onerror = reject;
-        reader.onload = function(e) {
-          const img = new Image();
-          img.onerror = () => {
-            const rawParts = e.target.result.split(',');
-            resolve({ mimeType: 'image/jpeg', base64: rawParts[1], dataUrl: e.target.result });
-          };
-          img.onload = () => {
-            const maxDim = 1200;
-            let w = img.width;
-            let h = img.height;
-            if (w > maxDim || h > maxDim) {
-              if (w > h) {
-                h = Math.round((h * maxDim) / w);
-                w = maxDim;
-              } else {
-                w = Math.round((w * maxDim) / h);
-                h = maxDim;
-              }
-            }
-            const canvas = document.createElement('canvas');
-            canvas.width = w;
-            canvas.height = h;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0, w, h);
-            const jpegDataUrl = canvas.toDataURL('image/jpeg', 0.85);
-            const base64 = jpegDataUrl.split(',')[1];
-            resolve({ mimeType: 'image/jpeg', base64, dataUrl: jpegDataUrl });
-          };
-          img.src = e.target.result;
-        };
-        reader.readAsDataURL(file);
-      });
+  function changeMonth(delta, animatedDirection = null) {
+    if (editing) finishEdit();
+    triggerHaptic(20);
+
+    const container = $('mainContainer');
+    if (animatedDirection) {
+      container.classList.add(animatedDirection === 'left' ? 'swipe-left' : 'swipe-right');
+      setTimeout(() => {
+        selectedDate.setMonth(selectedDate.getMonth() + delta);
+        updateMonthHeader();
+        subscribeSelectedMonth();
+        showToast($('currentMonthDisplay').textContent);
+        container.classList.remove('swipe-left', 'swipe-right');
+      }, 150);
+    } else {
+      selectedDate.setMonth(selectedDate.getMonth() + delta);
+      updateMonthHeader();
+      subscribeSelectedMonth();
+      showToast($('currentMonthDisplay').textContent);
     }
+  }
 
-    // Chiamata Gemini con fallback automatico e gestione trasparente degli errori
-    async function callGeminiApi(payload) {
-      const activeKey = appData.userApiKey || localStorage.getItem('icon_gemini_key') || '';
+  // TOUCH SWIPE MOBILE
+  let touchStartX = 0, touchStartY = 0, touchEndX = 0, touchEndY = 0;
+  const minSwipeDistance = 55;
 
-      let lastError = "";
-      for (const model of AI_MODELS) {
-        try {
-          const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(activeKey)}`;
-          const resp = await fetch(url, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
-          });
+  document.addEventListener('touchstart', e => {
+    if (e.target.closest('.calc-modal, input, button, select, canvas')) return;
+    touchStartX = e.changedTouches[0].screenX;
+    touchStartY = e.changedTouches[0].screenY;
+  }, { passive: true });
 
-          const data = await resp.json();
-          if (resp.ok && data.candidates?.[0]?.content?.parts?.[0]?.text) {
-            return data.candidates[0].content.parts[0].text;
-          }
-          if (data.error) {
-            lastError = data.error.message || `Errore ${resp.status}`;
-            console.warn(`Tentativo modello ${model} fallito:`, data.error);
-          }
-        } catch (e) {
-          lastError = e.message;
-        }
-      }
-      throw new Error(lastError || "Impossibile contattare Gemini. Verifica la chiave API.");
+  document.addEventListener('touchend', e => {
+    if (e.target.closest('.calc-modal, input, button, select, canvas')) return;
+    touchEndX = e.changedTouches[0].screenX;
+    touchEndY = e.changedTouches[0].screenY;
+    handleTouchSwipe();
+  }, { passive: true });
+
+  function handleTouchSwipe() {
+    const deltaX = touchEndX - touchStartX;
+    const deltaY = touchEndY - touchStartY;
+    if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > minSwipeDistance) {
+      if (deltaX < 0) changeMonth(1, 'left');
+      else changeMonth(-1, 'right');
     }
+  }
 
-    // Salvataggio e sincronizzazione Cloud della chiave API Gemini
-    window.saveUserApiKey = async function() {
-      const val = document.getElementById('userApiKeyInput').value.trim();
-      appData.userApiKey = val;
-      localStorage.setItem('icon_gemini_key', val);
-      document.getElementById('apiStatusDot').className = val ? "w-3 h-3 rounded-full bg-emerald-400" : "w-3 h-3 rounded-full bg-amber-500";
+  // CONTROLLO AUTOMATICO SPESE RICORRENTI AL CAMBIO MESE
+  async function checkAndApplyRecurringExpenses(budgetData, mKey) {
+    if (!auth.currentUser) return;
+    
+    // Controlla se abbiamo già applicato le ricorrenti per questo mese in questo documento
+    if (budgetData.recurringApplied === mKey) return;
+
+    // Cerca nel mese precedente o estrae le ricorrenti salvate nei mesi passati
+    const prevDate = new Date(selectedDate);
+    prevDate.setMonth(prevDate.getMonth() - 1);
+    const prevMKey = getMonthKey(prevDate);
+    
+    try {
+      const prevRef = doc(db, 'users', auth.currentUser.uid, 'budgets', prevMKey);
+      const prevSnap = await getDoc(prevRef);
       
-      if (currentUser) {
-        try {
-          const refG = doc(db, 'users', currentUser.uid, 'settings', 'gemini');
-          await setDoc(refG, { apiKey: val, updatedAt: Date.now() }, { merge: true });
-        } catch (e) {
-          console.warn("Errore salvataggio chiave su Firebase:", e);
-        }
+      let recurringItems = [];
+      if (prevSnap.exists() && Array.isArray(prevSnap.data().expense)) {
+        // Prende le spese che avevano il flag isRecurring: true nel mese precedente
+        recurringItems = prevSnap.data().expense.filter(x => x.isRecurring === true);
       }
+
+      if (recurringItems.length > 0) {
+        let currentExpenses = Array.isArray(budgetData.expense) ? budgetData.expense : [];
+        
+        recurringItems.forEach(rec => {
+          const exists = currentExpenses.some(x => (x.name || '').trim().toLowerCase() === rec.name.trim().toLowerCase());
+          if (!exists) {
+            currentExpenses.push({
+              name: rec.name,
+              amount: num(rec.amount),
+              date: `${mKey}-01`,
+              isRecurring: true
+            });
+          }
+        });
+
+        await setDoc(ref, { expense: currentExpenses, recurringApplied: mKey, updatedAt: Date.now() }, { merge: true });
+      } else {
+        // Segna comunque come controllato per evitare loop
+        await setDoc(ref, { recurringApplied: mKey, updatedAt: Date.now() }, { merge: true });
+      }
+    } catch (e) {
+      console.error("Errore verifica ricorrenti automatiche:", e);
+    }
+  }
+
+  function subscribeSelectedMonth() {
+    if (unsubBudget) unsubBudget();
+    if (unsubVacanze) unsubVacanze();
+
+    if (!auth.currentUser) return;
+
+    const mKey = getMonthKey(selectedDate);
+    ref = doc(db, 'users', auth.currentUser.uid, 'budgets', mKey);
+    refVacanze = doc(db, 'users', auth.currentUser.uid, 'vacanze', mKey);
+
+    $('syncStatus').textContent = `Caricamento dati ${mKey}...`;
+
+    unsubBudget = onSnapshot(ref, async s => {
+      if (editing) return;
+      const d = s.exists() ? s.data() : {};
       
-      window.closeApiKeyModal();
-      showNotification("Chiave API salvata e sincronizzata con il tuo Cloud!");
-    };
-
-    // Riconoscimento Vocale per Scanner Pasti
-    let scannerRecognition = null;
-    let isScannerRecording = false;
-
-    window.toggleVoiceInput = function() {
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if (!SpeechRecognition) {
-        showNotification("Il riconoscimento vocale non è supportato da questo browser.", true);
-        return;
+      // Controlla e applica in automatico le ricorrenti del mese se non fatto
+      if (!s.exists() || !d.recurringApplied) {
+        await checkAndApplyRecurringExpenses(d, mKey);
+        return; // l'onSnapshot si riattiverà subito dopo il salvataggio
       }
 
-      const btn = document.getElementById('voiceInputBtn');
-      const input = document.getElementById('manualDishTextInput');
-
-      if (isScannerRecording && scannerRecognition) {
-        scannerRecognition.stop();
-        return;
-      }
-
-      try {
-        scannerRecognition = new SpeechRecognition();
-        scannerRecognition.lang = 'it-IT';
-        scannerRecognition.continuous = false;
-        scannerRecognition.interimResults = true;
-
-        scannerRecognition.onstart = () => {
-          isScannerRecording = true;
-          if (btn) btn.classList.add('mic-active');
-          showNotification("🎙️ In ascolto... detta il pasto");
-        };
-
-        scannerRecognition.onresult = event => {
-          let transcript = '';
-          for (let i = event.resultIndex; i < event.results.length; i++) {
-            transcript += event.results[i][0].transcript;
-          }
-          if (input && transcript) {
-            input.value = transcript;
-          }
-        };
-
-        scannerRecognition.onerror = event => {
-          isScannerRecording = false;
-          if (btn) btn.classList.remove('mic-active');
-          if (event.error === 'not-allowed') {
-            showNotification("Permesso microfono non concesso nel browser.", true);
-          } else if (event.error !== 'no-speech') {
-            showNotification(`Errore microfono: ${event.error}`, true);
-          }
-        };
-
-        scannerRecognition.onend = () => {
-          isScannerRecording = false;
-          if (btn) btn.classList.remove('mic-active');
-          if (input && input.value.trim()) {
-            showNotification("Voce registrata! Tocca 'Calcola' o premi Invia.");
-          }
-        };
-
-        scannerRecognition.start();
-      } catch (err) {
-        isScannerRecording = false;
-        if (btn) btn.classList.remove('mic-active');
-        showNotification("Impossibile avviare il microfono.", true);
-      }
-    };
-
-    // Riconoscimento Vocale per Chat Coach
-    let coachRecognition = null;
-    let isCoachRecording = false;
-
-    window.toggleCoachVoiceInput = function() {
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if (!SpeechRecognition) {
-        showNotification("Riconoscimento vocale non supportato.", true);
-        return;
-      }
-
-      const btn = document.getElementById('coachVoiceBtn');
-      const input = document.getElementById('coachInputText');
-
-      if (isCoachRecording && coachRecognition) {
-        coachRecognition.stop();
-        return;
-      }
-
-      try {
-        coachRecognition = new SpeechRecognition();
-        coachRecognition.lang = 'it-IT';
-        coachRecognition.continuous = false;
-        coachRecognition.interimResults = true;
-
-        coachRecognition.onstart = () => {
-          isCoachRecording = true;
-          if (btn) btn.classList.add('mic-active');
-          showNotification("🎙️ Parla con il Coach...");
-        };
-
-        coachRecognition.onresult = event => {
-          let transcript = '';
-          for (let i = event.resultIndex; i < event.results.length; i++) {
-            transcript += event.results[i][0].transcript;
-          }
-          if (input && transcript) {
-            input.value = transcript;
-          }
-        };
-
-        coachRecognition.onerror = event => {
-          isCoachRecording = false;
-          if (btn) btn.classList.remove('mic-active');
-          if (event.error === 'not-allowed') {
-            showNotification("Permesso microfono negato.", true);
-          }
-        };
-
-        coachRecognition.onend = () => {
-          isCoachRecording = false;
-          if (btn) btn.classList.remove('mic-active');
-          if (input && input.value.trim()) {
-            window.handleCoachSubmit(new Event('submit'));
-          }
-        };
-
-        coachRecognition.start();
-      } catch (err) {
-        isCoachRecording = false;
-        if (btn) btn.classList.remove('mic-active');
-        showNotification("Errore avvio microfono Coach.", true);
-      }
-    };
-
-    // Scanner Foto Pasti
-    window.processFoodPhoto = async function(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-
-      const selVal = document.getElementById('scannerSlotSelect').value;
-      const targetSlot = selVal === 'auto' ? getInferredMealSlot() : selVal;
-
-      const resultBox = document.getElementById('scannerResultBox');
-      const loading = document.getElementById('foodLoadingSpinner');
-      const preview = document.getElementById('foodPreviewImg');
-      const target = document.getElementById('foodDetailsTarget');
-
-      resultBox.classList.remove('hidden');
-      loading.classList.remove('hidden');
-      target.innerHTML = '';
-
-      try {
-        // Conversione e ottimizzazione client-side (compatibile iPhone/Android)
-        const processed = await prepareImageForAi(file);
-        preview.src = processed.dataUrl;
-
-        const prompt = `
-          Agisci come Biologo Nutrizionista Sportivo.
-          Profilo atleta: Uomo 32 anni, 95kg, 177cm, target ricomposizione 1.950 kcal/die (target 170g proteine).
-          Pasto: "${targetSlot}".
-          Analizza l'immagine (piatto cucinato o etichetta nutrizionale) e calcola porzione, calorie e macronutrienti.
-          Restituisci ESCLUSIVAMENTE un JSON valido con questa struttura:
-          {
-            "dishName": "Nome descrittivo del piatto",
-            "slot": "${targetSlot}",
-            "calories": 450,
-            "protein": 38,
-            "carbs": 40,
-            "fat": 12,
-            "verdict": "Giudizio clinico per il deficit a 1.950 kcal",
-            "advice": "Consiglio pratico per sazietà o recupero"
-          }
-        `;
-
-        const rawText = await callGeminiApi({
-          contents: [{
-            role: "user",
-            parts: [
-              { text: prompt },
-              { inlineData: { mimeType: processed.mimeType, data: processed.base64 } }
-            ]
-          }],
-          generationConfig: { responseMimeType: "application/json" }
-        });
-
-        const jsonMatch = rawText.match(/\{[\s\S]*\}/);
-        if (!jsonMatch) throw new Error("Risposta AI non valida.");
-        const data = JSON.parse(jsonMatch[0]);
-
-        target.innerHTML = `
-          <div class="p-4 bg-app-dark rounded-2xl border border-app-border space-y-3">
-            <div class="flex items-center justify-between">
-              <div>
-                <span class="text-xs text-emerald-400 font-bold uppercase tracking-wider">${data.slot}</span>
-                <h4 class="font-display font-black text-white text-base sm:text-lg">${data.dishName}</h4>
-              </div>
-              <span class="text-base font-mono font-black text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-xl border border-emerald-500/20">
-                ${data.calories} kcal
-              </span>
-            </div>
-
-            <div class="grid grid-cols-3 gap-2 text-center text-xs">
-              <div class="p-2 rounded-xl bg-app-card border border-app-border">
-                <span class="text-[10px] text-app-textMuted uppercase font-bold">Pro</span>
-                <div class="text-sm font-bold text-white">${data.protein}g</div>
-              </div>
-              <div class="p-2 rounded-xl bg-app-card border border-app-border">
-                <span class="text-[10px] text-app-textMuted uppercase font-bold">Carbo</span>
-                <div class="text-sm font-bold text-white">${data.carbs}g</div>
-              </div>
-              <div class="p-2 rounded-xl bg-app-card border border-app-border">
-                <span class="text-[10px] text-app-textMuted uppercase font-bold">Grassi</span>
-                <div class="text-sm font-bold text-white">${data.fat}g</div>
-              </div>
-            </div>
-
-            <div class="text-xs text-app-textSecondary space-y-1 pt-1 border-t border-app-border">
-              <p><strong class="text-emerald-400">Verdetto:</strong> ${data.verdict}</p>
-              <p><strong class="text-teal-400">Consiglio:</strong> ${data.advice}</p>
-            </div>
-
-            <button onclick="window.commitMealToLog(${JSON.stringify(data).replace(/"/g, '&quot;')})" class="w-full py-3 bg-emerald-500 hover:bg-emerald-400 text-black font-black text-xs sm:text-sm rounded-xl active:scale-95 transition shadow-lg">
-              + Salva nel Diario di Oggi
-            </button>
-          </div>
-        `;
-      } catch (err) {
-        target.innerHTML = `
-          <div class="p-4 rounded-xl bg-red-950/40 text-red-200 text-xs border border-red-500/30 space-y-2">
-            <div class="font-bold flex items-center gap-1.5 text-sm">
-              <span>⚠️</span> <span>Errore analisi foto</span>
-            </div>
-            <p>${err.message}</p>
-            <button onclick="window.openApiKeyModal()" class="px-3 py-1.5 bg-red-900/60 hover:bg-red-800 rounded-lg text-xs font-bold text-white transition">
-              Verifica o Cambia Chiave API
-            </button>
-          </div>
-        `;
-      } finally {
-        loading.classList.add('hidden');
-      }
-    };
-
-    // Scanner Testuale / Vocale
-    window.processManualFoodText = async function() {
-      const input = document.getElementById('manualDishTextInput');
-      const textQuery = input.value.trim();
-      if (!textQuery) return;
-
-      const selVal = document.getElementById('scannerSlotSelect').value;
-      const targetSlot = selVal === 'auto' ? getInferredMealSlot() : selVal;
-
-      const resultBox = document.getElementById('scannerResultBox');
-      const loading = document.getElementById('foodLoadingSpinner');
-      const preview = document.getElementById('foodPreviewImg');
-      const target = document.getElementById('foodDetailsTarget');
-
-      preview.src = "https://placehold.co/600x200/141922/34d399?text=" + encodeURIComponent(textQuery);
-      resultBox.classList.remove('hidden');
-      loading.classList.remove('hidden');
-      target.innerHTML = '';
-
-      try {
-        const prompt = `
-          Agisci come Biologo Nutrizionista.
-          Piatto descritto: "${textQuery}".
-          Fascia pasto: "${targetSlot}".
-          Profilo: Uomo 32 anni, 95kg, deficit 1.950 kcal.
-          Stima porzione e calcola calorie e macro.
-          Restituisci ESCLUSIVAMENTE un JSON:
-          {
-            "dishName": "${textQuery}",
-            "slot": "${targetSlot}",
-            "calories": 380,
-            "protein": 30,
-            "carbs": 35,
-            "fat": 12,
-            "verdict": "Valutazione rapida",
-            "advice": "Consiglio pratico"
-          }
-        `;
-
-        const rawText = await callGeminiApi({
-          contents: [{ role: "user", parts: [{ text: prompt }] }],
-          generationConfig: { responseMimeType: "application/json" }
-        });
-
-        const jsonMatch = rawText.match(/\{[\s\S]*\}/);
-        if (!jsonMatch) throw new Error("Risposta non valida.");
-        const data = JSON.parse(jsonMatch[0]);
-
-        target.innerHTML = `
-          <div class="p-4 bg-app-dark rounded-2xl border border-app-border space-y-3">
-            <div class="flex items-center justify-between">
-              <div>
-                <span class="text-xs text-emerald-400 font-bold uppercase tracking-wider">${data.slot}</span>
-                <h4 class="font-display font-black text-white text-base">${data.dishName}</h4>
-              </div>
-              <span class="text-base font-mono font-black text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-xl border border-emerald-500/20">
-                ${data.calories} kcal
-              </span>
-            </div>
-
-            <div class="grid grid-cols-3 gap-2 text-center text-xs">
-              <div class="p-2 rounded-xl bg-app-card border border-app-border">
-                <span class="text-[10px] text-app-textMuted uppercase font-bold">Pro</span>
-                <div class="text-sm font-bold text-white">${data.protein}g</div>
-              </div>
-              <div class="p-2 rounded-xl bg-app-card border border-app-border">
-                <span class="text-[10px] text-app-textMuted uppercase font-bold">Carbo</span>
-                <div class="text-sm font-bold text-white">${data.carbs}g</div>
-              </div>
-              <div class="p-2 rounded-xl bg-app-card border border-app-border">
-                <span class="text-[10px] text-app-textMuted uppercase font-bold">Grassi</span>
-                <div class="text-sm font-bold text-white">${data.fat}g</div>
-              </div>
-            </div>
-
-            <button onclick="window.commitMealToLog(${JSON.stringify(data).replace(/"/g, '&quot;')})" class="w-full py-3 bg-emerald-500 hover:bg-emerald-400 text-black font-black text-xs sm:text-sm rounded-xl active:scale-95 transition shadow-lg">
-              + Salva nel Diario di Oggi
-            </button>
-          </div>
-        `;
-        input.value = '';
-      } catch (err) {
-        target.innerHTML = `<div class="p-4 bg-red-950/40 text-red-200 text-xs rounded-xl border border-red-500/30">${err.message}</div>`;
-      } finally {
-        loading.classList.add('hidden');
-      }
-    };
-
-    window.commitMealToLog = function(meal) {
-      const day = getSelectedDayData();
-      meal.time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      day.foodLogs.unshift(meal);
-      renderGroupedMeals();
-      renderDualColumnDiet();
-      updateDeficitCalculations();
-      triggerCloudSave();
-      showNotification(`"${meal.dishName}" registrato nel diario!`);
-      document.getElementById('scannerResultBox').classList.add('hidden');
-    };
-
-    function getInferredMealSlot() {
-      const h = new Date().getHours();
-      if (h >= 5 && h < 11) return "Colazione";
-      if (h >= 11 && h < 15) return "Pranzo";
-      if (h >= 15 && h < 18) return "Merenda";
-      if (h >= 18 && h < 23) return "Cena";
-      return "Spuntino notturno";
-    }
-
-    // Scanner Bevanda Palestra
-    window.processGymDrinkPhoto = async function(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-
-      const preview = document.getElementById('gymDrinkPreviewImg');
-      const box = document.getElementById('gymDrinkResultBox');
-      const textTarget = document.getElementById('gymDrinkAnalysisText');
-
-      box.classList.remove('hidden');
-      textTarget.innerHTML = `<div class="text-teal-400 font-bold animate-pulse">Analisi drink/dispenser Icon in corso...</div>`;
-
-      try {
-        const processed = await prepareImageForAi(file);
-        preview.src = processed.dataUrl;
-
-        const prompt = `Analizza questa bevanda da palestra Icon. Restituisci ESCLUSIVAMENTE un JSON: {"name": "Nome bevanda", "calories": 40, "carbs": 8, "hydrationLiters": 0.5, "advice": "Valutazione rapida"}`;
-        const rawText = await callGeminiApi({
-          contents: [{
-            role: "user",
-            parts: [
-              { text: prompt },
-              { inlineData: { mimeType: processed.mimeType, data: processed.base64 } }
-            ]
-          }],
-          generationConfig: { responseMimeType: "application/json" }
-        });
-
-        const jsonMatch = rawText.match(/\{[\s\S]*\}/);
-        const res = JSON.parse(jsonMatch ? jsonMatch[0] : '{}');
-
-        textTarget.innerHTML = `
-          <div class="font-bold text-white">${res.name || 'Bevanda Palestra'}</div>
-          <div class="text-teal-300 font-mono text-[11px]">${res.calories || 0} kcal • +${res.hydrationLiters || 0.5}L idratazione</div>
-          <div class="text-app-textMuted text-[10px]">${res.advice || 'Registrata'}</div>
-        `;
-
-        if (res.hydrationLiters) {
-          window.addWaterLiters(res.hydrationLiters);
-        }
-      } catch (err) {
-        textTarget.innerHTML = `<div class="text-teal-300 font-bold">Bevanda registrata (+0.5L idratazione).</div>`;
-        window.addWaterLiters(0.5);
-      }
-    };
-
-    // Scanner Orologio / Display Smartwatch
-    window.scanWatchCalories = async function(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-
-      showNotification("Analisi orologio in corso...");
-      try {
-        const processed = await prepareImageForAi(file);
-        const prompt = `Analizza lo schermo dell'orologio fitness/cardio. Estrai le calorie attive bruciate e se visibile il BMR/riposo. Restituisci ESCLUSIVAMENTE un JSON: {"burnedKcal": 450, "restingKcal": 1950}`;
-        const rawText = await callGeminiApi({
-          contents: [{
-            role: "user",
-            parts: [
-              { text: prompt },
-              { inlineData: { mimeType: processed.mimeType, data: processed.base64 } }
-            ]
-          }],
-          generationConfig: { responseMimeType: "application/json" }
-        });
-
-        const jsonMatch = rawText.match(/\{[\s\S]*\}/);
-        const res = JSON.parse(jsonMatch ? jsonMatch[0] : '{}');
-
-        const day = getSelectedDayData();
-        if (res.burnedKcal) day.burnedCalories = parseInt(res.burnedKcal, 10);
-        if (res.restingKcal) day.restingCalories = parseInt(res.restingKcal, 10);
-
-        updateBurnedCaloriesUI();
-        updateDeficitCalculations();
-        triggerCloudSave();
-        showNotification("Calorie sincronizzate dall'orologio!");
-      } catch (err) {
-        showNotification("Impossibile leggere l'orologio automaticamente.", true);
-      }
-    };
-
-    // AI Coach Chat
-    window.handleCoachSubmit = async function(e) {
-      if (e) e.preventDefault();
-      const input = document.getElementById('coachInputText');
-      const query = input.value.trim();
-      if (!query) return;
-
-      input.value = '';
-      const box = document.getElementById('coachChatBox');
-      box.innerHTML += `<div class="bg-emerald-500 text-black font-semibold p-3.5 rounded-2xl rounded-tr-none self-end max-w-[85%] ml-auto">${query}</div>`;
-      box.scrollTop = box.scrollHeight;
-
-      const loadingId = 'loading_' + Date.now();
-      box.innerHTML += `<div id="${loadingId}" class="bg-app-dark p-3.5 rounded-2xl border border-app-border max-w-[85%] text-emerald-400 animate-pulse">Il Coach sta elaborando...</div>`;
-      box.scrollTop = box.scrollHeight;
-
-      try {
-        const day = getSelectedDayData();
-        const totalIntake = (day.foodLogs || []).reduce((acc, m) => acc + (Number(m.calories) || 0), 0);
-        const sys = `
-          Sei il PT e Nutrizionista dell'atleta.
-          Profilo atleta: Luca, 32 anni, 95kg, 177cm, Icon Palestre (4 sessioni settimanali a pranzo).
-          Deficit calorico target: 1.950 kcal/die (target 170g proteine, 3.5L acqua).
-          Dati oggi: ${totalIntake} kcal assunte, ${day.burnedCalories} kcal attive bruciate, ${day.waterLiters}L acqua bevuta.
-          Dieta: polpette di manzo magro in friggitrice ad aria (180°C), patate croccanti in friggitrice, gamberetti con riso express, salmone fresco, tonno fresco weekend, mozzarella light Milbona. NO QUARK, NO BROCCOLI.
-          Rispondi in 2 brevi paragrafi in italiano con tono diretto, scientifico ed estremamente pratico.
-        `;
-
-        const reply = await callGeminiApi({
-          contents: [{ role: "user", parts: [{ text: query }] }],
-          systemInstruction: { parts: [{ text: sys }] }
-        });
-
-        document.getElementById(loadingId)?.remove();
-        box.innerHTML += `<div class="bg-app-dark p-4 rounded-2xl border border-app-border max-w-[90%] text-gray-200 leading-relaxed shadow-sm">${reply}</div>`;
-        box.scrollTop = box.scrollHeight;
-      } catch (err) {
-        document.getElementById(loadingId)?.remove();
-        box.innerHTML += `<div class="p-3 bg-red-950/40 text-red-300 text-xs rounded-xl border border-red-500/30">${err.message}</div>`;
-      }
-    };
-
-    window.sendQuickCoachMessage = function(txt) {
-      document.getElementById('coachInputText').value = txt;
-      window.handleCoachSubmit(new Event('submit'));
-    };
-
-    window.resetCoachChat = function() {
-      document.getElementById('coachChatBox').innerHTML = `
-        <div class="bg-app-dark p-4 rounded-2xl border border-app-border text-gray-200 leading-relaxed shadow-sm">
-          Chat azzerata! Profilo attivo: 32 anni, 95kg, 1.950 kcal, Huel Black + 5g creatina, polpette e patate in friggitrice ad aria, gamberetti e riso express. Chiedimi pure!
-        </div>
-      `;
-    };
-
-    // Eliminazione Singolo Piatto
-    window.deleteSingleFoodItem = function(indexToDelete) {
-      const day = getSelectedDayData();
-      if (!day || !day.foodLogs || !day.foodLogs[indexToDelete]) return;
-
-      const item = day.foodLogs[indexToDelete];
-      const dishTitle = item.dishName || "questo piatto";
-
-      day.foodLogs.splice(indexToDelete, 1);
-      renderGroupedMeals();
-      renderDualColumnDiet();
-      updateDeficitCalculations();
-      triggerCloudSave();
-      showNotification(`"${dishTitle}" rimosso dal diario.`);
-    };
-
-    window.clearFoodLog = function() {
-      const day = getSelectedDayData();
-      if (!day.foodLogs || day.foodLogs.length === 0) {
-        showNotification("Nessun pasto registrato.", true);
-        return;
-      }
-      day.foodLogs = [];
-      renderGroupedMeals();
-      renderDualColumnDiet();
-      updateDeficitCalculations();
-      triggerCloudSave();
-      showNotification("Diario pasti azzerato.");
-    };
-
-    function renderGroupedMeals() {
-      const container = document.getElementById('groupedMealsContainer');
-      if (!container) return;
-
-      const day = getSelectedDayData();
-      if (!day.foodLogs || day.foodLogs.length === 0) {
-        container.innerHTML = `
-          <div class="col-span-full text-sm text-app-textMuted py-10 text-center bg-app-card rounded-2xl border border-app-border">
-            Nessun pasto registrato per questo giorno. Scrivi cosa hai mangiato, parla al microfono o scatta una foto!
-          </div>
-        `;
-        return;
-      }
-
-      const groups = {};
-      day.foodLogs.forEach((item, globalIndex) => {
-        const s = item.slot || "Cena";
-        if (!groups[s]) groups[s] = [];
-        groups[s].push({ ...item, globalIndex });
-      });
-
-      container.innerHTML = Object.keys(groups).map(slot => {
-        const items = groups[slot];
-        const sumKcal = items.reduce((acc, x) => acc + (Number(x.calories) || 0), 0);
-        const sumPro = items.reduce((acc, x) => acc + (Number(x.protein) || 0), 0);
-        const sumCarb = items.reduce((acc, x) => acc + (Number(x.carbs) || 0), 0);
-        const sumFat = items.reduce((acc, x) => acc + (Number(x.fat) || 0), 0);
-
-        const itemsHTML = items.map(m => `
-          <div class="flex items-center justify-between p-2.5 rounded-xl bg-app-dark border border-app-border text-sm">
-            <div class="truncate pr-2">
-              <span class="font-bold text-white truncate block text-sm">${m.dishName}</span>
-              <span class="text-xs text-app-textMuted font-mono">${m.time || ''} • ${m.protein}g P | ${m.carbs}g C | ${m.fat}g F</span>
-            </div>
-            <div class="flex items-center gap-2 shrink-0">
-              <span class="font-mono font-bold text-emerald-400 text-sm">${m.calories} kcal</span>
-              <button type="button" onclick="window.deleteSingleFoodItem(${m.globalIndex})" class="w-8 h-8 rounded-lg bg-red-950/40 text-red-400 hover:bg-red-500 hover:text-white border border-red-500/30 flex items-center justify-center transition" title="Elimina piatto">
-                🗑️
-              </button>
-            </div>
-          </div>
-        `).join('');
-
-        return `
-          <div class="apple-glass-card p-5 rounded-2xl border border-app-border space-y-4 flex flex-col justify-between">
-            <div class="space-y-3">
-              <div class="flex items-center justify-between border-b border-app-border pb-2.5">
-                <h5 class="font-display font-black text-base text-white uppercase tracking-wider">${slot}</h5>
-                <span class="text-xs font-mono px-2.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold">${items.length} cibi</span>
-              </div>
-              <div class="space-y-2">${itemsHTML}</div>
-            </div>
-
-            <div class="p-3.5 rounded-xl bg-gradient-to-r from-emerald-500/15 to-teal-500/15 border border-emerald-500/30 flex items-center justify-between mt-2">
-              <div>
-                <span class="text-xs uppercase font-black text-emerald-400 block">Totale ${slot}</span>
-                <div class="text-xs font-mono text-gray-200 mt-0.5">
-                  <strong class="text-white">${sumPro}g</strong> P • <strong class="text-white">${sumCarb}g</strong> C • <strong class="text-white">${sumFat}g</strong> F
-                </div>
-              </div>
-              <div class="text-right">
-                <span class="text-2xl font-mono font-black text-emerald-300">${sumKcal}</span>
-                <span class="text-xs font-mono text-emerald-400 uppercase block font-bold">KCAL</span>
-              </div>
-            </div>
-          </div>
-        `;
-      }).join('');
-    }
-
-    function renderDualColumnDiet() {
-      const container = document.getElementById('dualColumnMealGrid');
-      if (!container) return;
-
-      const day = getSelectedDayData();
-      const loggedBySlot = {};
-      MEAL_SLOTS.forEach(s => loggedBySlot[s] = []);
-      (day.foodLogs || []).forEach(m => {
-        const s = m.slot || "Cena";
-        if (!loggedBySlot[s]) loggedBySlot[s] = [];
-        loggedBySlot[s].push(m);
-      });
-
-      container.innerHTML = MEAL_SLOTS.map(slotName => {
-        const actualItems = loggedBySlot[slotName] || [];
-        const sumKcal = actualItems.reduce((acc, x) => acc + (Number(x.calories) || 0), 0);
-        const sumPro = actualItems.reduce((acc, x) => acc + (Number(x.protein) || 0), 0);
-
-        return `
-          <div class="apple-glass-card p-5 rounded-2xl border border-app-border space-y-3">
-            <div class="flex items-center justify-between border-b border-app-border pb-2">
-              <h4 class="font-display font-black text-base text-white uppercase tracking-wider">${slotName}</h4>
-              <span class="font-mono text-sm text-emerald-400 font-bold">${sumKcal} kcal (${sumPro}g Pro)</span>
-            </div>
-            <div class="space-y-1.5">
-              ${actualItems.length === 0 ? '<p class="text-xs text-app-textMuted">Nessun cibo registrato in questo slot.</p>' : actualItems.map(item => `
-                <div class="flex items-center justify-between text-xs text-gray-300 bg-app-dark p-2 rounded-xl border border-app-border">
-                  <span>${item.dishName}</span>
-                  <span class="font-mono text-emerald-400 font-bold">${item.calories} kcal</span>
-                </div>
-              `).join('')}
-            </div>
-          </div>
-        `;
-      }).join('');
-    }
-
-    function updateDeficitCalculations() {
-      const day = getSelectedDayData();
-      const totalIntake = (day.foodLogs || []).reduce((acc, m) => acc + (Number(m.calories) || 0), 0);
-      const resting = Number(day.restingCalories) || 1950;
-      const burned = Number(day.burnedCalories) || 0;
-      
-      const totalExpenditure = resting + burned;
-      const actualDeficit = totalExpenditure - totalIntake;
-
-      const intakeEl = document.getElementById('summaryIntakeKcal');
-      const restEl = document.getElementById('summaryRestingKcal');
-      const burnedEl = document.getElementById('summaryBurnedKcal');
-      const totalBurnedEl = document.getElementById('summaryTotalBurnedKcal');
-      const netEl = document.getElementById('summaryNetBalance');
-      const statusEl = document.getElementById('summaryNetStatus');
-      const badgeEl = document.getElementById('deficitSurplusBadge');
-      const gymDeficitEl = document.getElementById('displayTotalDeficit');
-
-      if (intakeEl) intakeEl.innerText = totalIntake;
-      if (restEl) restEl.innerText = resting;
-      if (burnedEl) burnedEl.innerText = burned;
-      if (totalBurnedEl) totalBurnedEl.innerText = totalExpenditure;
-
-      const deficitStr = actualDeficit >= 0 ? `-${actualDeficit} kcal` : `+${Math.abs(actualDeficit)} kcal`;
-
-      if (gymDeficitEl) {
-        gymDeficitEl.innerText = deficitStr;
-        gymDeficitEl.className = actualDeficit >= 0 
-          ? "text-base sm:text-lg font-mono font-black text-emerald-400 mt-1"
-          : "text-base sm:text-lg font-mono font-black text-amber-400 mt-1";
-      }
-
-      if (netEl) {
-        netEl.innerText = deficitStr;
-        netEl.className = actualDeficit >= 0
-          ? "text-3xl font-mono font-black text-emerald-400 mt-1"
-          : "text-3xl font-mono font-black text-amber-400 mt-1";
-      }
-
-      if (statusEl) {
-        statusEl.innerText = actualDeficit >= 0 ? "in deficit calorico ✓" : "surplus calorico";
-        statusEl.className = actualDeficit >= 0 ? "text-xs text-emerald-400 font-mono font-bold" : "text-xs text-amber-400 font-mono font-bold";
-      }
-
-      if (badgeEl) {
-        badgeEl.innerText = actualDeficit >= 0 ? `DEFICIT -${actualDeficit} KCAL` : `SURPLUS +${Math.abs(actualDeficit)} KCAL`;
-        badgeEl.className = actualDeficit >= 0
-          ? "self-start sm:self-auto px-4 py-2 rounded-xl font-mono font-black text-sm sm:text-base bg-emerald-500/20 text-emerald-300 border border-emerald-500/40"
-          : "self-start sm:self-auto px-4 py-2 rounded-xl font-mono font-black text-sm sm:text-base bg-amber-500/20 text-amber-300 border border-amber-500/40";
-      }
-    }
-
-    window.updateRestingFromNutrition = function() {
-      const val = parseInt(document.getElementById('nutritionRestingInput').value, 10);
-      if (!isNaN(val) && val > 0) {
-        const day = getSelectedDayData();
-        day.restingCalories = val;
-        appData.defaultRestingCalories = val;
-        document.getElementById('nutritionRestingInput').value = '';
-        updateDeficitCalculations();
-        triggerCloudSave();
-        showNotification(`Metabolismo a riposo: ${val} kcal`);
-      }
-    };
-
-    window.updateBurnedFromNutrition = function() {
-      const val = parseInt(document.getElementById('nutritionBurnedInput').value, 10);
-      if (!isNaN(val) && val >= 0) {
-        const day = getSelectedDayData();
-        day.burnedCalories = val;
-        document.getElementById('nutritionBurnedInput').value = '';
-        updateBurnedCaloriesUI();
-        updateDeficitCalculations();
-        triggerCloudSave();
-        showNotification(`Calorie attive: ${val} kcal`);
-      }
-    };
-
-    window.addBurnedCalories = function(amount) {
-      const day = getSelectedDayData();
-      day.burnedCalories = (day.burnedCalories || 0) + amount;
-      updateBurnedCaloriesUI();
-      updateDeficitCalculations();
-      triggerCloudSave();
-      showNotification(`+${amount} kcal registrate!`);
-    };
-
-    window.applyCustomKcal = function() {
-      const val = parseInt(document.getElementById('customKcalInput').value, 10);
-      if (!isNaN(val) && val > 0) {
-        const day = getSelectedDayData();
-        day.burnedCalories = val;
-        document.getElementById('customKcalInput').value = '';
-        updateBurnedCaloriesUI();
-        updateDeficitCalculations();
-        triggerCloudSave();
-        showNotification(`Dispendio impostato a ${val} kcal!`);
-      }
-    };
-
-    window.resetBurnedCalories = function() {
-      const day = getSelectedDayData();
-      day.burnedCalories = 0;
-      updateBurnedCaloriesUI();
-      updateDeficitCalculations();
-      triggerCloudSave();
-      showNotification("Calorie attive azzerate.");
-    };
-
-    function updateBurnedCaloriesUI() {
-      const day = getSelectedDayData();
-      const el = document.getElementById('displayBurnedKcal');
-      if (el) el.innerText = day.burnedCalories || 0;
-    }
-
-    // Gestione Idratazione
-    window.addWaterLiters = function(delta) {
-      const day = getSelectedDayData();
-      day.waterLiters = parseFloat(Math.max(0, ((day.waterLiters || 0) + delta)).toFixed(2));
-      day.gymBottles = Math.round(day.waterLiters / 0.5);
-      updateWaterDisplay();
-      initWaterGrid();
-      triggerCloudSave();
-      showNotification(`${delta > 0 ? '+' : ''}${delta}L idratazione!`);
-    };
-
-    window.resetWaterLiters = function() {
-      const day = getSelectedDayData();
-      day.waterLiters = 0.0;
-      day.gymBottles = 0;
-      updateWaterDisplay();
-      initWaterGrid();
-      triggerCloudSave();
-      showNotification("Idratazione azzerata.");
-    };
-
-    function updateWaterDisplay() {
-      const day = getSelectedDayData();
-      const liters = day.waterLiters || 0;
-      const readoutBig = document.getElementById('waterValueDisplayBig');
-      if (readoutBig) readoutBig.innerText = liters.toFixed(1);
-      const badge = document.getElementById('gymBottleCountBadge');
-      if (badge) badge.innerText = `${day.gymBottles || 0} Borracce (${((day.gymBottles || 0) * 0.5).toFixed(1)} L)`;
-    }
-
-    function initWaterGrid() {
-      const grid = document.getElementById('waterTrackerGrid');
-      if (!grid) return;
-      grid.innerHTML = '';
-      const day = getSelectedDayData();
-      const filledSteps = Math.floor((day.waterLiters || 0) / 0.5);
-
-      for (let i = 1; i <= 7; i++) {
-        const active = i <= filledSteps;
-        const btn = document.createElement('button');
-        btn.onclick = () => {
-          const target = i * 0.5;
-          day.waterLiters = (day.waterLiters === target) ? (i - 1) * 0.5 : target;
-          day.gymBottles = Math.round(day.waterLiters / 0.5);
-          updateWaterDisplay();
-          initWaterGrid();
-          triggerCloudSave();
-        };
-        btn.className = `p-2.5 rounded-xl text-xs font-semibold transition flex flex-col items-center border active:scale-95 ${
-          active ? 'water-droplet-glow text-teal-300' : 'bg-app-dark border-app-border text-gray-500'
-        }`;
-        btn.innerHTML = `<span>💧</span><span class="text-[10px] font-mono mt-0.5">${(i * 0.5).toFixed(1)}L</span>`;
-        grid.appendChild(btn);
-      }
-    }
-
-    // Gestione Spesa Lidl
-    window.switchLidlSlot = function(slotKey) {
-      appData.currentLidlSlot = slotKey;
-      document.getElementById('btn-lidl-slot1').className = slotKey === 'slot1'
-        ? 'py-2.5 rounded-xl text-xs font-bold transition bg-emerald-500 text-black'
-        : 'py-2.5 rounded-xl text-xs font-medium transition text-app-textMuted hover:text-white';
-      document.getElementById('btn-lidl-slot2').className = slotKey === 'slot2'
-        ? 'py-2.5 rounded-xl text-xs font-bold transition bg-emerald-500 text-black'
-        : 'py-2.5 rounded-xl text-xs font-medium transition text-app-textMuted hover:text-white';
-      renderLidlShoppingList();
-    };
-
-    function renderLidlShoppingList() {
-      const container = document.getElementById('lidlListContainer');
-      if (!container) return;
-      const slotKey = appData.currentLidlSlot || 'slot1';
-      const slotData = LIDL_GROCERY_DATA[slotKey];
-      const savedState = JSON.parse(localStorage.getItem(`icon_lidl_${slotKey}`) || '{}');
-
-      let currentTotal = 0;
-      container.innerHTML = slotData.items.map((item, index) => {
-        const isChecked = savedState[index] !== undefined ? savedState[index] : false;
-        if (isChecked) currentTotal += item.price;
-
-        return `
-          <div onclick="window.toggleLidlItem(${index})" class="flex items-center justify-between p-2.5 rounded-xl bg-app-card border border-app-border cursor-pointer hover:border-emerald-500/40 transition">
-            <div class="flex items-center gap-2.5">
-              <div class="w-4 h-4 rounded border flex items-center justify-center text-[10px] ${
-                isChecked ? 'bg-emerald-500 border-emerald-500 text-black font-bold' : 'border-app-border'
-              }">${isChecked ? '✓' : ''}</div>
-              <span class="text-xs ${isChecked ? 'line-through text-app-textMuted' : 'text-gray-200'}">${item.name}</span>
-            </div>
-            <span class="text-xs font-mono font-bold text-emerald-400">~${item.price.toFixed(2)}€</span>
-          </div>
-        `;
-      }).join('');
-
-      document.getElementById('lidlTotalDisplay').innerText = `${currentTotal.toFixed(2)} €`;
-    }
-
-    window.toggleLidlItem = function(index) {
-      const slotKey = appData.currentLidlSlot || 'slot1';
-      const savedState = JSON.parse(localStorage.getItem(`icon_lidl_${slotKey}`) || '{}');
-      savedState[index] = !savedState[index];
-      localStorage.setItem(`icon_lidl_${slotKey}`, JSON.stringify(savedState));
-      renderLidlShoppingList();
-    };
-
-    // Gestione Camminata & Recupero Attivo
-    window.updateEstimatedSteps = function() {
-      const km = parseFloat(document.getElementById('inputWalkKm').value) || 0;
-      const steps = Math.round(km * 1320);
-      const display = document.getElementById('displayEstimatedSteps');
-      if (display) display.innerText = km > 0 ? `~${steps.toLocaleString('it-IT')} passi` : '~0 passi';
-    };
-
-    window.updateHeartRateZoneBadge = function() {
-      const bpm = parseInt(document.getElementById('inputWalkBpm').value) || 0;
-      const el = document.getElementById('bpmZoneStatus');
-      if (!el) return;
-      if (bpm === 0) el.innerText = "Zona 2 (Ottimale)";
-      else if (bpm < 100) el.innerText = "Passeggiata Leggera";
-      else if (bpm >= 100 && bpm <= 128) el.innerText = "Zona 2 • Fat Burn 🔥";
-      else el.innerText = "Soglia Aerobica";
-    };
-
-    window.saveWalkSession = function() {
-      const km = parseFloat(document.getElementById('inputWalkKm').value);
-      const kcal = parseInt(document.getElementById('inputWalkKcal').value);
-      const bpm = parseInt(document.getElementById('inputWalkBpm').value);
-      const water = parseFloat(document.getElementById('inputWalkWater').value) || 0;
-      const notes = document.getElementById('inputWalkNotes').value.trim() || 'Passeggiata';
-
-      if (isNaN(km) || km <= 0) {
-        showNotification("Inserisci i chilometri percorsi.", true);
-        return;
-      }
-
-      if (water > 0) window.addWaterLiters(water);
-      if (!isNaN(kcal) && kcal > 0) window.addBurnedCalories(kcal);
-
-      const session = {
-        id: 'walk_' + Date.now(),
-        date: new Date().toLocaleDateString('it-IT', { day: 'numeric', month: 'short' }),
-        km: km.toFixed(1),
-        steps: Math.round(km * 1320),
-        kcal: !isNaN(kcal) ? kcal : Math.round(km * 55),
-        bpm: !isNaN(bpm) ? bpm : null,
-        water: water > 0 ? water.toFixed(1) : null,
-        notes
+      lastBudgetDoc = d;
+      refreshAmpollaFromDocs();
+
+      state = {
+        income: Array.isArray(d.income) ? d.income : [],
+        expense: Array.isArray(d.expense) ? d.expense : []
       };
+      allWeeks = d.spesaSettimanale?.weeks && typeof d.spesaSettimanale.weeks === 'object' ? d.spesaSettimanale.weeks : {};
+      syncWeeklyExpenses();
+      render('income');
+      render('expense');
+      renderSelectedWeek();
+      drawMonthly();
+      $('syncStatus').textContent = `Cloud sincronizzato ✓ (${mKey})`;
+    }, e => $('syncStatus').textContent = 'Errore Database: ' + e.message);
 
-      appData.walkLogs.unshift(session);
-      document.getElementById('inputWalkKm').value = '';
-      document.getElementById('inputWalkKcal').value = '';
-      document.getElementById('inputWalkBpm').value = '';
-      document.getElementById('inputWalkWater').value = '';
-      document.getElementById('inputWalkNotes').value = '';
+    unsubVacanze = onSnapshot(refVacanze, s => {
+      lastVacanzeDoc = s.exists() ? s.data() : {};
+      refreshAmpollaFromDocs();
+    }, () => {});
+  }
 
-      renderWalkHistory();
-      triggerCloudSave();
-      showNotification(`Camminata di ${km} km salvata!`);
-    };
+  function monday(d) {
+    const x = new Date(d);
+    x.setHours(0, 0, 0, 0);
+    const day = x.getDay() || 7;
+    x.setDate(x.getDate() - day + 1);
+    return x;
+  }
 
-    function renderWalkHistory() {
-      const container = document.getElementById('walkLogContainer');
-      if (!container) return;
+  function weekKey(offset = 0) {
+    const d = monday(new Date());
+    d.setDate(d.getDate() + offset * 7);
+    return d.toISOString().slice(0, 10);
+  }
 
-      if (!appData.walkLogs || appData.walkLogs.length === 0) {
-        container.innerHTML = `<div class="text-xs text-app-textMuted py-4 text-center bg-app-dark rounded-xl border border-app-border">Nessuna camminata registrata.</div>`;
-        return;
+  function weekValues(k) {
+    const w = allWeeks[k] || {};
+    return { food: num(w.food1) + num(w.food2), pets: num(w.pet1) + num(w.pet2) };
+  }
+
+  function allWeeklyTotal() {
+    return Object.keys(allWeeks).reduce((s, k) => s + weekValues(k).food + weekValues(k).pets, 0);
+  }
+
+  function renderSelectedWeek() {
+    const k = weekKey(selectedWeekOffset), v = weekValues(k);
+    $('weekFood').textContent = money(v.food);
+    $('weekPets').textContent = money(v.pets);
+    $('weekTotal').textContent = money(v.food + v.pets);
+    $('weekRange').textContent = 'Settimana ' + k;
+    $('selectedWeekLabel').textContent = selectedWeekOffset === 0 ? 'Settimana corrente' : ('Settimana ' + k);
+  }
+
+  window.changeWeek = delta => {
+    triggerHaptic(12);
+    selectedWeekOffset += delta;
+    renderSelectedWeek();
+  };
+
+  function syncWeeklyExpenses() {
+    const food = weekValues(weekKey()).food, pets = weekValues(weekKey()).pets;
+    const manual = state.expense.filter(x => {
+      const n = (x.name || '').trim().toLowerCase();
+      return n !== 'spese alimentari luca e lisa' && n !== 'spese animali';
+    });
+    state.expense = [
+      ...manual,
+      { name: 'Spese alimentari Luca e Lisa', amount: food, date: defaultDateForSelectedMonth() },
+      { name: 'Spese animali', amount: pets, date: defaultDateForSelectedMonth() }
+    ];
+  }
+
+  function render(type) {
+    const el = $(type === 'income' ? 'incomeList' : 'expenseList');
+    el.innerHTML = '';
+    state[type].forEach((x, i) => {
+      const d = document.createElement('div');
+      d.className = 'entry';
+      
+      const name = document.createElement('input');
+      name.placeholder = 'Descrizione';
+      name.value = x.name || '';
+      
+      const amount = document.createElement('input');
+      amount.type = 'number';
+      amount.step = '0.01';
+      amount.placeholder = '€';
+      amount.value = x.amount ?? '';
+      
+      const date = document.createElement('input');
+      date.type = 'date';
+      date.value = x.date || defaultDateForSelectedMonth();
+
+      // Pulsante Ricorrente 🔁 (disponibile solo nelle spese)
+      const recBtn = document.createElement('button');
+      recBtn.type = 'button';
+      recBtn.className = `rec-toggle-btn ${x.isRecurring ? 'active' : ''}`;
+      recBtn.innerHTML = '<i class="fa-solid fa-rotate"></i>';
+      recBtn.title = x.isRecurring ? 'Spesa ricorrente attiva (si ripeterà ogni mese)' : 'Attiva spesa ricorrente';
+      
+      const del = document.createElement('button');
+      del.className = 'smallbtn';
+      del.textContent = '✕';
+      
+      name.oninput = () => { state[type][i].name = name.value; updateTotals(); };
+      amount.oninput = () => { state[type][i].amount = amount.value; updateTotals(); };
+      date.onchange = () => { state[type][i].date = date.value; drawMonthly(); };
+
+      if (type === 'expense') {
+        recBtn.onclick = () => {
+          triggerHaptic(12);
+          state[type][i].isRecurring = !state[type][i].isRecurring;
+          recBtn.classList.toggle('active', state[type][i].isRecurring);
+          recBtn.title = state[type][i].isRecurring ? 'Spesa ricorrente attiva' : 'Attiva spesa ricorrente';
+          finishEdit();
+        };
       }
+      
+      [name, amount, date].forEach(v => v.onblur = finishEdit);
+      del.onclick = () => {
+        triggerHaptic(15);
+        state[type].splice(i, 1);
+        render(type);
+        saveNow();
+      };
+      
+      d.append(name, amount, date);
+      if (type === 'expense') d.appendChild(recBtn);
+      d.appendChild(del);
+      el.appendChild(d);
+    });
+    updateTotals();
+    drawMonthly();
+  }
 
-      container.innerHTML = appData.walkLogs.map(w => `
-        <div class="p-3.5 rounded-xl bg-app-card border border-app-border text-xs space-y-1">
-          <div class="flex items-center justify-between">
-            <span class="font-bold text-white flex items-center gap-1.5">
-              <span>👟</span> <span>${w.km} km (${w.steps.toLocaleString('it-IT')} passi)</span>
-            </span>
-            <span class="font-mono font-bold text-amber-400">${w.kcal} kcal</span>
-          </div>
-          <div class="flex items-center justify-between text-[11px] text-app-textMuted">
-            <span>${w.date}</span>
-            <div class="flex gap-2">
-              ${w.bpm ? `<span class="text-red-300">❤️ ${w.bpm} bpm</span>` : ''}
-              ${w.water ? `<span class="text-teal-300">💧 +${w.water}L</span>` : ''}
-            </div>
-          </div>
-          ${w.notes ? `<div class="text-[10px] text-app-textMuted italic pt-0.5 border-t border-app-border/40">"${w.notes}"</div>` : ''}
-        </div>
-      `).join('');
+  function finishEdit() {
+    editing = false;
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(saveNow, 250);
+  }
+
+  function updateTotals() {
+    const inc = state.income.reduce((s, x) => s + num(x.amount), 0);
+    const manual = state.expense.filter(x => {
+      const n = (x.name || '').trim().toLowerCase();
+      return n !== 'spese alimentari luca e lisa' && n !== 'spese animali';
+    }).reduce((s, x) => s + num(x.amount), 0);
+    const exp = manual + allWeeklyTotal();
+    
+    $('incomeTotal').textContent = money(inc);
+    $('expenseTotal').textContent = money(exp);
+    $('balanceTotal').textContent = money(inc - exp);
+  }
+
+  window.addRow = type => {
+    triggerHaptic(15);
+    state[type].push({ name: '', amount: '', date: defaultDateForSelectedMonth(), isRecurring: false });
+    render(type);
+    setTimeout(() => $(type === 'income' ? 'incomeList' : 'expenseList').lastElementChild?.querySelector('input')?.focus(), 50);
+  };
+
+  window.toggleCollapse = (id, btn) => {
+    triggerHaptic(10);
+    const card = $(id);
+    card.classList.toggle('collapsed');
+    if (btn) btn.textContent = card.classList.contains('collapsed') ? '+' : '−';
+  };
+
+  async function saveNow() {
+    if (!ref) return;
+    try {
+      await setDoc(ref, { income: state.income, expense: state.expense, updatedAt: Date.now() }, { merge: true });
+      $('syncStatus').textContent = `Cloud sincronizzato ✓ (${getMonthKey(selectedDate)})`;
+    } catch (e) {
+      $('syncStatus').textContent = 'Errore di sincronizzazione: ' + e.message;
     }
+  }
 
-    window.clearWalkLogs = function() {
-      appData.walkLogs = [];
-      renderWalkHistory();
-      triggerCloudSave();
-      showNotification("Storico camminate azzerato.");
-    };
+  function drawMonthly() {
+    const y = selectedDate.getFullYear();
+    const m = selectedDate.getMonth();
+    const days = new Date(y, m + 1, 0).getDate();
+    const labels = Array.from({ length: days }, (_, i) => String(i + 1).padStart(2, '0'));
+    const inc = Array(days).fill(0), exp = Array(days).fill(0);
 
-    // Gestione Misure Corporee
-    window.saveBodyMeasurements = function() {
-      const w = parseFloat(document.getElementById('quickWeightInput').value);
-      const waist = parseFloat(document.getElementById('quickWaistInput').value);
-      if (!isNaN(w) && w > 40 && w < 200) appData.weight = w.toFixed(1);
-      if (!isNaN(waist) && waist > 50 && waist < 180) appData.waist = waist.toFixed(1);
+    state.income.forEach(x => {
+      const d = new Date((x.date || defaultDateForSelectedMonth()) + 'T00:00:00');
+      if (d.getFullYear() === y && d.getMonth() === m) inc[d.getDate() - 1] += num(x.amount);
+    });
 
-      document.getElementById('metricCurrentWeight').innerHTML = `${appData.weight} <span class="text-xs text-app-textMuted">kg</span>`;
-      document.getElementById('metricCurrentWaist').innerHTML = `${appData.waist} <span class="text-xs text-app-textMuted">cm</span>`;
-      document.getElementById('quickWeightInput').value = '';
-      document.getElementById('quickWaistInput').value = '';
+    const auto = ['spese alimentari luca e lisa', 'spese animali'];
+    state.expense.forEach(x => {
+      if (auto.includes((x.name || '').trim().toLowerCase())) return;
+      const d = new Date((x.date || defaultDateForSelectedMonth()) + 'T00:00:00');
+      if (d.getFullYear() === y && d.getMonth() === m) exp[d.getDate() - 1] += num(x.amount);
+    });
 
-      triggerCloudSave();
-      showNotification("Misure salvate con successo!");
-    };
+    Object.entries(allWeeks).forEach(([k]) => {
+      const d = new Date(k + 'T00:00:00');
+      if (d.getFullYear() === y && d.getMonth() === m) exp[d.getDate() - 1] += weekValues(k).food + weekValues(k).pets;
+    });
 
-    // Gestione Scheda Palestra
-    window.switchWorkoutDay = function(dayKey) {
-      currentWorkoutDay = dayKey;
-      ['dayA', 'dayB', 'dayC', 'dayD'].forEach(key => {
-        const btn = document.getElementById(`btn-${key}`);
-        if (!btn) return;
-        btn.className = key === dayKey
-          ? 'py-3 rounded-xl text-sm font-bold transition bg-emerald-500 text-black shadow-sm'
-          : 'py-3 rounded-xl text-sm font-medium transition text-app-textMuted hover:text-white';
-      });
-      renderWorkoutList(dayKey);
-    };
-
-    function renderWorkoutList(dayKey) {
-      const routine = ROUTINES[dayKey];
-      if (!routine) return;
-
-      document.getElementById('workoutTitle').innerText = routine.title;
-      document.getElementById('workoutSubtitle').innerText = routine.subtitle;
-
-      const container = document.getElementById('exerciseList');
-      if (!container) return;
-      container.innerHTML = '';
-
-      if (!appData.workoutExercises) appData.workoutExercises = {};
-
-      routine.exercises.forEach(ex => {
-        const key = `${dayKey}_${ex.id}`;
-        const exState = appData.workoutExercises[key] || { kg: ex.defaultKg, completedSets: [] };
-        const currentKg = (exState.kg !== null && exState.kg !== undefined) ? exState.kg : ex.defaultKg;
-        const completedSets = Array.isArray(exState.completedSets) ? exState.completedSets : [];
-
-        let setsHTML = '';
-        for (let s = 1; s <= ex.sets; s++) {
-          const isDone = completedSets.includes(s);
-          setsHTML += `
-            <button onclick="window.handleGymSetClick('${dayKey}', '${ex.id}', ${s}, ${ex.rest})" class="h-12 flex-1 min-w-[56px] rounded-xl text-sm font-black transition border flex items-center justify-center gap-1 active:scale-95 ${
-              isDone ? 'bg-emerald-500 text-black border-emerald-400 shadow-md' : 'bg-app-dark border-app-border text-gray-300 hover:border-emerald-500/40'
-            }">
-              ${isDone ? '✓ ' : ''}S${s}
-            </button>
-          `;
-        }
-
-        const card = document.createElement('div');
-        card.className = "apple-glass-card p-5 rounded-2xl border border-app-border space-y-3.5";
-        card.innerHTML = `
-          <div>
-            <div class="flex items-center justify-between gap-2">
-              <div class="flex items-center gap-2">
-                <span class="font-mono text-xs font-black px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">${ex.code}</span>
-                <h3 class="font-display font-bold text-base text-white">${ex.name}</h3>
-              </div>
-              <button onclick="window.startDiscreetTimer(${ex.rest})" class="px-3 py-1 rounded-xl bg-app-card border border-app-border text-xs sm:text-sm font-mono text-emerald-400">
-                <span>⏱️</span><span>${ex.rest}s</span>
-              </button>
-            </div>
-            <div class="text-xs text-app-textMuted font-mono mt-1">${ex.model} • ${ex.sets} × ${ex.reps}</div>
-          </div>
-
-          <div class="bg-app-dark/90 p-3 rounded-xl border border-app-border text-xs">
-            <span class="text-teal-400 font-medium">⚙️ Seduta: ${ex.seat}</span>
-          </div>
-
-          <div class="space-y-2.5">
-            <div class="flex items-center justify-between gap-2">
-              <div class="flex items-center gap-1 bg-app-dark p-1 rounded-xl border border-app-border">
-                <button onclick="window.adjustWeight('${dayKey}', '${ex.id}', -2.5)" class="w-9 h-9 rounded-lg bg-app-card text-white font-black text-base active:scale-90">-</button>
-                <div class="flex items-center px-2">
-                  <input type="number" step="0.5" value="${currentKg}" onchange="window.saveWeightLoadDirect('${dayKey}', '${ex.id}', this.value)" class="w-16 text-center bg-transparent text-emerald-400 font-display font-black text-base focus:outline-none">
-                  <span class="text-xs text-app-textMuted font-bold ml-0.5">kg</span>
-                </div>
-                <button onclick="window.adjustWeight('${dayKey}', '${ex.id}', 2.5)" class="w-9 h-9 rounded-lg bg-app-card text-white font-black text-base active:scale-90">+</button>
-              </div>
-              <span class="text-xs sm:text-sm text-app-textMuted font-medium">Serie completata:</span>
-            </div>
-            <div class="flex gap-2 w-full overflow-x-auto pb-0.5">${setsHTML}</div>
-          </div>
-        `;
-        container.appendChild(card);
-      });
-    }
-
-    window.adjustWeight = function(dayKey, exId, delta) {
-      const key = `${dayKey}_${exId}`;
-      if (!appData.workoutExercises[key]) appData.workoutExercises[key] = { kg: 50, completedSets: [] };
-      appData.workoutExercises[key].kg = Math.max(2.5, parseFloat(((parseFloat(appData.workoutExercises[key].kg) || 0) + delta).toFixed(1)));
-      renderWorkoutList(dayKey);
-      triggerCloudSave();
-    };
-
-    window.saveWeightLoadDirect = function(dayKey, exId, val) {
-      const parsed = parseFloat(val);
-      if (!isNaN(parsed) && parsed > 0) {
-        const key = `${dayKey}_${exId}`;
-        if (!appData.workoutExercises[key]) appData.workoutExercises[key] = { kg: 50, completedSets: [] };
-        appData.workoutExercises[key].kg = parseFloat(parsed.toFixed(1));
-        triggerCloudSave();
-        showNotification(`Carico: ${appData.workoutExercises[key].kg} kg`);
-      }
-    };
-
-    window.handleGymSetClick = function(dayKey, exId, setNumber, restSeconds) {
-      const key = `${dayKey}_${exId}`;
-      if (!appData.workoutExercises[key]) appData.workoutExercises[key] = { kg: null, completedSets: [] };
-      let list = Array.isArray(appData.workoutExercises[key].completedSets) ? appData.workoutExercises[key].completedSets : [];
-
-      if (list.includes(setNumber)) {
-        list = list.filter(n => n !== setNumber);
-      } else {
-        list.push(setNumber);
-        window.startDiscreetTimer(restSeconds);
-        showNotification(`Set ${setNumber} completato!`);
-      }
-
-      appData.workoutExercises[key].completedSets = list;
-      renderWorkoutList(dayKey);
-      triggerCloudSave();
-    };
-
-    window.resetCurrentDayChecks = function() {
-      const routine = ROUTINES[currentWorkoutDay];
-      if (!routine) return;
-      routine.exercises.forEach(ex => {
-        const key = `${currentWorkoutDay}_${ex.id}`;
-        if (appData.workoutExercises[key]) appData.workoutExercises[key].completedSets = [];
-      });
-      renderWorkoutList(currentWorkoutDay);
-      triggerCloudSave();
-      showNotification("Spunte azzerate.");
-    };
-
-    window.startDiscreetTimer = function(seconds) {
-      clearInterval(timerCountdown);
-      secondsRemaining = seconds;
-      updateTimerDisplay();
-
-      document.getElementById('activeTimerBar').classList.remove('hidden');
-      timerCountdown = setInterval(() => {
-        secondsRemaining--;
-        if (secondsRemaining <= 0) {
-          clearInterval(timerCountdown);
-          secondsRemaining = 0;
-          updateTimerDisplay();
-          window.stopDiscreetTimer();
-          showNotification("Recupero terminato!");
-        } else {
-          updateTimerDisplay();
-        }
-      }, 1000);
-    };
-
-    window.addTimerSeconds = function(extra) {
-      secondsRemaining += extra;
-      updateTimerDisplay();
-    };
-
-    window.stopDiscreetTimer = function() {
-      clearInterval(timerCountdown);
-      secondsRemaining = 0;
-      updateTimerDisplay();
-      document.getElementById('activeTimerBar').classList.add('hidden');
-    };
-
-    function updateTimerDisplay() {
-      const m = Math.floor(secondsRemaining / 60);
-      const s = secondsRemaining % 60;
-      const str = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-      document.getElementById('activeTimerValue').innerText = str;
-      document.getElementById('headerTimerReadout').innerText = str;
-      document.getElementById('modalTimerDigits').innerText = str;
-    }
-
-    window.toggleTimerModal = () => document.getElementById('restTimerModal').classList.toggle('hidden');
-
-    // Navigazione Giorni
-    window.shiftSelectedDay = function(delta) {
-      selectedDate.setDate(selectedDate.getDate() + delta);
-      window.updateUIFromState();
-    };
-
-    // Login e Gestione Utente
-    window.handleGoogleLogin = async function() {
-      const btnLabel = document.getElementById('loginBtnLabel');
-      const errBox = document.getElementById('loginStatusMsg');
-      try {
-        if (btnLabel) btnLabel.innerText = "Accesso in corso...";
-        errBox.classList.add('hidden');
-        await signInWithPopup(auth, provider);
-      } catch (err) {
-        console.warn("Login popup fallito:", err);
-        errBox.innerText = "Accesso popup non disponibile. Puoi continuare in modalità Locale.";
-        errBox.classList.remove('hidden');
-      } finally {
-        if (btnLabel) btnLabel.innerText = "Accedi con Google";
-      }
-    };
-
-    window.continueAsGuest = function() {
-      document.getElementById('loginOverlay').classList.add('hidden');
-      document.getElementById('cloudStatusReadout').innerText = "Offline / Locale";
-      showNotification("Modalità locale attiva: dati salvati nel browser.");
-    };
-
-    window.logoutUser = async function() {
-      try {
-        await signOut(auth);
-        document.getElementById('loginOverlay').classList.remove('hidden');
-        showNotification("Disconnesso.");
-      } catch (e) {}
-    };
-
-    // Aggiornamento Globale Interfaccia
-    window.updateUIFromState = function() {
-      const todayKey = getFormattedDateKey(new Date());
-      const currentKey = getFormattedDateKey(selectedDate);
-      const label = document.getElementById('headerCurrentDateLabel');
-      if (label) {
-        label.innerText = todayKey === currentKey ? "Oggi" : selectedDate.toLocaleDateString('it-IT', { day: 'numeric', month: 'short' });
-      }
-
-      const dayTitle = document.getElementById('currentDayTitle');
-      if (dayTitle) {
-        dayTitle.innerText = selectedDate.toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long' });
-      }
-
-      renderWorkoutList(currentWorkoutDay);
-      renderDualColumnDiet();
-      renderGroupedMeals();
-      initWaterGrid();
-      updateWaterDisplay();
-      updateBurnedCaloriesUI();
-      updateDeficitCalculations();
-      renderLidlShoppingList();
-      renderWalkHistory();
-
-      document.getElementById('metricCurrentWeight').innerHTML = `${appData.weight} <span class="text-xs text-app-textMuted">kg</span>`;
-      document.getElementById('metricCurrentWaist').innerHTML = `${appData.waist} <span class="text-xs text-app-textMuted">cm</span>`;
-      document.getElementById('apiStatusDot').className = appData.userApiKey ? "w-3 h-3 rounded-full bg-emerald-400" : "w-3 h-3 rounded-full bg-amber-500";
-    };
-
-    // Firebase Auth Observer
-    onAuthStateChanged(auth, user => {
-      currentUser = user;
-      const overlay = document.getElementById('loginOverlay');
-      const cloudStatus = document.getElementById('cloudStatusReadout');
-
-      if (!user) {
-        cloudStatus.innerText = "Offline / Locale";
-      } else {
-        overlay.classList.add('hidden');
-        cloudDocRef = doc(db, 'users', user.uid, 'gym_recomp', 'current_state');
-        cloudStatus.innerText = `${user.displayName ? user.displayName.split(' ')[0] : 'Utente'} • Cloud ✓`;
-
-        // Carica automaticamente la chiave Gemini già salvata su AI-BUDGET
-        const refGemini = doc(db, 'users', user.uid, 'settings', 'gemini');
-        onSnapshot(refGemini, snapG => {
-          if (snapG.exists() && snapG.data().apiKey) {
-            appData.userApiKey = snapG.data().apiKey;
-            localStorage.setItem('icon_gemini_key', appData.userApiKey);
-            const dot = document.getElementById('apiStatusDot');
-            if (dot) dot.className = "w-3 h-3 rounded-full bg-emerald-400";
-            const inp = document.getElementById('userApiKeyInput');
-            if (inp) inp.value = appData.userApiKey;
+    if (monthlyChart) monthlyChart.destroy();
+    monthlyChart = new Chart($('monthlyChart'), {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [
+          {
+            label: 'Entrate',
+            data: inc,
+            tension: 0.35,
+            borderColor: '#10b981',
+            backgroundColor: 'rgba(16, 185, 129, 0.05)',
+            borderWidth: 2,
+            pointRadius: 0,
+            pointHoverRadius: 5,
+            fill: true
+          },
+          {
+            label: 'Spese',
+            data: exp,
+            tension: 0.35,
+            borderColor: '#f43f5e',
+            backgroundColor: 'rgba(244, 63, 94, 0.05)',
+            borderWidth: 2,
+            pointRadius: 0,
+            pointHoverRadius: 5,
+            fill: true
           }
-        }, () => {});
-
-        unsubCloud = onSnapshot(cloudDocRef, snap => {
-          if (snap.exists()) {
-            const data = snap.data();
-            if (data.dailyRecords) appData.dailyRecords = data.dailyRecords;
-            if (data.workoutExercises) appData.workoutExercises = data.workoutExercises;
-            if (data.weight) appData.weight = data.weight;
-            if (data.waist) appData.waist = data.waist;
-            if (data.walkLogs) appData.walkLogs = data.walkLogs;
-            window.updateUIFromState();
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: {
+            display: true,
+            position: 'top',
+            labels: { color: '#94a3b8', font: { family: 'Plus Jakarta Sans', size: 12 }, boxWidth: 8, usePointStyle: true }
+          },
+          tooltip: {
+            backgroundColor: 'rgba(11, 15, 25, 0.95)',
+            borderColor: 'rgba(255, 255, 255, 0.1)',
+            borderWidth: 1,
+            padding: 10,
+            callbacks: { label: c => ` ${c.dataset.label}: ${money(c.raw)}` }
           }
-        }, err => {
-          console.warn("Snapshot Cloud:", err);
+        },
+        scales: {
+          x: {
+            ticks: { color: '#64748b', maxTicksLimit: 10 },
+            grid: { color: 'rgba(255, 255, 255, 0.03)' }
+          },
+          y: {
+            beginAtZero: true,
+            ticks: { color: '#64748b' },
+            grid: { color: 'rgba(255, 255, 255, 0.03)' }
+          }
+        }
+      }
+    });
+  }
+
+  // Onde Liquide Canvas
+  const canvas = $('waveCanvas');
+  const ctx = canvas ? canvas.getContext('2d') : null;
+  let targetFillLevel = 0.05, currentFillLevel = 0.05, waveStep = 0, animationId = null;
+
+  if (canvas && ctx) {
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = 125 * dpr;
+    canvas.height = 175 * dpr;
+    ctx.scale(dpr, dpr);
+  }
+
+  function drawWave() {
+    if (!ctx) return;
+    const w = 125, h = 175;
+    ctx.clearRect(0, 0, w, h);
+    currentFillLevel += (targetFillLevel - currentFillLevel) * 0.04;
+    const baseHeight = h - (h * Math.max(0.04, Math.min(0.96, currentFillLevel)));
+
+    ctx.fillStyle = 'rgba(56, 189, 248, 0.35)';
+    ctx.beginPath();
+    ctx.moveTo(0, h);
+    for (let x = 0; x <= w; x += 2) {
+      const y = Math.sin((x / 18) + (waveStep * 0.04)) * 4 + baseHeight;
+      ctx.lineTo(x, y);
+    }
+    ctx.lineTo(w, h);
+    ctx.closePath();
+    ctx.fill();
+
+    const grad = ctx.createLinearGradient(0, baseHeight - 10, 0, h);
+    grad.addColorStop(0, '#10b981');
+    grad.addColorStop(1, '#064e3b');
+    
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.moveTo(0, h);
+    for (let x = 0; x <= w; x += 2) {
+      const y = Math.cos((x / 22) - (waveStep * 0.05)) * 5 + (baseHeight + 3);
+      ctx.lineTo(x, y);
+    }
+    ctx.lineTo(w, h);
+    ctx.closePath();
+    ctx.fill();
+
+    waveStep++;
+    animationId = requestAnimationFrame(drawWave);
+  }
+  drawWave();
+
+  function calculateVacanzaSaved(d1, d2) {
+    let target = 120, saved = 0, foundWeeksSum = 0, hasWeeklyEntries = false;
+    const docs = [d1, d2].filter(Boolean);
+    for (const d of docs) {
+      if (d.vacanzaTarget) target = num(d.vacanzaTarget);
+      if (d.target) target = num(d.target);
+      if (d.vacanzaAccantonato !== undefined) saved = Math.max(saved, num(d.vacanzaAccantonato));
+      if (d.totaleVersato !== undefined) saved = Math.max(saved, num(d.totaleVersato));
+      
+      const weekContainers = [d.weeks, d.settimane, d.vacanze, d];
+      for (const container of weekContainers) {
+        if (!container || typeof container !== 'object') continue;
+        const items = Array.isArray(container) ? container : Object.values(container);
+        items.forEach(item => {
+          if (item && typeof item === 'object') {
+            const isChecked = item.versato === true || item.checked === true;
+            const val = num(item.amount ?? item.importo ?? item.val);
+            if (isChecked) { foundWeeksSum += val; hasWeeklyEntries = true; }
+          }
         });
       }
-      window.updateUIFromState();
+    }
+    if (hasWeeklyEntries && foundWeeksSum > 0) saved = foundWeeksSum;
+    return { saved, target: target || 120 };
+  }
+
+  function updateAmpolla(d) {
+    const saved = num(d?.vacanzaAccantonato), target = num(d?.vacanzaTarget) || 120;
+    const pct = Math.min(100, (saved / target) * 100);
+    $('ampollaEuro').textContent = money(saved);
+    $('ampollaInside').textContent = money(saved);
+    $('ampollaPercent').textContent = Math.round(pct) + '% dell\'obiettivo di ' + money(target);
+    const badge = $('ampollaPercentBadge');
+    if (badge) badge.textContent = Math.round(pct) + '%';
+    targetFillLevel = Math.max(0.04, Math.min(1, saved / target));
+  }
+
+  function refreshAmpollaFromDocs() {
+    const { saved, target } = calculateVacanzaSaved(lastBudgetDoc, lastVacanzeDoc);
+    updateAmpolla({ vacanzaAccantonato: saved, vacanzaTarget: target });
+  }
+
+  async function versaImporto() {
+    if (!auth.currentUser || !ref) return;
+    const amount = num($('depositAmount').value);
+    if (!amount || amount <= 0) return;
+    triggerHaptic(25);
+    
+    const snap = await getDoc(ref), d = snap.exists() ? snap.data() : {};
+    const snapV = refVacanze ? await getDoc(refVacanze) : null;
+    const dV = snapV && snapV.exists() ? snapV.data() : {};
+    
+    const currentData = calculateVacanzaSaved(d, dV);
+    const saved = currentData.saved + amount;
+    const target = currentData.target || 120;
+    
+    state.expense.push({ name: 'Versamento Salvadanaio Vacanze', amount: amount, date: defaultDateForSelectedMonth(), isRecurring: false });
+    await setDoc(ref, { vacanzaAccantonato: saved, vacanzaTarget: target, expense: state.expense, updatedAt: Date.now() }, { merge: true });
+
+    if (refVacanze) {
+      await setDoc(refVacanze, { totaleVersato: saved, vacanzaAccantonato: saved, target: target, updatedAt: Date.now() }, { merge: true });
+    }
+    $('depositAmount').value = '';
+    render('expense');
+    updateAmpolla({ vacanzaAccantonato: saved, vacanzaTarget: target });
+  }
+
+  async function svuotaSalvadanaio() {
+    if (!auth.currentUser || !ref) return;
+    if (!confirm("Azzerare il salvadanaio vacanze per questo mese?")) return;
+    triggerHaptic(35);
+    await setDoc(ref, { vacanzaAccantonato: 0, vacanzaTarget: 120, updatedAt: Date.now() }, { merge: true });
+    if (refVacanze) {
+      await setDoc(refVacanze, { totaleVersato: 0, vacanzaAccantonato: 0, target: 120, updatedAt: Date.now() }, { merge: true });
+    }
+    updateAmpolla({ vacanzaAccantonato: 0, vacanzaTarget: 120 });
+  }
+
+  $('openVacanze').onclick = () => location.href = 'vacanze.html';
+  $('addVacanza').onclick = versaImporto;
+  $('resetVacanza').onclick = svuotaSalvadanaio;
+  $('depositAmount').addEventListener('keydown', e => { if (e.key === 'Enter') versaImporto(); });
+
+  $('loginScreenBtn').onclick = async () => {
+    try { await signInWithPopup(auth, provider); }
+    catch (e) { $('loginError').textContent = 'Accesso non riuscito: ' + (e.code || e.message); }
+  };
+  $('topLogin').onclick = () => $('loginScreenBtn').click();
+  $('logoutBtn').onclick = () => signOut(auth);
+  $('topLogoutBtn').onclick = () => signOut(auth);
+
+  onAuthStateChanged(auth, user => {
+    if (!user) {
+      $('login').style.display = 'flex';
+      $('app').style.display = 'none';
+      $('topLogin').style.display = 'inline-flex';
+      $('topUserProfile').style.display = 'none';
+      return;
+    }
+    $('login').style.display = 'none';
+    $('app').style.display = 'block';
+
+    const photo = user.photoURL || 'https://via.placeholder.com/32';
+    const name = user.displayName || user.email || 'Utente';
+    $('userInfo').innerHTML = `<img src="${photo}" class="user-avatar-small" alt="Avatar"> <span>${user.email || ''}</span>`;
+    $('topUserImg').src = photo;
+    $('topUserName').textContent = name;
+    $('topLogin').style.display = 'none';
+    $('topUserProfile').style.display = 'flex';
+    
+    refGemini = doc(db, 'users', user.uid, 'settings', 'gemini');
+    onSnapshot(refGemini, s => {
+      if (s.exists()) {
+        userGeminiApiKey = s.data().apiKey || "";
+        $('geminiApiKeyInput').value = userGeminiApiKey;
+      }
     });
 
-    window.addEventListener('DOMContentLoaded', () => {
-      window.updateUIFromState();
-    });
-  </script>
+    updateMonthHeader();
+    subscribeSelectedMonth();
+  });
+
+  const geminiModal = $('geminiModal');
+  $('openGeminiModalBtn').onclick = () => { triggerHaptic(12); geminiModal.classList.add('open'); };
+  $('closeGeminiModalBtn').onclick = () => geminiModal.classList.remove('open');
+  geminiModal.onclick = e => { if (e.target === geminiModal) geminiModal.classList.remove('open'); };
+
+  $('saveGeminiKeyBtn').onclick = async () => {
+    if (!auth.currentUser || !refGemini) return;
+    const k = $('geminiApiKeyInput').value.trim();
+    if (!k) return alert("Inserisci una chiave valida.");
+    try {
+      await setDoc(refGemini, { apiKey: k, updatedAt: Date.now() }, { merge: true });
+      userGeminiApiKey = k;
+      geminiModal.classList.remove('open');
+      alert("Chiave Gemini salvata in modo sicuro nel tuo cloud privato!");
+    } catch (e) {
+      alert("Errore salvataggio chiave: " + e.message);
+    }
+  };
+
+  // AI COACH + VOCALE
+  async function queryAiCoach(customQuestion = null, isVoiceExpense = false) {
+    if (!userGeminiApiKey) {
+      geminiModal.classList.add('open');
+      return alert("Inserisci prima la tua chiave gratuita di Gemini per attivare il Coach!");
+    }
+
+    triggerHaptic(20);
+    const out = $('aiCoachText');
+    const mName = $('currentMonthDisplay').textContent;
+    
+    out.innerHTML = `<div style="display: flex; align-items: center; gap: 8px; color: #38bdf8;">
+      <i class="fa-solid fa-spinner fa-spin"></i> ${isVoiceExpense ? 'Elaborazione spesa vocale con AI...' : `Gemini sta analizzando i dati di ${mName}...`}
+    </div>`;
+
+    const incTot = state.income.reduce((s, x) => s + num(x.amount), 0);
+    const expTot = state.expense.filter(x => {
+      const n = (x.name || '').trim().toLowerCase();
+      return n !== 'spese alimentari luca e lisa' && n !== 'spese animali';
+    }).reduce((s, x) => s + num(x.amount), 0) + allWeeklyTotal();
+    const netBal = incTot - expTot;
+    const savedVacanza = num(lastBudgetDoc?.vacanzaAccantonato || 0);
+
+    const baseContext = `Sei l'AI Financial Coach dell'app "AI-BUDGET".
+Quadro finanziario del mese di ${mName}:
+- Entrate complessive: € ${incTot.toFixed(2)}
+- Spese complessive: € ${expTot.toFixed(2)}
+- Risparmio Netto: € ${netBal.toFixed(2)}
+- Fondo Vacanze: € ${savedVacanza.toFixed(2)} (Target: € 120,00)`;
+
+    let promptText = "";
+
+    if (isVoiceExpense) {
+      promptText = `${baseContext}
+
+L'utente ha pronunciato a voce la seguente frase per registrare una spesa:
+"${customQuestion}"
+
+Estrai dalla frase il **nome della spesa/categoria** e l'**importo in euro (numero puro)**.
+Restituisci la risposta ESATTAMENTE in questo formato JSON valido, senza altri commenti o markdown aggiuntivi:
+{"name": "Nome spesa", "amount": 00.00}`;
+    } else if (customQuestion) {
+      promptText = `${baseContext}
+
+Domanda dell'utente:
+"${customQuestion}"
+
+Rispondi in modo diretto, concreto e senza convenevoli. Basa la risposta sui numeri reali forniti, indicando cifre e percentuali d'impatto.`;
+    } else {
+      promptText = `${baseContext}
+
+Fornisci un'analisi generale del mese in 3 punti sintetici e diretti (stile fintech, senza convenevoli):
+1. **Stato Finanziario**: giudizio rapido sul bilancio entrate/uscite del mese.
+2. **Consiglio Pratico**: una mossa pratica per ottimizzare i costi o gestire la liquidità residua.
+3. **Obiettivo Vacanze**: raccomandazione sull'accantonamento per il salvadanaio vacanze.`;
+    }
+
+    const modelsToTry = ['gemini-3.6-flash', 'gemini-2.5-flash'];
+    let reply = null;
+
+    for (const model of modelsToTry) {
+      try {
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(userGeminiApiKey)}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ contents: [{ parts: [{ text: promptText }] }] })
+        });
+        const data = await response.json();
+        if (!data.error) {
+          reply = data.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (reply) break;
+        }
+      } catch (err) {}
+    }
+
+    if (!reply) {
+      out.innerHTML = `<span style="color: var(--accent-red);"><i class="fa-solid fa-triangle-exclamation"></i> Errore elaborazione AI.</span>`;
+      return;
+    }
+
+    if (isVoiceExpense) {
+      try {
+        const cleanJson = reply.replace(/```json/g, '').replace(/```/g, '').trim();
+        const parsed = JSON.parse(cleanJson);
+        if (parsed.name && parsed.amount) {
+          state.expense.push({
+            name: parsed.name,
+            amount: num(parsed.amount),
+            date: defaultDateForSelectedMonth(),
+            isRecurring: false
+          });
+          render('expense');
+          await saveNow();
+          triggerHaptic(30);
+          out.innerHTML = `<div style="color: var(--accent-green); font-weight: 700;">
+            <i class="fa-solid fa-circle-check"></i> Spesa registrata con successo: ${parsed.name} (${money(parsed.amount)})
+          </div>`;
+          return;
+        }
+      } catch (e) {
+        out.innerHTML = `<span style="color: var(--accent-red);">Non sono riuscito a interpretare la spesa vocale. Riprova.</span>`;
+        return;
+      }
+    }
+
+    const formatted = reply
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\n\n/g, '</p><p>')
+      .replace(/\n/g, '<br>');
+
+    out.innerHTML = `<p>${formatted}</p>`;
+  }
+
+  $('askAiCoachBtn').onclick = () => queryAiCoach();
+
+  function handleSendUserQuestion() {
+    const q = $('aiUserQuestionInput').value.trim();
+    if (!q) return;
+    queryAiCoach(q);
+    $('aiUserQuestionInput').value = '';
+  }
+
+  $('sendAiQuestionBtn').onclick = handleSendUserQuestion;
+  $('aiUserQuestionInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') handleSendUserQuestion();
+  });
+
+  const micBtn = $('micVoiceBtn');
+  const speechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+  if (speechRecognition) {
+    const recognition = new speechRecognition();
+    recognition.lang = 'it-IT';
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    micBtn.onclick = () => {
+      triggerHaptic(20);
+      try {
+        recognition.start();
+        micBtn.classList.add('listening');
+        $('aiCoachText').innerHTML = `<span style="color: #38bdf8;"><i class="fa-solid fa-microphone fa-beat"></i> Ti sto ascoltando... Detta la spesa (es: "Ho speso 20 euro di caffè")</span>`;
+      } catch (e) {
+        micBtn.classList.remove('listening');
+      }
+    };
+
+    recognition.onresult = event => {
+      micBtn.classList.remove('listening');
+      const speechText = event.results[0][0].transcript;
+      $('aiUserQuestionInput').value = speechText;
+      queryAiCoach(speechText, true);
+    };
+
+    recognition.onerror = () => {
+      micBtn.classList.remove('listening');
+      $('aiCoachText').innerHTML = `<span style="color: var(--accent-red);">Errore microfono o riconoscimento vocale non disponibile.</span>`;
+    };
+
+    recognition.onend = () => {
+      micBtn.classList.remove('listening');
+    };
+  } else {
+    micBtn.onclick = () => alert("Il tuo browser non supporta le API di riconoscimento vocale native.");
+  }
+
+  // Calcolatrice
+  const calcModal = $('calcModal');
+  $('calcToggleBtn').onclick = () => { triggerHaptic(12); calcModal.classList.add('open'); };
+  $('closeCalcBtn').onclick = () => calcModal.classList.remove('open');
+  calcModal.onclick = e => { if (e.target === calcModal) calcModal.classList.remove('open'); };
+
+  let appleCalcCurrent = '0', appleCalcPrevious = null, appleCalcOperatorValue = null, appleCalcWaitingForNewNumber = false;
+  
+  function appleCalcUpdateDisplay() {
+    const d = $('appleCalcDisplay');
+    if (d) d.textContent = appleCalcCurrent.length > 9 ? Number(appleCalcCurrent).toLocaleString('it-IT', { maximumFractionDigits: 6 }) : appleCalcCurrent;
+  }
+  window.appleCalcNumber = n => {
+    triggerHaptic(8);
+    if (appleCalcCurrent === '0' || appleCalcWaitingForNewNumber) { appleCalcCurrent = n; appleCalcWaitingForNewNumber = false; }
+    else appleCalcCurrent += n;
+    appleCalcUpdateDisplay();
+  };
+  window.appleCalcDecimal = () => {
+    triggerHaptic(8);
+    if (appleCalcWaitingForNewNumber) { appleCalcCurrent = '0.'; appleCalcWaitingForNewNumber = false; }
+    else if (!appleCalcCurrent.includes('.')) appleCalcCurrent += '.';
+    appleCalcUpdateDisplay();
+  };
+  window.appleCalcClear = () => {
+    triggerHaptic(12);
+    appleCalcCurrent = '0'; appleCalcPrevious = null; appleCalcOperatorValue = null; appleCalcWaitingForNewNumber = false;
+    appleCalcUpdateDisplay();
+  };
+  window.appleCalcPlusMinus = () => { triggerHaptic(10); if (appleCalcCurrent !== '0') appleCalcCurrent = String(Number(appleCalcCurrent) * -1); appleCalcUpdateDisplay(); };
+  window.appleCalcPercent = () => { triggerHaptic(10); appleCalcCurrent = String(Number(appleCalcCurrent) / 100); appleCalcUpdateDisplay(); };
+  window.appleCalcOperator = op => {
+    triggerHaptic(12);
+    if (appleCalcOperatorValue && !appleCalcWaitingForNewNumber) window.appleCalcEquals();
+    appleCalcPrevious = Number(appleCalcCurrent);
+    appleCalcOperatorValue = op;
+    appleCalcWaitingForNewNumber = true;
+  };
+  window.appleCalcEquals = () => {
+    triggerHaptic(15);
+    if (appleCalcPrevious === null || !appleCalcOperatorValue) return;
+    const c = Number(appleCalcCurrent);
+    let r = 0;
+    if (appleCalcOperatorValue === '+') r = appleCalcPrevious + c;
+    if (appleCalcOperatorValue === '-') r = appleCalcPrevious - c;
+    if (appleCalcOperatorValue === '×') r = appleCalcPrevious * c;
+    if (appleCalcOperatorValue === '÷') r = c === 0 ? 0 : appleCalcPrevious / c;
+    appleCalcCurrent = String(Number(r.toFixed(8)));
+    appleCalcPrevious = null; appleCalcOperatorValue = null; appleCalcWaitingForNewNumber = true;
+    appleCalcUpdateDisplay();
+  };
+
+  // Consumi Live Tuya
+  let currentWatts = 0, accumulatedKwh = 0;
+  const kwhRate = 0.28;
+  const setWattBtn = $('setWattBtn');
+  if (setWattBtn) {
+    setWattBtn.onclick = () => {
+      triggerHaptic(12);
+      const v = num($('simWattInput').value);
+      currentWatts = Math.max(0, v);
+      $('liveWattValue').textContent = currentWatts;
+      $('simWattInput').value = '';
+    };
+  }
+
+  setInterval(() => {
+    if (currentWatts > 0) {
+      accumulatedKwh += (currentWatts * (5 / 3600)) / 1000;
+      const cost = accumulatedKwh * kwhRate;
+      if ($('liveKwhToday')) $('liveKwhToday').textContent = accumulatedKwh.toFixed(3) + ' kWh';
+      if ($('liveCostToday')) $('liveCostToday').textContent = money(cost);
+    }
+  }, 5000);
+</script>
 </body>
 </html>
