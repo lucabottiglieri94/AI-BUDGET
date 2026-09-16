@@ -1560,134 +1560,228 @@
   }
 
   function elaboraDatiEstratti(ingText, revolutText) {
-    let stipendioCentroauto = 0;
-    let amexSpesa = 0;
-    let speseIng = 0;
-    let grocerySum = 0;
-    const groceryList = [];
+  let stipendioCentroauto = 0;
+  let amexSpesa = 0;
+  let speseIng = 0;
+  let usciteRevolut = 0;
+  let grocerySum = 0;
+  const groceryList = [];
 
-    // --- 1. PARSING ING BANK ---
-    if (ingText) {
-      // 1A. Rilevamento Amex
-      const amexMatch = ingText.match(/AMERICAN\s+EXPRESS[\s\S]*?Imp\.\s*([\d\.,]+)/i) ||
-                        ingText.match(/AMERICAN\s+EXPRESS[\s\S]*?[-–]\s*([\d\.,]+)/i) ||
-                        ingText.match(/IT07AEX[\s\S]*?Imp\.\s*([\d\.,]+)/i);
+  // Esclude trasferimenti e movimenti interni tra conti personali
+  const isInternalMovement = (description) => {
+    const s = String(description || '').toLowerCase();
+
+    return /revolut|unicredit|giroconto|ricarica|trasferimento|saldo|pocket|revpoints|luca\s+bottiglieri|to\s+luca\b|american\s+express|it07aex/.test(s);
+  };
+
+  // Spese alimentari da mantenere separate
+  const isGrocery = (description) => {
+    return /lidl|conad|\bdem\b|demilio/i.test(
+      String(description || '')
+    );
+  };
+
+  const addGrocery = (description, amount, source) => {
+    if (!amount || amount <= 0) return;
+
+    grocerySum += amount;
+
+    groceryList.push({
+      desc: String(description)
+        .trim()
+        .slice(0, 70)
+        .replace(/\s+/g, ' '),
+      amount,
+      source
+    });
+  };
+
+  /*
+   * =========================
+   * ESTRATTO CONTO ING
+   * =========================
+   */
+
+  if (ingText) {
+    const blocchi = ingText.split(
+      /(?=[0-3][0-9]\/[0-1][0-9]\/20\d{2})/
+    );
+
+    blocchi.forEach((b) => {
+      if (!b.trim()) return;
+
+      const impMatch = b.match(
+        /([+-])\s*(\d+(?:\.\d{3})*,\d{2})/
+      );
+
+      if (!impMatch) return;
+
+      const segno = impMatch[1];
+      const val = parseAmount(impMatch[2]);
+
+      if (!val) return;
+
+      const lowerB = b.toLowerCase();
+
+      // ENTRATE: solo stipendio Centro Auto
+      if (segno === '+') {
+        if (
+          /centro\s*auto|centroautovt|stipendio/i.test(b) &&
+          !isInternalMovement(b)
+        ) {
+          stipendioCentroauto += val;
+        }
+
+        return;
+      }
+
+      // Considera solo uscite effettive
+      if (segno !== '-') return;
+
+      // American Express viene sottratta dalla quota di Lisa,
+      // non conteggiata nuovamente tra le uscite
+      if (
+        /american\s+express|it07aex/i.test(lowerB)
+      ) {
+        amexSpesa = Math.max(amexSpesa, val);
+        return;
+      }
+
+      // Esclude movimenti interni/personali
+      if (isInternalMovement(b)) return;
+
+      // Uscita valida verso terzi
+      speseIng += val;
+
+      // Alimentari separati
+      if (isGrocery(b)) {
+        addGrocery(b, val, 'ING');
+      }
+    });
+
+    // Fallback per trovare American Express se non rilevata dal segno
+    if (!amexSpesa) {
+      const amexMatch = ingText.match(
+        /(?:american\s+express|it07aex)[\s\S]{0,250}?(?:Imp\.\s*)?(-?\s*\d+(?:\.\d{3})*,\d{2})/i
+      );
+
       if (amexMatch) {
-        amexSpesa = parseAmount(amexMatch[1]);
+        amexSpesa = Math.abs(
+          parseAmount(amexMatch[1])
+        );
       }
-
-      // 1B. Rilevamento Stipendio CentroAutoVT
-      const stipMatch = ingText.match(/CENTROAUTO[\s\S]*?\+([\d\.]+[,]\\d{2})/i) ||
-                        ingText.match(/STIPENDIO[\s\S]*?\+([\d\.]+[,]\\d{2})/i) ||
-                        ingText.match(/CENTROAUTOVT[\s\S]*?\+([\d\.,]+)/i);
-      if (stipMatch) {
-        stipendioCentroauto = parseAmount(stipMatch[1]);
-      }
-
-      // 1C. Movimenti riga per data contabile (GG/MM/AAAA)
-      const blocchi = ingText.split(/(?=[0-3][0-9]\/[0-1][0-9]\/20\d{2})/);
-      blocchi.forEach(b => {
-        if (!b.trim()) return;
-
-        // Cerca importi con segno [+-]
-        const impMatch = b.match(/([+-])\s*(\d+(?:\.\d{3})*,\d{2})/);
-        if (!impMatch) return;
-
-        const segno = impMatch[1];
-        const val = parseAmount(impMatch[2]);
-        const lowerB = b.toLowerCase();
-
-        if (segno === '-') {
-          // ESCLUSIONI RIGOROSE:
-          // 1. Ricariche e uscite verso Revolut (evita doppio conteggio)
-          if (/revolut/i.test(b)) return;
-          // 2. Giroconti interni personali di risparmio (Auto, Vacanze)
-          if (/giroconto/i.test(b) && (/auto/i.test(b) || /vacanze/i.test(b))) return;
-          // 3. Spesa Amex (già scalata dalla quota Lisa a monte)
-          if (/american\s+express/i.test(b) || /it07aex/i.test(b)) return;
-
-          // SE È AFFITTO (Federica Demilio): conteggia come spesa effettiva
-          if (/demilio/i.test(b) || /affitto/i.test(b)) {
-            speseIng += val;
-            return;
-          }
-
-          // Tutte le altre sono spese/uscite ordinarie valide
-          speseIng += val;
-
-          // Rilevamento Grocery (Lidl, Conad, DEM) su ING
-          if (lowerB.includes('lidl') || lowerB.includes('conad') || lowerB.includes('dem')) {
-            grocerySum += val;
-            groceryList.push({ desc: b.trim().slice(0, 45).replace(/\s+/g, ' '), amount: val, source: 'ING' });
-          }
-        } else if (segno === '+') {
-          // Se c'è uno storno rimborso (es. rimborso Lidl +33,97), riduce la spesa per compensare
-          if (/lidl/i.test(b) && (/rimborso/i.test(b) || /accredito/i.test(b) || /trasferimento/i.test(b))) {
-            speseIng -= val;
-            grocerySum -= val;
-          }
-          // Tutti gli altri accrediti (+110 Unicredit, +3.30 Unicredit, +20 Revolut) vengono ignorati al 100%
-        }
-      });
     }
-
-    // --- 2. PARSING REVOLUT (Solo denaro in uscita) ---
-    let usciteRevolut = 0;
-    if (revolutText) {
-      // Cerca il totale sintetico "Denaro in uscita" del Conto (conto corrente)
-      const matchUsciteRev = revolutText.match(/Conto\s*\(conto corrente\)[^€\n]*?[\d\.,]+€\s*\|\s*([\d\.,]+)€/i) ||
-                             revolutText.match(/Denaro in uscita\s*\|\s*([\d\.,]+)\s*€/i) ||
-                             revolutText.match(/Denaro in uscita\s*([\d\.,]+)\s*€/i);
-      if (matchUsciteRev) {
-        usciteRevolut = parseAmount(matchUsciteRev[1]);
-      } else {
-        // Fallback sommando le uscite se il riassunto non viene trovato
-        const revLines = revolutText.split(/\r?\n/);
-        revLines.forEach(l => {
-          const m = l.match(/(\d+[,.]\d{2})\s*€/);
-          if (m && !l.includes('Ricarica') && !l.includes('Saldo')) {
-            usciteRevolut += parseAmount(m[1]);
-          }
-        });
-      }
-
-      // Rilevamento supermercati alimentare anche su Revolut
-      const revLines = revolutText.split(/\r?\n/);
-      revLines.forEach(l => {
-        const lowerL = l.toLowerCase();
-        if (lowerL.includes('lidl') || lowerL.includes('conad') || lowerL.includes('dem')) {
-          const amtM = l.match(/([\d\.,]+)\s*€/);
-          if (amtM) {
-            const aVal = parseAmount(amtM[1]);
-            if (aVal > 0 && !lowerL.includes('saldo') && !lowerL.includes('ricarica')) {
-              grocerySum += aVal;
-              groceryList.push({ desc: l.trim().slice(0, 45).replace(/\s+/g, ' '), amount: aVal, source: 'Revolut' });
-            }
-          }
-        }
-      });
-    }
-
-    // --- 3. CALCOLO BILANCIO COMPLESSIVO ---
-    const quotaLisaNetta = QUOTA_LISA_BASE - amexSpesa;
-    const finalIncome = stipendioCentroauto + quotaLisaNetta;
-    const finalExpense = speseIng + usciteRevolut + RATA_AUTO_FISSA;
-    const finalNet = finalIncome - finalExpense;
-
-    return {
-      income: finalIncome,
-      expense: finalExpense,
-      net: finalNet,
-      grocery: Math.max(0, grocerySum),
-      groceryItems: groceryList,
-      stipendioCentroauto,
-      amexSpesa,
-      quotaLisaNetta,
-      speseIng,
-      usciteRevolut
-    };
   }
 
+  /*
+   * =========================
+   * ESTRATTO REVOLUT
+   * =========================
+   */
+
+  if (revolutText) {
+    const revText = String(revolutText)
+      .replace(/\u00a0/g, ' ');
+
+    const revBlocks = revText.split(
+      /(?=\b(?:[0-3]\d\/[0-1]\d\/20\d{2}|20\d{2}-[0-1]\d-[0-3]\d)\b)/
+    );
+
+    revBlocks.forEach((block) => {
+      const cleanBlock = block.trim();
+
+      if (!cleanBlock) return;
+
+      const lowerBlock = cleanBlock.toLowerCase();
+
+      // Ignora riepiloghi e totali sintetici
+      if (
+        /denaro\s+in\s+uscita|totale|saldo\s+iniziale|saldo\s+finale|riepilogo/.test(
+          lowerBlock
+        )
+      ) {
+        return;
+      }
+
+      // Ignora movimenti interni
+      if (isInternalMovement(cleanBlock)) return;
+
+      // Ignora accrediti, rimborsi ed entrate
+      if (
+        /\b(accredito|ricevuto|entrata|rimborso)\b/.test(
+          lowerBlock
+        )
+      ) {
+        return;
+      }
+
+      // Recupera tutti gli importi del movimento
+      const amounts = [
+        ...cleanBlock.matchAll(
+          /(-?\s*\d+(?:[.\s]\d{3})*[,.]\d{2})\s*€/g
+        )
+      ];
+
+      if (!amounts.length) return;
+
+      // Usa l'ultimo importo del blocco
+      const amount = Math.abs(
+        parseAmount(
+          amounts[amounts.length - 1][1]
+        )
+      );
+
+      if (!amount) return;
+
+      usciteRevolut += amount;
+
+      // Alimentari separati
+      if (isGrocery(cleanBlock)) {
+        addGrocery(
+          cleanBlock,
+          amount,
+          'Revolut'
+        );
+      }
+    });
+  }
+
+  /*
+   * =========================
+   * CALCOLO FINALE
+   * =========================
+   */
+
+  const quotaLisaNetta = Math.max(
+    0,
+    QUOTA_LISA_BASE - amexSpesa
+  );
+
+  const finalIncome =
+    stipendioCentroauto + quotaLisaNetta;
+
+  const finalExpense =
+    speseIng +
+    usciteRevolut +
+    RATA_AUTO_FISSA;
+
+  const finalNet =
+    finalIncome - finalExpense;
+
+  return {
+    income: finalIncome,
+    expense: finalExpense,
+    net: finalNet,
+    grocery: Math.max(0, grocerySum),
+    groceryItems: groceryList,
+
+    stipendioCentroauto,
+    amexSpesa,
+    quotaLisaNetta,
+    speseIng,
+    usciteRevolut
+  };
+}
   $('processPdfsBtn').onclick = async () => {
     if (!pdfIngFile && !pdfRevolutFile) {
       alert("Seleziona almeno un estratto conto in PDF (ING o Revolut).");
