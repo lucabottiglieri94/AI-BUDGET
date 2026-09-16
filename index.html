@@ -13,9 +13,11 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js"></script>
+  <!-- PDF.js per lettura locale estratti conto -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 
   <style>
     :root {
@@ -102,26 +104,16 @@
       border: none;
       box-shadow: 0 4px 18px rgba(99, 102, 241, 0.35);
     }
-    .btn.primary:hover {
-      box-shadow: 0 6px 24px rgba(99, 102, 241, 0.5);
-    }
     .btn.ai-btn {
       background: var(--ai-grad);
       color: #fff;
       border: none;
       box-shadow: 0 4px 18px rgba(168, 85, 247, 0.35);
     }
-    .btn.ai-btn:hover {
-      box-shadow: 0 6px 24px rgba(168, 85, 247, 0.5);
-    }
     .btn.danger {
       background: var(--accent-red-bg);
       color: var(--accent-red);
       border-color: rgba(244, 63, 94, 0.3);
-    }
-    .btn.danger:hover {
-      background: var(--accent-red);
-      color: #fff;
     }
 
     .app { display: none; }
@@ -230,11 +222,7 @@
       padding: 0;
       line-height: 1;
     }
-    .month-btn:hover {
-      background: rgba(56, 189, 248, 0.25);
-      border-color: #38bdf8;
-      color: #38bdf8;
-    }
+    .month-btn:hover { background: rgba(56, 189, 248, 0.25); border-color: #38bdf8; color: #38bdf8; }
     .month-btn:active { transform: scale(0.9); }
     #currentMonthDisplay {
       font-size: 13px;
@@ -247,10 +235,8 @@
       cursor: pointer;
       user-select: none;
     }
-    #currentMonthDisplay:hover { text-decoration: underline; }
 
     .top-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-
     .calc-toggle-btn {
       width: 38px;
       height: 38px;
@@ -296,11 +282,10 @@
       padding: 6px;
       font-size: 14px;
       border-radius: 50%;
-      transition: 0.15s;
     }
     .logout-btn-top:hover { color: var(--accent-red); }
 
-    /* Modali */
+    /* Modale */
     .calc-modal {
       position: fixed;
       inset: 0;
@@ -332,6 +317,8 @@
       text-transform: uppercase;
       letter-spacing: 0.5px;
     }
+
+    /* Calcolatrice */
     .apple-calc-display {
       height: 52px;
       display: flex;
@@ -347,11 +334,7 @@
       margin-bottom: 12px;
       border: 1px solid var(--border);
     }
-    .apple-calc-buttons {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 8px;
-    }
+    .apple-calc-buttons { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
     .calc-btn {
       aspect-ratio: 1;
       border: 0;
@@ -364,33 +347,16 @@
       justify-content: center;
       transition: all 0.15s;
     }
-    .calc-btn:active { transform: scale(0.95); opacity: 0.7; }
     .calc-number { background: rgba(255, 255, 255, 0.07); color: #fff; }
     .calc-function { background: rgba(255, 255, 255, 0.14); color: #fff; }
     .calc-operator { background: #f59e0b; color: #fff; font-size: 19px; }
     .calc-special { background: rgba(255, 255, 255, 0.07); color: var(--muted); }
 
-    /* Dashboard Cards */
-    .summary {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 16px;
-    }
+    /* Summary */
+    .summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
     .sum { padding: 22px; border-radius: var(--radius); }
-    .label {
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      color: var(--muted);
-      font-weight: 700;
-    }
-    .value {
-      font-size: 26px;
-      font-weight: 800;
-      letter-spacing: -0.5px;
-      margin-top: 6px;
-      font-family: 'JetBrains Mono', monospace;
-    }
+    .label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); font-weight: 700; }
+    .value { font-size: 26px; font-weight: 800; letter-spacing: -0.5px; margin-top: 6px; font-family: 'JetBrains Mono', monospace; }
     .positive { color: var(--accent-green); }
     .negative { color: var(--accent-red); }
 
@@ -412,7 +378,6 @@
       border: 1px solid rgba(168, 85, 247, 0.3);
       padding: 4px 10px;
       border-radius: 100px;
-      letter-spacing: 0.5px;
     }
     .ai-output-box {
       background: rgba(5, 8, 17, 0.6);
@@ -425,11 +390,6 @@
       min-height: 70px;
       margin-top: 14px;
     }
-    .ai-output-box p { margin-bottom: 8px; }
-    .ai-output-box p:last-child { margin-bottom: 0; }
-    .ai-output-box strong { color: #38bdf8; font-weight: 700; }
-
-    /* Pulsante Microfono */
     .mic-btn {
       background: rgba(168, 85, 247, 0.15);
       border: 1px solid rgba(168, 85, 247, 0.4);
@@ -437,36 +397,88 @@
       border-radius: 12px;
       padding: 10px 14px;
       cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.2s;
-    }
-    .mic-btn:hover { background: rgba(168, 85, 247, 0.3); color: #fff; }
-    .mic-btn.listening {
-      background: var(--accent-red);
-      color: #fff;
-      border-color: var(--accent-red);
-      animation: pulseMic 1.2s infinite;
-    }
-    @keyframes pulseMic {
-      0%, 100% { transform: scale(1); opacity: 1; }
-      50% { transform: scale(1.05); opacity: 0.7; }
     }
 
-    .grid {
+    /* CARD ESTRATTI CONTO (ING / REVOLUT) */
+    .statement-card {
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      background: linear-gradient(135deg, rgba(56, 189, 248, 0.05) 0%, rgba(17, 24, 39, 0.85) 100%);
+    }
+    .upload-zone-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 16px;
-      align-items: start;
+      gap: 14px;
+      margin: 16px 0;
     }
-    .card { padding: 24px; border-radius: var(--radius); }
-    .section-title {
+    .drop-box {
+      border: 2px dashed rgba(255, 255, 255, 0.15);
+      border-radius: 18px;
+      padding: 20px;
+      text-align: center;
+      background: rgba(5, 8, 17, 0.4);
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+    }
+    .drop-box:hover { border-color: #38bdf8; background: rgba(56, 189, 248, 0.06); }
+    .drop-box input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+    .drop-box i { font-size: 26px; color: #38bdf8; margin-bottom: 8px; display: block; }
+    .drop-box strong { font-size: 14px; display: block; margin-bottom: 4px; }
+    .drop-box span { font-size: 11px; color: var(--muted); }
+
+    .statement-results {
+      background: rgba(5, 8, 17, 0.7);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 18px;
+      margin-top: 14px;
+      display: none;
+    }
+    .results-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .res-box {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px;
+      text-align: center;
+    }
+    .res-box .r-label { font-size: 11px; color: var(--muted); font-weight: 700; text-transform: uppercase; }
+    .res-box .r-val { font-size: 18px; font-weight: 800; font-family: 'JetBrains Mono', monospace; margin-top: 4px; }
+
+    .grocery-highlight-box {
+      background: rgba(245, 158, 11, 0.08);
+      border: 1px solid rgba(245, 158, 11, 0.25);
+      border-radius: 16px;
+      padding: 14px;
+      margin-top: 10px;
+    }
+    .grocery-list {
+      max-height: 180px;
+      overflow-y: auto;
+      margin-top: 8px;
       display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 14px;
+      flex-direction: column;
+      gap: 6px;
     }
+    .grocery-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(0, 0, 0, 0.3);
+      padding: 8px 12px;
+      border-radius: 10px;
+      font-size: 12px;
+    }
+
+    /* Griglia Classica */
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+    .card { padding: 24px; border-radius: var(--radius); }
+    .section-title { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
     .section-title h2 { font-size: 16px; font-weight: 700; }
     .section-toggle {
       width: 32px;
@@ -480,9 +492,7 @@
       align-items: center;
       justify-content: center;
       font-size: 16px;
-      transition: 0.15s;
     }
-    .section-toggle:hover { background: rgba(255, 255, 255, 0.1); }
 
     /* Riga Entrate/Spese */
     .entry {
@@ -506,15 +516,7 @@
       color: #fff;
       font-size: 13px;
     }
-    .entry input:focus {
-      border-color: var(--border-focus);
-      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
-    }
-    .entry input:disabled {
-      opacity: 0.85;
-      background: rgba(255, 255, 255, 0.03);
-      cursor: not-allowed;
-    }
+    .entry input:disabled { opacity: 0.85; background: rgba(255, 255, 255, 0.03); cursor: not-allowed; }
     .smallbtn {
       width: 36px;
       height: 36px;
@@ -540,19 +542,17 @@
       align-items: center;
       justify-content: center;
       font-size: 14px;
-      transition: 0.2s;
     }
     .rec-toggle-btn.active {
       background: rgba(168, 85, 247, 0.2);
       border-color: #c084fc;
       color: #c084fc;
-      box-shadow: 0 0 10px rgba(168, 85, 247, 0.3);
     }
 
     .add { width: 100%; border-radius: 12px; margin-top: 6px; }
     .collapsed #incomeList, .collapsed #expenseList, .collapsed .add { display: none; }
 
-    /* Box Spesa Settimanale Aggiornato */
+    /* Box Spesa del Giorno */
     .daily-expense-panel {
       background: rgba(0, 0, 0, 0.3);
       border: 1px solid var(--border);
@@ -560,12 +560,18 @@
       padding: 18px;
       margin-bottom: 16px;
     }
-    .daily-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      margin-top: 10px;
+    .day-detector-box {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(99, 102, 241, 0.08);
+      border: 1px solid rgba(99, 102, 241, 0.2);
+      border-radius: 14px;
+      padding: 10px 14px;
+      margin-bottom: 12px;
     }
+    .day-badge { font-weight: 800; color: #38bdf8; font-size: 14px; display: flex; align-items: center; gap: 6px; }
+    .daily-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 10px; }
     .daily-cat-card {
       background: rgba(255, 255, 255, 0.02);
       border: 1px solid var(--border);
@@ -574,12 +580,6 @@
       display: flex;
       flex-direction: column;
       gap: 8px;
-    }
-    .daily-cat-card strong {
-      font-size: 13px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
     }
     .daily-cat-card input {
       width: 100%;
@@ -593,37 +593,13 @@
       font-family: 'JetBrains Mono', monospace;
     }
 
-    .day-detector-box {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      background: rgba(99, 102, 241, 0.08);
-      border: 1px solid rgba(99, 102, 241, 0.2);
-      border-radius: 14px;
-      padding: 10px 14px;
-      margin-bottom: 12px;
-    }
-    .day-badge {
-      font-weight: 800;
-      color: #38bdf8;
-      font-size: 14px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
     .weekbox {
       background: rgba(0, 0, 0, 0.3);
       border: 1px solid var(--border);
       border-radius: 20px;
       padding: 18px;
     }
-    .week-selector {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 12px;
-    }
+    .week-selector { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
     .week-selector button {
       width: 32px;
       height: 32px;
@@ -644,20 +620,8 @@
     .chartwrap { height: 260px; margin-top: 14px; }
 
     /* Griglia Metà e Metà */
-    .grid-halves {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
-      align-items: stretch;
-    }
-
-    .energy-live-card {
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      gap: 14px;
-      padding: 24px;
-    }
+    .grid-halves { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: stretch; }
+    .energy-live-card { display: flex; flex-direction: column; justify-content: space-between; gap: 14px; padding: 24px; }
     .live-pill {
       display: inline-flex;
       align-items: center;
@@ -669,7 +633,6 @@
       border: 1px solid rgba(16, 185, 129, 0.25);
       padding: 4px 10px;
       border-radius: 100px;
-      letter-spacing: 0.5px;
     }
     .live-dot {
       width: 7px;
@@ -677,11 +640,6 @@
       background: var(--accent-green);
       border-radius: 50%;
       box-shadow: 0 0 8px var(--accent-green);
-      animation: pulseDot 1.8s infinite;
-    }
-    @keyframes pulseDot {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.4; transform: scale(0.85); }
     }
     .energy-main-stat {
       display: flex;
@@ -704,59 +662,17 @@
       background: rgba(99, 102, 241, 0.08);
       border: 1px solid rgba(99, 102, 241, 0.2);
     }
-    .energy-val {
-      font-size: 30px;
-      font-weight: 800;
-      font-family: 'JetBrains Mono', monospace;
-      color: #38bdf8;
-      line-height: 1;
-    }
-    .energy-unit {
-      font-size: 11px;
-      color: var(--muted);
-      font-weight: 700;
-      margin-top: 4px;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-    .energy-substats {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
-      font-size: 12px;
-    }
-    .stat-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
+    .energy-val { font-size: 30px; font-weight: 800; font-family: 'JetBrains Mono', monospace; color: #38bdf8; line-height: 1; }
+    .energy-unit { font-size: 11px; color: var(--muted); font-weight: 700; margin-top: 4px; text-transform: uppercase; }
+    .energy-substats { flex: 1; display: flex; flex-direction: column; gap: 5px; font-size: 12px; }
+    .stat-row { display: flex; justify-content: space-between; align-items: center; }
     .stat-label { color: var(--muted); }
     .stat-value { font-weight: 600; font-family: 'JetBrains Mono', monospace; }
-    .energy-footer-actions {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
+    .energy-footer-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 
-    /* Ampolla Wave */
-    .ampolla-card {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 24px;
-      padding: 24px;
-    }
-    .ampolla-container {
-      position: relative;
-      width: 140px;
-      height: 190px;
-      flex-shrink: 0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
+    /* Ampolla */
+    .ampolla-card { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 24px; }
+    .ampolla-container { position: relative; width: 140px; height: 190px; flex-shrink: 0; display: flex; justify-content: center; align-items: center; }
     .ampolla-flask {
       position: relative;
       width: 125px;
@@ -764,35 +680,12 @@
       border-radius: 65px 65px 35px 35px;
       background: rgba(255, 255, 255, 0.03);
       border: 2px solid rgba(255, 255, 255, 0.18);
-      box-shadow: 
-        0 15px 35px rgba(0, 0, 0, 0.5),
-        inset 0 0 20px rgba(255, 255, 255, 0.05),
-        inset 2px 2px 5px rgba(255, 255, 255, 0.2);
       overflow: hidden;
-      backdrop-filter: blur(8px);
       display: flex;
       align-items: center;
       justify-content: center;
     }
-    .ampolla-flask::after {
-      content: '';
-      position: absolute;
-      top: 15px;
-      right: 12px;
-      width: 6px;
-      height: 60px;
-      background: linear-gradient(to bottom, rgba(255, 255, 255, 0.35), transparent);
-      border-radius: 10px;
-      z-index: 4;
-      pointer-events: none;
-    }
-    #waveCanvas {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 1;
-    }
+    #waveCanvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; }
     .ampolla-center-text {
       position: absolute;
       inset: 0;
@@ -804,23 +697,9 @@
       z-index: 6;
       pointer-events: none;
       width: 100%;
-      padding: 0 6px;
     }
-    .ampolla-center-text strong {
-      font-size: 15px;
-      font-weight: 800;
-      color: #fff;
-      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9);
-      font-family: 'JetBrains Mono', monospace;
-      white-space: nowrap;
-    }
-    .ampolla-center-text span {
-      font-size: 11px;
-      font-weight: 700;
-      color: #6ee7b7;
-      text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9);
-      margin-top: 3px;
-    }
+    .ampolla-center-text strong { font-size: 15px; font-weight: 800; color: #fff; font-family: 'JetBrains Mono', monospace; }
+    .ampolla-center-text span { font-size: 11px; font-weight: 700; color: #6ee7b7; margin-top: 3px; }
     .ampolla-info { flex: 1; min-width: 0; }
     .ampolla-title { font-size: 17px; font-weight: 700; margin-bottom: 4px; }
     .ampolla-euro { font-size: 28px; font-weight: 800; color: var(--accent-green); font-family: 'JetBrains Mono', monospace; }
@@ -852,33 +731,25 @@
       font-size: 12px;
       font-weight: 700;
       z-index: 101;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
       display: flex;
       align-items: center;
       gap: 6px;
-      transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s;
+      transition: transform 0.25s, opacity 0.25s;
       opacity: 0;
       pointer-events: none;
     }
-    .swipe-indicator.show {
-      transform: translateX(-50%) translateY(0);
-      opacity: 1;
-    }
+    .swipe-indicator.show { transform: translateX(-50%) translateY(0); opacity: 1; }
 
     .mobile-bottom-bar { display: none; }
 
     @media (max-width: 980px) {
-      .grid-halves { grid-template-columns: 1fr; }
+      .grid-halves, .upload-zone-grid, .results-grid { grid-template-columns: 1fr; }
     }
 
     @media (max-width: 860px) {
-      .shell { 
-        grid-template-columns: 1fr; 
-        padding: 10px 10px 85px 10px;
-      }
+      .shell { grid-template-columns: 1fr; padding: 10px 10px 85px 10px; }
       .side { display: none; }
-      .summary, .grid { grid-template-columns: 1fr; }
-      .daily-grid { grid-template-columns: 1fr; }
+      .summary, .grid, .daily-grid { grid-template-columns: 1fr; }
       .entry { grid-template-columns: 1fr 90px 110px 34px 34px; }
       .ampolla-card { flex-direction: column; text-align: center; }
       .ampolla-actions { justify-content: center; }
@@ -955,7 +826,7 @@
   </div>
 </div>
 
-<!-- Calcolatrice Apple Modale -->
+<!-- Calcolatrice Modale -->
 <div id="calcModal" class="calc-modal">
   <div class="calc-popup-content">
     <div class="calc-popup-header">
@@ -1019,7 +890,7 @@
               <button type="button" id="monthNextBtn" class="month-btn" title="Mese successivo">›</button>
             </div>
           </div>
-          <div class="muted" id="currentMonthSubtext">Gestione flussi di cassa e risparmi (Swipe con il dito per cambiare mese)</div>
+          <div class="muted" id="currentMonthSubtext">Gestione flussi di cassa e risparmi (Swipe per cambiare mese)</div>
         </div>
 
         <div class="top-actions">
@@ -1056,6 +927,75 @@
         </div>
       </div>
 
+      <!-- SEZIONE ESTRATTI CONTO (ING E REVOLUT) -->
+      <section class="card statement-card">
+        <div class="section-title">
+          <div>
+            <h2>📑 Estratti Conto • ING & Revolut</h2>
+            <p class="muted" style="margin-top: 2px;">Carica i PDF degli estratti conto. Calcola entrate, uscite totali, include sempre <b>+450€ di Lisa</b> ed estrae la voce alimentari (<b>Conad / DEM / Lidl</b>).</p>
+          </div>
+          <span class="live-pill" style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; border-color: rgba(56, 189, 248, 0.3);">
+            <i class="fa-solid fa-file-pdf"></i> PDF PARSER
+          </span>
+        </div>
+
+        <div class="upload-zone-grid">
+          <div class="drop-box">
+            <input type="file" id="pdfIngInput" accept="application/pdf">
+            <i class="fa-solid fa-building-columns"></i>
+            <strong>Carica Estratto Conto ING</strong>
+            <span id="nameIngFile">Trascina o clicca per selezionare il PDF ING</span>
+          </div>
+
+          <div class="drop-box">
+            <input type="file" id="pdfRevolutInput" accept="application/pdf">
+            <i class="fa-solid fa-credit-card"></i>
+            <strong>Carica Estratto Conto Revolut</strong>
+            <span id="nameRevolutFile">Trascina o clicca per selezionare il PDF Revolut</span>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+          <button id="processPdfsBtn" class="btn primary" style="flex: 1; padding: 12px; font-size: 13px;">
+            <i class="fa-solid fa-calculator"></i> Elabora Estratti e Calcola Bilancio
+          </button>
+          <button id="applyToBudgetBtn" class="btn" style="padding: 12px 18px; font-size: 13px; display: none;">
+            <i class="fa-solid fa-cloud-arrow-up"></i> Sincronizza nel Bilancio Mensile
+          </button>
+        </div>
+
+        <div id="statementResults" class="statement-results">
+          <div class="results-grid">
+            <div class="res-box">
+              <div class="r-label">Totale Entrate (+450 Lisa)</div>
+              <div class="r-val positive" id="calcStmtIncome">€ 0,00</div>
+            </div>
+            <div class="res-box">
+              <div class="r-label">Uscite Complessive</div>
+              <div class="r-val negative" id="calcStmtExpense">€ 0,00</div>
+            </div>
+            <div class="res-box">
+              <div class="r-label">Risultato Netto</div>
+              <div class="r-val" id="calcStmtNet">€ 0,00</div>
+            </div>
+            <div class="res-box" style="border-color: rgba(245, 158, 11, 0.4);">
+              <div class="r-label" style="color: #f59e0b;">Spesa Conad/DEM/Lidl</div>
+              <div class="r-val" style="color: #f59e0b;" id="calcStmtGrocery">€ 0,00</div>
+            </div>
+          </div>
+
+          <div class="grocery-highlight-box">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <strong style="font-size: 13px; color: #f59e0b;"><i class="fa-solid fa-basket-shopping"></i> Dettaglio Spese Rilevate (Conad, DEM, Lidl):</strong>
+              <span id="groceryCountBadge" style="font-size: 11px; background: rgba(245, 158, 11, 0.2); padding: 2px 8px; border-radius: 8px; color: #f59e0b; font-weight: 700;">0 transazioni</span>
+            </div>
+            <div class="grocery-list" id="groceryListContainer">
+              <div style="color: var(--muted); font-size: 12px;">Nessuna transazione alimentare rilevata al momento.</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <!-- AI COACH + VOCALE -->
       <section class="card ai-coach-card">
         <div class="section-title" style="margin-bottom: 8px;">
@@ -1069,7 +1009,7 @@
         </div>
 
         <div style="display: flex; gap: 8px; margin-top: 10px;">
-          <input type="text" id="aiUserQuestionInput" placeholder="Chiedi al Coach o detta una spesa (es: 'Spesi 42 euro per la spesa di Lisa')..." 
+          <input type="text" id="aiUserQuestionInput" placeholder="Chiedi al Coach o detta una spesa..." 
                  style="flex: 1; padding: 10px 14px; border-radius: 12px; border: 1px solid rgba(168, 85, 247, 0.3); background: rgba(5, 8, 17, 0.7); color: #fff; font-size: 13px;">
           <button id="micVoiceBtn" class="mic-btn" title="Detta spesa o domanda a voce">
             <i class="fa-solid fa-microphone"></i>
@@ -1081,7 +1021,7 @@
 
         <div id="aiCoachText" class="ai-output-box">
           <span style="color: var(--muted); font-style: italic;">
-            Registra le tue spese giornaliere sotto o usa il microfono. Il bilancio si aggiorna all'istante.
+            Puoi registrare le spese giornaliere, caricare gli estratti conto o chiedere consigli personalizzati al coach.
           </span>
         </div>
       </section>
@@ -1275,6 +1215,11 @@
   import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js';
   import { getFirestore, doc, onSnapshot, setDoc, getDoc } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js';
 
+  // Configura PDF.js worker
+  if (window.pdfjsLib) {
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  }
+
   const firebaseConfig = {
     apiKey: 'AIzaSyAdZbBv6JYbYnl6CxuFVfHhSftvIxwf2DY',
     authDomain: 'budget-luca.firebaseapp.com',
@@ -1327,7 +1272,7 @@
   const money = n => new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(Number(n) || 0);
   function num(v) { return Number(String(v ?? '').replace(',', '.')) || 0; }
 
-  // GIORNO DELLA SETTIMANA IN ITALIANO
+  // GIORNO DELLA SETTIMANA
   const dayNames = ['Domenica', 'Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato'];
 
   function updateDetectedDayLabel(dateStr) {
@@ -1339,13 +1284,10 @@
     $('detectedDayLabel').innerHTML = `<i class="fa-regular fa-calendar-check"></i> ${name} ${isToday ? '<b>(Oggi)</b>' : ''}`;
   }
 
-  // Inizializza data spesa del giorno
   const dailyDateInput = $('dailyExpenseDate');
   dailyDateInput.value = today();
   updateDetectedDayLabel(today());
-  dailyDateInput.addEventListener('change', e => {
-    updateDetectedDayLabel(e.target.value);
-  });
+  dailyDateInput.addEventListener('change', e => updateDetectedDayLabel(e.target.value));
 
   function showToast(text) {
     const t = $('swipeToast');
@@ -1408,7 +1350,7 @@
     }
   }
 
-  // TOUCH SWIPE MOBILE
+  // TOUCH SWIPE
   let touchStartX = 0, touchStartY = 0, touchEndX = 0, touchEndY = 0;
   const minSwipeDistance = 55;
 
@@ -1430,7 +1372,6 @@
     }
   }, { passive: true });
 
-  // Calcola il lunedì di qualsiasi data
   function mondayOf(d) {
     const x = new Date(d);
     x.setHours(0, 0, 0, 0);
@@ -1445,7 +1386,6 @@
     return d.toISOString().slice(0, 10);
   }
 
-  // NUOVA LOGICA: solo 'food' e 'pets' (mantenendo piena compatibilità con vecchi food1/food2)
   function weekValues(k) {
     const w = allWeeks[k] || {};
     const food = w.food !== undefined ? num(w.food) : (num(w.food1) + num(w.food2));
@@ -1453,7 +1393,6 @@
     return { food, pets };
   }
 
-  // Calcolo totale mese corrente per le 2 categorie
   function getMonthFoodAndPetsTotals() {
     const y = selectedDate.getFullYear();
     const m = selectedDate.getMonth();
@@ -1461,7 +1400,6 @@
     let totalPets = 0;
 
     Object.entries(allWeeks).forEach(([k, w]) => {
-      // Se abbiamo le registrazioni per singoli giorni, calcoliamo esattamente quelle del mese selezionato
       if (Array.isArray(w.entries) && w.entries.length > 0) {
         w.entries.forEach(entry => {
           const ed = new Date(entry.date + 'T00:00:00');
@@ -1471,7 +1409,6 @@
           }
         });
       } else {
-        // Fallback su base lunedì settimana
         const d = new Date(k + 'T00:00:00');
         if (d.getFullYear() === y && d.getMonth() === m) {
           const v = weekValues(k);
@@ -1516,7 +1453,7 @@
     renderSelectedWeek();
   };
 
-  // REGISTRAZIONE GIORNALIERA CON SALVATAGGIO CLOUD
+  // REGISTRAZIONE GIORNALIERA CON SALVATAGGIO
   $('submitDailyExpenseBtn').onclick = async () => {
     if (!auth.currentUser || !ref) return;
 
@@ -1531,7 +1468,6 @@
 
     triggerHaptic(25);
 
-    // Calcola il lunedì di questa data specifica
     const dateObj = new Date(chosenDate + 'T00:00:00');
     const mondayKeyStr = mondayOf(dateObj).toISOString().slice(0, 10);
 
@@ -1551,8 +1487,6 @@
     });
 
     allWeeks[mondayKeyStr] = currentW;
-
-    // Sincronizza lo stato delle uscite del mese
     syncWeeklyExpenses();
 
     try {
@@ -1562,7 +1496,6 @@
         updatedAt: Date.now()
       }, { merge: true });
 
-      // Reset campi input
       $('inputDailyFood').value = '';
       $('inputDailyPets').value = '';
 
@@ -1576,6 +1509,234 @@
     }
   };
 
+  // ==========================================
+  // LOGICA ESTRATTI CONTO (PDF ING & REVOLUT)
+  // ==========================================
+  let pdfIngFile = null, pdfRevolutFile = null;
+  let parsedStatements = {
+    income: 0,
+    expense: 0,
+    net: 0,
+    grocery: 0,
+    groceryItems: [],
+    details: []
+  };
+
+  $('pdfIngInput').onchange = e => {
+    pdfIngFile = e.target.files[0];
+    if (pdfIngFile) $('nameIngFile').textContent = `Caricato: ${pdfIngFile.name}`;
+  };
+
+  $('pdfRevolutInput').onchange = e => {
+    pdfRevolutFile = e.target.files[0];
+    if (pdfRevolutFile) $('nameRevolutFile').textContent = `Caricato: ${pdfRevolutFile.name}`;
+  };
+
+  async function extractTextFromPdf(file) {
+    const arrayBuffer = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    let fullText = "";
+    for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+      const page = await pdf.getPage(pageNum);
+      const textContent = await page.getTextContent();
+      const pageText = textContent.items.map(item => item.str).join(' ');
+      fullText += pageText + "\n";
+    }
+    return fullText;
+  }
+
+  function parseAmount(str) {
+    if (!str) return 0;
+    // Rimuove valute, spazi e converte virgole in punti
+    const clean = str.replace(/[€$£\s]/g, '').replace(/\./g, '').replace(',', '.');
+    return Number(clean) || 0;
+  }
+
+  $('processPdfsBtn').onclick = async () => {
+    if (!pdfIngFile && !pdfRevolutFile) {
+      alert("Seleziona almeno un estratto conto in PDF (ING o Revolut).");
+      return;
+    }
+
+    triggerHaptic(20);
+    $('processPdfsBtn').innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Elaborazione estratti conto...`;
+
+    let ingText = "", revolutText = "";
+    try {
+      if (pdfIngFile) ingText = await extractTextFromPdf(pdfIngFile);
+      if (pdfRevolutFile) revolutText = await extractTextFromPdf(pdfRevolutFile);
+    } catch (err) {
+      alert("Errore durante la lettura del file PDF: " + err.message);
+      $('processPdfsBtn').innerHTML = `<i class="fa-solid fa-calculator"></i> Elabora Estratti e Calcola Bilancio`;
+      return;
+    }
+
+    let detectedIncome = 0;
+    let detectedExpense = 0;
+    let grocerySum = 0;
+    const groceryList = [];
+
+    const lines = (ingText + "\n" + revolutText).split(/\r?\n/);
+    const groceryKeywords = ['conad', 'dem', 'lidl', 'supermercati dem', 'conad city', 'spazio conad'];
+
+    lines.forEach(line => {
+      const lower = line.toLowerCase();
+      // Trova cifre monetarie tipiche italiane o internazionali (es: 1.250,00 o 35,40 o +1.500,00 o -25,00)
+      const amountMatches = line.match(/([+-]?\s*\d{1,3}(?:\.\d{3})*,\d{2})/g);
+
+      if (amountMatches && amountMatches.length > 0) {
+        // Cerca se è associato a supermercati CONAD, DEM, LIDL
+        const isGrocery = groceryKeywords.some(kw => lower.includes(kw));
+
+        // Esamina l'importo
+        amountMatches.forEach(rawVal => {
+          const val = parseAmount(rawVal);
+          if (val === 0) return;
+
+          // Se è spesa alimentare
+          if (isGrocery && val > 0) {
+            grocerySum += val;
+            groceryList.push({ desc: line.trim().slice(0, 45), amount: val });
+          }
+
+          // Segno esplicito o contesto
+          if (rawVal.includes('+') || lower.includes('stipendio') || lower.includes('bonifico a vostro favore') || lower.includes('accredito')) {
+            detectedIncome += Math.abs(val);
+          } else if (rawVal.includes('-') || isGrocery || lower.includes('pagamento pos') || lower.includes('addebit')) {
+            detectedExpense += Math.abs(val);
+          }
+        });
+      }
+    });
+
+    // Se non trova entrate o uscite strutturate dai pattern, tenta estrazione tramite Gemini se configurata
+    if ((detectedExpense === 0 && detectedIncome === 0) && userGeminiApiKey) {
+      try {
+        const aiPrompt = `Analizza questo testo estratto dagli estratti conto ING e Revolut.
+Testo:
+"""${(ingText + "\n" + revolutText).slice(0, 8000)}"""
+
+Restituisci ESCLUSIVAMENTE questo JSON valido:
+{
+  "totalIncome": 0.00,
+  "totalExpense": 0.00,
+  "groceryTotal": 0.00,
+  "groceryItems": [{"desc": "string", "amount": 0.00}]
+}
+Considera come groceryTotal solo gli acquisti nei supermercati Conad, DEM e Lidl.`;
+
+        const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(userGeminiApiKey)}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ contents: [{ parts: [{ text: aiPrompt }] }] })
+        });
+        const d = await resp.json();
+        const jsonText = d.candidates?.[0]?.content?.parts?.[0]?.text?.replace(/```json/g, '').replace(/```/g, '').trim();
+        const parsed = JSON.parse(jsonText);
+        if (parsed) {
+          detectedIncome = Number(parsed.totalIncome) || 0;
+          detectedExpense = Number(parsed.totalExpense) || 0;
+          grocerySum = Number(parsed.groceryTotal) || 0;
+          if (Array.isArray(parsed.groceryItems)) groceryList.push(...parsed.groceryItems);
+        }
+      } catch (e) {
+        console.warn("AI Fallback non riuscito:", e);
+      }
+    }
+
+    // REGOLA UTENTE RICHIESTA: +450€ fissi di Lisa al 1° del mese
+    const lisaContribution = 450.00;
+    const finalIncome = detectedIncome + lisaContribution;
+    const finalNet = finalIncome - detectedExpense;
+
+    parsedStatements = {
+      income: finalIncome,
+      expense: detectedExpense,
+      net: finalNet,
+      grocery: grocerySum,
+      groceryItems: groceryList
+    };
+
+    // Visualizzazione Risultati
+    $('calcStmtIncome').textContent = money(finalIncome);
+    $('calcStmtExpense').textContent = money(detectedExpense);
+    $('calcStmtNet').textContent = money(finalNet);
+    $('calcStmtNet').className = 'r-val ' + (finalNet >= 0 ? 'positive' : 'negative');
+    $('calcStmtGrocery').textContent = money(grocerySum);
+
+    const gContainer = $('groceryListContainer');
+    gContainer.innerHTML = '';
+    if (groceryList.length > 0) {
+      $('groceryCountBadge').textContent = `${groceryList.length} transazioni`;
+      groceryList.forEach(item => {
+        const row = document.createElement('div');
+        row.className = 'grocery-item';
+        row.innerHTML = `
+          <span><b>🛒 ${item.desc}</b></span>
+          <span style="font-family: 'JetBrains Mono', monospace; font-weight: 700; color: #f59e0b;">${money(item.amount)}</span>
+        `;
+        gContainer.appendChild(row);
+      });
+    } else {
+      $('groceryCountBadge').textContent = `0 transazioni`;
+      gContainer.innerHTML = `<div style="color: var(--muted); font-size: 12px;">Nessuna voce Conad, DEM o Lidl rilevata automaticamente nei PDF caricati.</div>`;
+    }
+
+    $('statementResults').style.display = 'block';
+    $('applyToBudgetBtn').style.display = 'inline-flex';
+    $('processPdfsBtn').innerHTML = `<i class="fa-solid fa-circle-check"></i> Calcolo Completato`;
+  };
+
+  // Sincronizza i risultati dell'estratto conto nel bilancio mensile
+  $('applyToBudgetBtn').onclick = async () => {
+    if (!ref) return alert("Firebase non connesso.");
+    triggerHaptic(25);
+
+    const mKey = getMonthKey(selectedDate);
+    const dateFirst = `${mKey}-01`;
+
+    // 1. Aggiunge o aggiorna quota Lisa (+450€)
+    const hasLisa = state.income.some(x => (x.name || '').toLowerCase().includes('lisa'));
+    if (!hasLisa) {
+      state.income.push({ name: 'Contributo Spese Lisa', amount: 450.00, date: dateFirst, isRecurring: true });
+    }
+
+    // 2. Se è stata rilevata la mia entrata dall'estratto conto, la registra
+    const myIncome = parsedStatements.income - 450.00;
+    if (myIncome > 0) {
+      state.income.push({ name: 'Entrate Estratto Conto (ING/Revolut)', amount: myIncome, date: dateFirst, isRecurring: false });
+    }
+
+    // 3. Registra la voce alimentari estratta nella Spesa Luca e Lisa
+    if (parsedStatements.grocery > 0) {
+      const curMonKey = mondayOf(new Date(dateFirst + 'T00:00:00')).toISOString().slice(0, 10);
+      const currW = allWeeks[curMonKey] || { food: 0, pets: 0, entries: [] };
+      currW.food = (num(currW.food) || 0) + parsedStatements.grocery;
+      allWeeks[curMonKey] = currW;
+      syncWeeklyExpenses();
+    }
+
+    // 4. Salva su Firebase
+    try {
+      await setDoc(ref, {
+        income: state.income,
+        expense: state.expense,
+        spesaSettimanale: { weeks: allWeeks },
+        updatedAt: Date.now()
+      }, { merge: true });
+
+      render('income');
+      render('expense');
+      drawMonthly();
+      showToast("Estratti conto sincronizzati nel bilancio!");
+    } catch (e) {
+      alert("Errore sincronizzazione: " + e.message);
+    }
+  };
+
+  // ==========================================
+  // SINCRONIZZAZIONE DATABASE & INIZIALIZZAZIONE
+  // ==========================================
   function subscribeSelectedMonth() {
     if (unsubBudget) unsubBudget();
     if (unsubVacanze) unsubVacanze();
@@ -1628,7 +1789,7 @@
       name.value = x.name || '';
       if (isAuto) {
         name.disabled = true;
-        name.title = "Categoria gestita automaticamente dal modulo Spesa";
+        name.title = "Categoria automatica gestita dalla spesa";
       }
       
       const amount = document.createElement('input');
@@ -1636,10 +1797,7 @@
       amount.step = '0.01';
       amount.placeholder = '€';
       amount.value = x.amount ?? '';
-      if (isAuto) {
-        amount.disabled = true;
-        amount.title = "Totale calcolato automaticamente dalla spesa quotidiana";
-      }
+      if (isAuto) amount.disabled = true;
       
       const date = document.createElement('input');
       date.type = 'date';
@@ -1662,7 +1820,6 @@
       if (isAuto) {
         del.style.opacity = '0.3';
         del.disabled = true;
-        del.title = "Le categorie automatiche non possono essere rimosse da qui";
       }
       
       if (!isAuto) {
@@ -1748,14 +1905,12 @@
       if (d.getFullYear() === y && d.getMonth() === m) inc[d.getDate() - 1] += num(x.amount);
     });
 
-    // Uscite manuali
     state.expense.forEach(x => {
       if (isAutoCategory(x.name)) return;
       const d = new Date((x.date || defaultDateForSelectedMonth()) + 'T00:00:00');
       if (d.getFullYear() === y && d.getMonth() === m) exp[d.getDate() - 1] += num(x.amount);
     });
 
-    // Uscite Spesa (distribuite per giorno se registrate)
     Object.entries(allWeeks).forEach(([k, w]) => {
       if (Array.isArray(w.entries) && w.entries.length > 0) {
         w.entries.forEach(en => {
@@ -1787,7 +1942,6 @@
             backgroundColor: 'rgba(16, 185, 129, 0.05)',
             borderWidth: 2,
             pointRadius: 0,
-            pointHoverRadius: 5,
             fill: true
           },
           {
@@ -1798,7 +1952,6 @@
             backgroundColor: 'rgba(244, 63, 94, 0.05)',
             borderWidth: 2,
             pointRadius: 0,
-            pointHoverRadius: 5,
             fill: true
           }
         ]
@@ -1806,12 +1959,11 @@
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        interaction: { mode: 'index', intersect: false },
         plugins: {
           legend: {
             display: true,
             position: 'top',
-            labels: { color: '#94a3b8', font: { family: 'Plus Jakarta Sans', size: 12 }, boxWidth: 8, usePointStyle: true }
+            labels: { color: '#94a3b8', font: { family: 'Plus Jakarta Sans', size: 12 }, boxWidth: 8 }
           },
           tooltip: {
             backgroundColor: 'rgba(11, 15, 25, 0.95)',
@@ -1822,21 +1974,14 @@
           }
         },
         scales: {
-          x: {
-            ticks: { color: '#64748b', maxTicksLimit: 10 },
-            grid: { color: 'rgba(255, 255, 255, 0.03)' }
-          },
-          y: {
-            beginAtZero: true,
-            ticks: { color: '#64748b' },
-            grid: { color: 'rgba(255, 255, 255, 0.03)' }
-          }
+          x: { ticks: { color: '#64748b' }, grid: { color: 'rgba(255, 255, 255, 0.03)' } },
+          y: { beginAtZero: true, ticks: { color: '#64748b' }, grid: { color: 'rgba(255, 255, 255, 0.03)' } }
         }
       }
     });
   }
 
-  // Animazione Ampolla Onde Liquide
+  // Ampolla Animata
   const canvas = $('waveCanvas');
   const ctx = canvas ? canvas.getContext('2d') : null;
   let targetFillLevel = 0.05, currentFillLevel = 0.05, waveStep = 0;
@@ -2097,7 +2242,6 @@ Determina se fa riferimento a "Spesa Luca e Lisa", "Spesa Animali" o ad un'altra
         if (parsed.name && parsed.amount) {
           const lower = parsed.name.toLowerCase();
           
-          // Se la voce vocale appartiene a una delle due categorie principali, aggiorna direttamente la spesa del giorno
           if (lower.includes('alimentar') || lower.includes('spesa') || lower.includes('cibo') || lower.includes('lisa') || lower.includes('luca')) {
             $('inputDailyFood').value = num(parsed.amount);
             $('submitDailyExpenseBtn').click();
@@ -2187,10 +2331,10 @@ Determina se fa riferimento a "Spesa Luca e Lisa", "Spesa Animali" o ad un'altra
 
     recognition.onend = () => micBtn.classList.remove('listening');
   } else {
-    micBtn.onclick = () => alert("Riconoscimento vocale non supportato dal browser in uso.");
+    micBtn.onclick = () => alert("Riconoscimento vocale non supportato.");
   }
 
-  // Calcolatrice Apple
+  // Calcolatrice
   const calcModal = $('calcModal');
   $('calcToggleBtn').onclick = () => { triggerHaptic(12); calcModal.classList.add('open'); };
   $('closeCalcBtn').onclick = () => calcModal.classList.remove('open');
@@ -2242,7 +2386,7 @@ Determina se fa riferimento a "Spesa Luca e Lisa", "Spesa Animali" o ad un'altra
     appleCalcUpdateDisplay();
   };
 
-  // Consumi Live
+  // Consumi Tuya Live
   let currentWatts = 0, accumulatedKwh = 0;
   const kwhRate = 0.28;
   const setWattBtn = $('setWattBtn');
