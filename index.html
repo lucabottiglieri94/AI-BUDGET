@@ -484,13 +484,19 @@
     }
     .section-toggle:hover { background: rgba(255, 255, 255, 0.1); }
 
-    /* Riga Spesa aggiornata con Pulsante Ricorrente (🔁) */
+    /* Riga Entrate/Spese */
     .entry {
       display: grid;
       grid-template-columns: 1fr 100px 120px 36px 36px;
       gap: 6px;
       margin-bottom: 10px;
       align-items: center;
+    }
+    .entry.auto-locked {
+      background: rgba(99, 102, 241, 0.06);
+      border: 1px dashed rgba(99, 102, 241, 0.25);
+      border-radius: 14px;
+      padding: 4px;
     }
     .entry input {
       padding: 10px 14px;
@@ -503,6 +509,11 @@
     .entry input:focus {
       border-color: var(--border-focus);
       box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+    }
+    .entry input:disabled {
+      opacity: 0.85;
+      background: rgba(255, 255, 255, 0.03);
+      cursor: not-allowed;
     }
     .smallbtn {
       width: 36px;
@@ -517,7 +528,6 @@
       align-items: center;
       justify-content: center;
     }
-    /* Bottone Ricorrente 🔁 */
     .rec-toggle-btn {
       width: 36px;
       height: 36px;
@@ -540,11 +550,68 @@
     }
 
     .add { width: 100%; border-radius: 12px; margin-top: 6px; }
-
     .collapsed #incomeList, .collapsed #expenseList, .collapsed .add { display: none; }
 
-    .linkcard { text-decoration: none; color: inherit; display: block; margin-bottom: 14px; }
-    .linkcard strong { font-size: 16px; display: inline-flex; align-items: center; gap: 6px; }
+    /* Box Spesa Settimanale Aggiornato */
+    .daily-expense-panel {
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 18px;
+      margin-bottom: 16px;
+    }
+    .daily-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 10px;
+    }
+    .daily-cat-card {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .daily-cat-card strong {
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .daily-cat-card input {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: rgba(5, 8, 17, 0.6);
+      color: #fff;
+      font-size: 14px;
+      font-weight: 600;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .day-detector-box {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(99, 102, 241, 0.08);
+      border: 1px solid rgba(99, 102, 241, 0.2);
+      border-radius: 14px;
+      padding: 10px 14px;
+      margin-bottom: 12px;
+    }
+    .day-badge {
+      font-weight: 800;
+      color: #38bdf8;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
     .weekbox {
       background: rgba(0, 0, 0, 0.3);
       border: 1px solid var(--border);
@@ -771,7 +838,7 @@
 
     .status { font-size: 12px; color: var(--muted); text-align: right; padding: 4px 10px; }
 
-    /* Toast Swipe */
+    /* Toast */
     .swipe-indicator {
       position: fixed;
       top: 18px;
@@ -811,6 +878,7 @@
       }
       .side { display: none; }
       .summary, .grid { grid-template-columns: 1fr; }
+      .daily-grid { grid-template-columns: 1fr; }
       .entry { grid-template-columns: 1fr 90px 110px 34px 34px; }
       .ampolla-card { flex-direction: column; text-align: center; }
       .ampolla-actions { justify-content: center; }
@@ -887,7 +955,7 @@
   </div>
 </div>
 
-<!-- Cassetto Calcolatrice Apple Modale -->
+<!-- Calcolatrice Apple Modale -->
 <div id="calcModal" class="calc-modal">
   <div class="calc-popup-content">
     <div class="calc-popup-header">
@@ -1001,7 +1069,7 @@
         </div>
 
         <div style="display: flex; gap: 8px; margin-top: 10px;">
-          <input type="text" id="aiUserQuestionInput" placeholder="Chiedi al Coach o detta una spesa (es: 'Ho speso 34 euro per il cibo dei gatti')..." 
+          <input type="text" id="aiUserQuestionInput" placeholder="Chiedi al Coach o detta una spesa (es: 'Spesi 42 euro per la spesa di Lisa')..." 
                  style="flex: 1; padding: 10px 14px; border-radius: 12px; border: 1px solid rgba(168, 85, 247, 0.3); background: rgba(5, 8, 17, 0.7); color: #fff; font-size: 13px;">
           <button id="micVoiceBtn" class="mic-btn" title="Detta spesa o domanda a voce">
             <i class="fa-solid fa-microphone"></i>
@@ -1013,11 +1081,79 @@
 
         <div id="aiCoachText" class="ai-output-box">
           <span style="color: var(--muted); font-style: italic;">
-            Usa il microfono per dettare una spesa al volo (es: "Aggiungi 45 euro di benzina") oppure chiedi un consiglio finanziario.
+            Registra le tue spese giornaliere sotto o usa il microfono. Il bilancio si aggiorna all'istante.
           </span>
         </div>
       </section>
 
+      <!-- REGISTRAZIONE DIRETTA SPESA GIORNALIERA -->
+      <section class="card">
+        <div class="section-title">
+          <div>
+            <h2>🛒 Registra Spesa del Giorno</h2>
+            <p class="muted" style="margin-top: 2px;">Solo le due categorie: Spesa Luca e Lisa e Spesa Animali. Riconoscimento automatico del giorno.</p>
+          </div>
+          <button class="btn" onclick="location.href='spesa-settimanale.html'" style="font-size: 12px;">
+            Vedi dettaglio storico →
+          </button>
+        </div>
+
+        <div class="daily-expense-panel">
+          <div class="day-detector-box">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <span style="font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase;">Giorno:</span>
+              <span class="day-badge" id="detectedDayLabel"><i class="fa-regular fa-calendar-check"></i> Oggi</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <label for="dailyExpenseDate" style="font-size: 11px; color: var(--muted); font-weight: 700;">DATA:</label>
+              <input type="date" id="dailyExpenseDate" style="padding: 6px 10px; border-radius: 10px; background: rgba(5, 8, 17, 0.6); color: #fff; border: 1px solid var(--border); font-size: 12px;">
+            </div>
+          </div>
+
+          <div class="daily-grid">
+            <div class="daily-cat-card">
+              <strong>🥗 Spesa Luca e Lisa</strong>
+              <input type="number" id="inputDailyFood" step="0.01" min="0" placeholder="€ 0,00">
+            </div>
+
+            <div class="daily-cat-card">
+              <strong>🐈 Spesa Animali</strong>
+              <input type="number" id="inputDailyPets" step="0.01" min="0" placeholder="€ 0,00">
+            </div>
+          </div>
+
+          <div style="margin-top: 14px; display: flex; justify-content: flex-end;">
+            <button id="submitDailyExpenseBtn" class="btn primary" style="width: 100%; padding: 12px; font-size: 14px;">
+              <i class="fa-solid fa-floppy-disk"></i> Registra e Sincronizza nelle Spese
+            </button>
+          </div>
+        </div>
+
+        <!-- Riepilogo Settimana & Grafico -->
+        <div class="weekbox">
+          <div class="week-selector">
+            <button type="button" onclick="changeWeek(-1)">‹</button>
+            <strong id="selectedWeekLabel">Settimana corrente</strong>
+            <button type="button" onclick="changeWeek(1)">›</button>
+          </div>
+          <div class="weekrow">
+            <span>🥗 Spesa Luca e Lisa</span>
+            <span class="weekamount" id="weekFood">€ 0,00</span>
+          </div>
+          <div class="weekrow">
+            <span>🐈 Spesa Animali</span>
+            <span class="weekamount" id="weekPets">€ 0,00</span>
+          </div>
+          <div class="weekrow" style="margin-top: 4px; border-top: 1px solid var(--border);">
+            <strong style="color: var(--text);">📅 Totale settimana selezionata</strong>
+            <strong class="weekamount" style="color: var(--accent-green);" id="weekTotal">€ 0,00</strong>
+          </div>
+          <div class="muted" id="weekRange" style="margin-top: 8px; font-size: 11px;">Settimana corrente</div>
+          <div class="chartwrap"><canvas id="monthlyChart"></canvas></div>
+        </div>
+      </section>
+
+      <!-- ENTRATE & USCITE MENSILI -->
       <div class="grid">
         <section id="incomeCard" class="card collapsed">
           <div class="section-title">
@@ -1028,45 +1164,17 @@
           <button class="btn primary add" onclick="addRow('income')">+ Aggiungi Entrata</button>
         </section>
 
-        <section id="expenseCard" class="card collapsed">
+        <section id="expenseCard" class="card">
           <div class="section-title">
-            <h2>📤 Uscite Programmate</h2>
-            <button class="section-toggle" type="button" onclick="toggleCollapse('expenseCard',this)">+</button>
+            <h2>📤 Uscite del Mese (con Spesa e Animali)</h2>
+            <button class="section-toggle" type="button" onclick="toggleCollapse('expenseCard',this)">−</button>
           </div>
           <div id="expenseList"></div>
-          <button class="btn primary add" onclick="addRow('expense')">+ Aggiungi Spesa</button>
+          <button class="btn primary add" onclick="addRow('expense')">+ Aggiungi Altra Spesa</button>
         </section>
       </div>
 
-      <section class="card">
-        <a class="linkcard" href="spesa-settimanale.html">
-          <strong>🛒 Monitoraggio Spese Settimanali →</strong>
-          <p class="muted">Sincronizzazione automatica alimentari e cura animali.</p>
-        </a>
-        <div class="weekbox">
-          <div class="week-selector">
-            <button type="button" onclick="changeWeek(-1)">‹</button>
-            <strong id="selectedWeekLabel">Settimana corrente</strong>
-            <button type="button" onclick="changeWeek(1)">›</button>
-          </div>
-          <div class="weekrow">
-            <span>🥗 Spese alimentari Luca e Lisa</span>
-            <span class="weekamount" id="weekFood">€ 0,00</span>
-          </div>
-          <div class="weekrow">
-            <span>🐈 Spese cura animali</span>
-            <span class="weekamount" id="weekPets">€ 0,00</span>
-          </div>
-          <div class="weekrow" style="margin-top: 4px; border-top: 1px solid var(--border);">
-            <strong style="color: var(--text);">📅 Totale settimana</strong>
-            <strong class="weekamount" style="color: var(--accent-green);" id="weekTotal">€ 0,00</strong>
-          </div>
-          <div class="muted" id="weekRange" style="margin-top: 8px; font-size: 11px;">Settimana corrente</div>
-          <div class="chartwrap"><canvas id="monthlyChart"></canvas></div>
-        </div>
-      </section>
-
-      <!-- SEZIONE METÀ E METÀ -->
+      <!-- SEZIONE METÀ E METÀ: ENERGIA & SALVADANAIO -->
       <div class="grid-halves">
         <section class="card energy-live-card">
           <div class="section-title" style="margin-bottom: 4px;">
@@ -1217,8 +1325,27 @@
 
   const $ = id => document.getElementById(id);
   const money = n => new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(Number(n) || 0);
-
   function num(v) { return Number(String(v ?? '').replace(',', '.')) || 0; }
+
+  // GIORNO DELLA SETTIMANA IN ITALIANO
+  const dayNames = ['Domenica', 'Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato'];
+
+  function updateDetectedDayLabel(dateStr) {
+    if (!dateStr) return;
+    const parts = dateStr.split('-');
+    const d = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+    const name = dayNames[d.getDay()];
+    const isToday = today() === dateStr;
+    $('detectedDayLabel').innerHTML = `<i class="fa-regular fa-calendar-check"></i> ${name} ${isToday ? '<b>(Oggi)</b>' : ''}`;
+  }
+
+  // Inizializza data spesa del giorno
+  const dailyDateInput = $('dailyExpenseDate');
+  dailyDateInput.value = today();
+  updateDetectedDayLabel(today());
+  dailyDateInput.addEventListener('change', e => {
+    updateDetectedDayLabel(e.target.value);
+  });
 
   function showToast(text) {
     const t = $('swipeToast');
@@ -1295,86 +1422,174 @@
     if (e.target.closest('.calc-modal, input, button, select, canvas')) return;
     touchEndX = e.changedTouches[0].screenX;
     touchEndY = e.changedTouches[0].screenY;
-    handleTouchSwipe();
-  }, { passive: true });
-
-  function handleTouchSwipe() {
     const deltaX = touchEndX - touchStartX;
     const deltaY = touchEndY - touchStartY;
     if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > minSwipeDistance) {
       if (deltaX < 0) changeMonth(1, 'left');
       else changeMonth(-1, 'right');
     }
+  }, { passive: true });
+
+  // Calcola il lunedì di qualsiasi data
+  function mondayOf(d) {
+    const x = new Date(d);
+    x.setHours(0, 0, 0, 0);
+    const day = x.getDay() || 7;
+    x.setDate(x.getDate() - day + 1);
+    return x;
   }
 
-  // CONTROLLO AUTOMATICO SPESE RICORRENTI AL CAMBIO MESE
-  async function checkAndApplyRecurringExpenses(budgetData, mKey) {
-    if (!auth.currentUser) return;
-    
-    // Controlla se abbiamo già applicato le ricorrenti per questo mese in questo documento
-    if (budgetData.recurringApplied === mKey) return;
+  function weekKey(offset = 0) {
+    const d = mondayOf(new Date());
+    d.setDate(d.getDate() + offset * 7);
+    return d.toISOString().slice(0, 10);
+  }
 
-    // Cerca nel mese precedente o estrae le ricorrenti salvate nei mesi passati
-    const prevDate = new Date(selectedDate);
-    prevDate.setMonth(prevDate.getMonth() - 1);
-    const prevMKey = getMonthKey(prevDate);
-    
-    try {
-      const prevRef = doc(db, 'users', auth.currentUser.uid, 'budgets', prevMKey);
-      const prevSnap = await getDoc(prevRef);
-      
-      let recurringItems = [];
-      if (prevSnap.exists() && Array.isArray(prevSnap.data().expense)) {
-        // Prende le spese che avevano il flag isRecurring: true nel mese precedente
-        recurringItems = prevSnap.data().expense.filter(x => x.isRecurring === true);
-      }
+  // NUOVA LOGICA: solo 'food' e 'pets' (mantenendo piena compatibilità con vecchi food1/food2)
+  function weekValues(k) {
+    const w = allWeeks[k] || {};
+    const food = w.food !== undefined ? num(w.food) : (num(w.food1) + num(w.food2));
+    const pets = w.pets !== undefined ? num(w.pets) : (num(w.pet1) + num(w.pet2));
+    return { food, pets };
+  }
 
-      if (recurringItems.length > 0) {
-        let currentExpenses = Array.isArray(budgetData.expense) ? budgetData.expense : [];
-        
-        recurringItems.forEach(rec => {
-          const exists = currentExpenses.some(x => (x.name || '').trim().toLowerCase() === rec.name.trim().toLowerCase());
-          if (!exists) {
-            currentExpenses.push({
-              name: rec.name,
-              amount: num(rec.amount),
-              date: `${mKey}-01`,
-              isRecurring: true
-            });
+  // Calcolo totale mese corrente per le 2 categorie
+  function getMonthFoodAndPetsTotals() {
+    const y = selectedDate.getFullYear();
+    const m = selectedDate.getMonth();
+    let totalFood = 0;
+    let totalPets = 0;
+
+    Object.entries(allWeeks).forEach(([k, w]) => {
+      // Se abbiamo le registrazioni per singoli giorni, calcoliamo esattamente quelle del mese selezionato
+      if (Array.isArray(w.entries) && w.entries.length > 0) {
+        w.entries.forEach(entry => {
+          const ed = new Date(entry.date + 'T00:00:00');
+          if (ed.getFullYear() === y && ed.getMonth() === m) {
+            totalFood += num(entry.food);
+            totalPets += num(entry.pets);
           }
         });
-
-        await setDoc(ref, { expense: currentExpenses, recurringApplied: mKey, updatedAt: Date.now() }, { merge: true });
       } else {
-        // Segna comunque come controllato per evitare loop
-        await setDoc(ref, { recurringApplied: mKey, updatedAt: Date.now() }, { merge: true });
+        // Fallback su base lunedì settimana
+        const d = new Date(k + 'T00:00:00');
+        if (d.getFullYear() === y && d.getMonth() === m) {
+          const v = weekValues(k);
+          totalFood += v.food;
+          totalPets += v.pets;
+        }
       }
-    } catch (e) {
-      console.error("Errore verifica ricorrenti automatiche:", e);
-    }
+    });
+
+    return { totalFood, totalPets };
   }
+
+  function isAutoCategory(name) {
+    const n = (name || '').trim().toLowerCase();
+    return n === 'spesa luca e lisa' || n === 'spesa animali' || n === 'spese alimentari luca e lisa';
+  }
+
+  function syncWeeklyExpenses() {
+    const { totalFood, totalPets } = getMonthFoodAndPetsTotals();
+    const manual = state.expense.filter(x => !isAutoCategory(x.name));
+    
+    state.expense = [
+      ...manual,
+      { name: 'Spesa Luca e Lisa', amount: totalFood, date: defaultDateForSelectedMonth(), isAuto: true },
+      { name: 'Spesa Animali', amount: totalPets, date: defaultDateForSelectedMonth(), isAuto: true }
+    ];
+  }
+
+  function renderSelectedWeek() {
+    const k = weekKey(selectedWeekOffset);
+    const v = weekValues(k);
+    $('weekFood').textContent = money(v.food);
+    $('weekPets').textContent = money(v.pets);
+    $('weekTotal').textContent = money(v.food + v.pets);
+    $('weekRange').textContent = 'Settimana dal ' + k;
+    $('selectedWeekLabel').textContent = selectedWeekOffset === 0 ? 'Settimana corrente' : ('Settimana ' + k);
+  }
+
+  window.changeWeek = delta => {
+    triggerHaptic(12);
+    selectedWeekOffset += delta;
+    renderSelectedWeek();
+  };
+
+  // REGISTRAZIONE GIORNALIERA CON SALVATAGGIO CLOUD
+  $('submitDailyExpenseBtn').onclick = async () => {
+    if (!auth.currentUser || !ref) return;
+
+    const chosenDate = dailyDateInput.value || today();
+    const foodVal = num($('inputDailyFood').value);
+    const petsVal = num($('inputDailyPets').value);
+
+    if (foodVal <= 0 && petsVal <= 0) {
+      alert("Inserisci almeno un importo per 'Spesa Luca e Lisa' o 'Spesa Animali'.");
+      return;
+    }
+
+    triggerHaptic(25);
+
+    // Calcola il lunedì di questa data specifica
+    const dateObj = new Date(chosenDate + 'T00:00:00');
+    const mondayKeyStr = mondayOf(dateObj).toISOString().slice(0, 10);
+
+    const currentW = allWeeks[mondayKeyStr] || { food: 0, pets: 0, entries: [] };
+    const currentFood = currentW.food !== undefined ? num(currentW.food) : (num(currentW.food1) + num(currentW.food2));
+    const currentPets = currentW.pets !== undefined ? num(currentW.pets) : (num(currentW.pet1) + num(currentW.pet2));
+
+    currentW.food = currentFood + foodVal;
+    currentW.pets = currentPets + petsVal;
+
+    if (!Array.isArray(currentW.entries)) currentW.entries = [];
+    currentW.entries.push({
+      date: chosenDate,
+      food: foodVal,
+      pets: petsVal,
+      timestamp: Date.now()
+    });
+
+    allWeeks[mondayKeyStr] = currentW;
+
+    // Sincronizza lo stato delle uscite del mese
+    syncWeeklyExpenses();
+
+    try {
+      await setDoc(ref, {
+        expense: state.expense,
+        spesaSettimanale: { weeks: allWeeks },
+        updatedAt: Date.now()
+      }, { merge: true });
+
+      // Reset campi input
+      $('inputDailyFood').value = '';
+      $('inputDailyPets').value = '';
+
+      render('expense');
+      renderSelectedWeek();
+      drawMonthly();
+
+      showToast(`Registrato: ${dayNames[dateObj.getDay()]} (${money(foodVal + petsVal)})`);
+    } catch (e) {
+      alert("Errore salvataggio: " + e.message);
+    }
+  };
 
   function subscribeSelectedMonth() {
     if (unsubBudget) unsubBudget();
     if (unsubVacanze) unsubVacanze();
-
     if (!auth.currentUser) return;
 
     const mKey = getMonthKey(selectedDate);
     ref = doc(db, 'users', auth.currentUser.uid, 'budgets', mKey);
     refVacanze = doc(db, 'users', auth.currentUser.uid, 'vacanze', mKey);
 
-    $('syncStatus').textContent = `Caricamento dati ${mKey}...`;
+    $('syncStatus').textContent = `Caricamento ${mKey}...`;
 
     unsubBudget = onSnapshot(ref, async s => {
       if (editing) return;
       const d = s.exists() ? s.data() : {};
-      
-      // Controlla e applica in automatico le ricorrenti del mese se non fatto
-      if (!s.exists() || !d.recurringApplied) {
-        await checkAndApplyRecurringExpenses(d, mKey);
-        return; // l'onSnapshot si riattiverà subito dopo il salvataggio
-      }
 
       lastBudgetDoc = d;
       refreshAmpollaFromDocs();
@@ -1383,7 +1598,9 @@
         income: Array.isArray(d.income) ? d.income : [],
         expense: Array.isArray(d.expense) ? d.expense : []
       };
+
       allWeeks = d.spesaSettimanale?.weeks && typeof d.spesaSettimanale.weeks === 'object' ? d.spesaSettimanale.weeks : {};
+      
       syncWeeklyExpenses();
       render('income');
       render('expense');
@@ -1398,110 +1615,78 @@
     }, () => {});
   }
 
-  function monday(d) {
-    const x = new Date(d);
-    x.setHours(0, 0, 0, 0);
-    const day = x.getDay() || 7;
-    x.setDate(x.getDate() - day + 1);
-    return x;
-  }
-
-  function weekKey(offset = 0) {
-    const d = monday(new Date());
-    d.setDate(d.getDate() + offset * 7);
-    return d.toISOString().slice(0, 10);
-  }
-
-  function weekValues(k) {
-    const w = allWeeks[k] || {};
-    return { food: num(w.food1) + num(w.food2), pets: num(w.pet1) + num(w.pet2) };
-  }
-
-  function allWeeklyTotal() {
-    return Object.keys(allWeeks).reduce((s, k) => s + weekValues(k).food + weekValues(k).pets, 0);
-  }
-
-  function renderSelectedWeek() {
-    const k = weekKey(selectedWeekOffset), v = weekValues(k);
-    $('weekFood').textContent = money(v.food);
-    $('weekPets').textContent = money(v.pets);
-    $('weekTotal').textContent = money(v.food + v.pets);
-    $('weekRange').textContent = 'Settimana ' + k;
-    $('selectedWeekLabel').textContent = selectedWeekOffset === 0 ? 'Settimana corrente' : ('Settimana ' + k);
-  }
-
-  window.changeWeek = delta => {
-    triggerHaptic(12);
-    selectedWeekOffset += delta;
-    renderSelectedWeek();
-  };
-
-  function syncWeeklyExpenses() {
-    const food = weekValues(weekKey()).food, pets = weekValues(weekKey()).pets;
-    const manual = state.expense.filter(x => {
-      const n = (x.name || '').trim().toLowerCase();
-      return n !== 'spese alimentari luca e lisa' && n !== 'spese animali';
-    });
-    state.expense = [
-      ...manual,
-      { name: 'Spese alimentari Luca e Lisa', amount: food, date: defaultDateForSelectedMonth() },
-      { name: 'Spese animali', amount: pets, date: defaultDateForSelectedMonth() }
-    ];
-  }
-
   function render(type) {
     const el = $(type === 'income' ? 'incomeList' : 'expenseList');
     el.innerHTML = '';
     state[type].forEach((x, i) => {
       const d = document.createElement('div');
-      d.className = 'entry';
+      const isAuto = isAutoCategory(x.name) || x.isAuto === true;
+      d.className = `entry ${isAuto ? 'auto-locked' : ''}`;
       
       const name = document.createElement('input');
       name.placeholder = 'Descrizione';
       name.value = x.name || '';
+      if (isAuto) {
+        name.disabled = true;
+        name.title = "Categoria gestita automaticamente dal modulo Spesa";
+      }
       
       const amount = document.createElement('input');
       amount.type = 'number';
       amount.step = '0.01';
       amount.placeholder = '€';
       amount.value = x.amount ?? '';
+      if (isAuto) {
+        amount.disabled = true;
+        amount.title = "Totale calcolato automaticamente dalla spesa quotidiana";
+      }
       
       const date = document.createElement('input');
       date.type = 'date';
       date.value = x.date || defaultDateForSelectedMonth();
+      if (isAuto) date.disabled = true;
 
-      // Pulsante Ricorrente 🔁 (disponibile solo nelle spese)
       const recBtn = document.createElement('button');
       recBtn.type = 'button';
       recBtn.className = `rec-toggle-btn ${x.isRecurring ? 'active' : ''}`;
       recBtn.innerHTML = '<i class="fa-solid fa-rotate"></i>';
-      recBtn.title = x.isRecurring ? 'Spesa ricorrente attiva (si ripeterà ogni mese)' : 'Attiva spesa ricorrente';
+      recBtn.title = x.isRecurring ? 'Spesa ricorrente attiva' : 'Attiva ricorrente';
+      if (isAuto) {
+        recBtn.style.opacity = '0.3';
+        recBtn.disabled = true;
+      }
       
       const del = document.createElement('button');
       del.className = 'smallbtn';
       del.textContent = '✕';
-      
-      name.oninput = () => { state[type][i].name = name.value; updateTotals(); };
-      amount.oninput = () => { state[type][i].amount = amount.value; updateTotals(); };
-      date.onchange = () => { state[type][i].date = date.value; drawMonthly(); };
-
-      if (type === 'expense') {
-        recBtn.onclick = () => {
-          triggerHaptic(12);
-          state[type][i].isRecurring = !state[type][i].isRecurring;
-          recBtn.classList.toggle('active', state[type][i].isRecurring);
-          recBtn.title = state[type][i].isRecurring ? 'Spesa ricorrente attiva' : 'Attiva spesa ricorrente';
-          finishEdit();
-        };
+      if (isAuto) {
+        del.style.opacity = '0.3';
+        del.disabled = true;
+        del.title = "Le categorie automatiche non possono essere rimosse da qui";
       }
       
-      [name, amount, date].forEach(v => v.onblur = finishEdit);
-      del.onclick = () => {
-        triggerHaptic(15);
-        state[type].splice(i, 1);
-        render(type);
-        saveNow();
-      };
+      if (!isAuto) {
+        name.oninput = () => { state[type][i].name = name.value; updateTotals(); };
+        amount.oninput = () => { state[type][i].amount = amount.value; updateTotals(); };
+        date.onchange = () => { state[type][i].date = date.value; drawMonthly(); };
+
+        if (type === 'expense') {
+          recBtn.onclick = () => {
+            triggerHaptic(12);
+            state[type][i].isRecurring = !state[type][i].isRecurring;
+            recBtn.classList.toggle('active', state[type][i].isRecurring);
+            finishEdit();
+          };
+        }
+        
+        [name, amount, date].forEach(v => v.onblur = finishEdit);
+        del.onclick = () => {
+          triggerHaptic(15);
+          state[type].splice(i, 1);
+          render(type);
+          saveNow();
+        };
+      }
       
       d.append(name, amount, date);
       if (type === 'expense') d.appendChild(recBtn);
@@ -1520,11 +1705,7 @@
 
   function updateTotals() {
     const inc = state.income.reduce((s, x) => s + num(x.amount), 0);
-    const manual = state.expense.filter(x => {
-      const n = (x.name || '').trim().toLowerCase();
-      return n !== 'spese alimentari luca e lisa' && n !== 'spese animali';
-    }).reduce((s, x) => s + num(x.amount), 0);
-    const exp = manual + allWeeklyTotal();
+    const exp = state.expense.reduce((s, x) => s + num(x.amount), 0);
     
     $('incomeTotal').textContent = money(inc);
     $('expenseTotal').textContent = money(exp);
@@ -1533,7 +1714,7 @@
 
   window.addRow = type => {
     triggerHaptic(15);
-    state[type].push({ name: '', amount: '', date: defaultDateForSelectedMonth(), isRecurring: false });
+    state[type].push({ name: '', amount: '', date: defaultDateForSelectedMonth(), isRecurring: false, isAuto: false });
     render(type);
     setTimeout(() => $(type === 'income' ? 'incomeList' : 'expenseList').lastElementChild?.querySelector('input')?.focus(), 50);
   };
@@ -1551,7 +1732,7 @@
       await setDoc(ref, { income: state.income, expense: state.expense, updatedAt: Date.now() }, { merge: true });
       $('syncStatus').textContent = `Cloud sincronizzato ✓ (${getMonthKey(selectedDate)})`;
     } catch (e) {
-      $('syncStatus').textContent = 'Errore di sincronizzazione: ' + e.message;
+      $('syncStatus').textContent = 'Errore salvataggio: ' + e.message;
     }
   }
 
@@ -1567,16 +1748,29 @@
       if (d.getFullYear() === y && d.getMonth() === m) inc[d.getDate() - 1] += num(x.amount);
     });
 
-    const auto = ['spese alimentari luca e lisa', 'spese animali'];
+    // Uscite manuali
     state.expense.forEach(x => {
-      if (auto.includes((x.name || '').trim().toLowerCase())) return;
+      if (isAutoCategory(x.name)) return;
       const d = new Date((x.date || defaultDateForSelectedMonth()) + 'T00:00:00');
       if (d.getFullYear() === y && d.getMonth() === m) exp[d.getDate() - 1] += num(x.amount);
     });
 
-    Object.entries(allWeeks).forEach(([k]) => {
-      const d = new Date(k + 'T00:00:00');
-      if (d.getFullYear() === y && d.getMonth() === m) exp[d.getDate() - 1] += weekValues(k).food + weekValues(k).pets;
+    // Uscite Spesa (distribuite per giorno se registrate)
+    Object.entries(allWeeks).forEach(([k, w]) => {
+      if (Array.isArray(w.entries) && w.entries.length > 0) {
+        w.entries.forEach(en => {
+          const d = new Date(en.date + 'T00:00:00');
+          if (d.getFullYear() === y && d.getMonth() === m) {
+            exp[d.getDate() - 1] += num(en.food) + num(en.pets);
+          }
+        });
+      } else {
+        const d = new Date(k + 'T00:00:00');
+        if (d.getFullYear() === y && d.getMonth() === m) {
+          const v = weekValues(k);
+          exp[d.getDate() - 1] += v.food + v.pets;
+        }
+      }
     });
 
     if (monthlyChart) monthlyChart.destroy();
@@ -1642,10 +1836,10 @@
     });
   }
 
-  // Onde Liquide Canvas
+  // Animazione Ampolla Onde Liquide
   const canvas = $('waveCanvas');
   const ctx = canvas ? canvas.getContext('2d') : null;
-  let targetFillLevel = 0.05, currentFillLevel = 0.05, waveStep = 0, animationId = null;
+  let targetFillLevel = 0.05, currentFillLevel = 0.05, waveStep = 0;
 
   if (canvas && ctx) {
     const dpr = window.devicePixelRatio || 1;
@@ -1688,7 +1882,7 @@
     ctx.fill();
 
     waveStep++;
-    animationId = requestAnimationFrame(drawWave);
+    requestAnimationFrame(drawWave);
   }
   drawWave();
 
@@ -1748,7 +1942,7 @@
     const saved = currentData.saved + amount;
     const target = currentData.target || 120;
     
-    state.expense.push({ name: 'Versamento Salvadanaio Vacanze', amount: amount, date: defaultDateForSelectedMonth(), isRecurring: false });
+    state.expense.push({ name: 'Versamento Salvadanaio Vacanze', amount: amount, date: defaultDateForSelectedMonth(), isRecurring: false, isAuto: false });
     await setDoc(ref, { vacanzaAccantonato: saved, vacanzaTarget: target, expense: state.expense, updatedAt: Date.now() }, { merge: true });
 
     if (refVacanze) {
@@ -1833,7 +2027,7 @@
     }
   };
 
-  // AI COACH + VOCALE
+  // AI COACH & DETTATURA VOCALE
   async function queryAiCoach(customQuestion = null, isVoiceExpense = false) {
     if (!userGeminiApiKey) {
       geminiModal.classList.add('open');
@@ -1849,48 +2043,31 @@
     </div>`;
 
     const incTot = state.income.reduce((s, x) => s + num(x.amount), 0);
-    const expTot = state.expense.filter(x => {
-      const n = (x.name || '').trim().toLowerCase();
-      return n !== 'spese alimentari luca e lisa' && n !== 'spese animali';
-    }).reduce((s, x) => s + num(x.amount), 0) + allWeeklyTotal();
+    const expTot = state.expense.reduce((s, x) => s + num(x.amount), 0);
     const netBal = incTot - expTot;
     const savedVacanza = num(lastBudgetDoc?.vacanzaAccantonato || 0);
 
-    const baseContext = `Sei l'AI Financial Coach dell'app "AI-BUDGET".
-Quadro finanziario del mese di ${mName}:
-- Entrate complessive: € ${incTot.toFixed(2)}
-- Spese complessive: € ${expTot.toFixed(2)}
+    const baseContext = `Sei l'AI Financial Coach di "AI-BUDGET".
+Mese: ${mName}
+- Entrate: € ${incTot.toFixed(2)}
+- Uscite Totali: € ${expTot.toFixed(2)}
 - Risparmio Netto: € ${netBal.toFixed(2)}
-- Fondo Vacanze: € ${savedVacanza.toFixed(2)} (Target: € 120,00)`;
+- Fondo Vacanze: € ${savedVacanza.toFixed(2)}`;
 
     let promptText = "";
 
     if (isVoiceExpense) {
       promptText = `${baseContext}
-
-L'utente ha pronunciato a voce la seguente frase per registrare una spesa:
-"${customQuestion}"
-
-Estrai dalla frase il **nome della spesa/categoria** e l'**importo in euro (numero puro)**.
-Restituisci la risposta ESATTAMENTE in questo formato JSON valido, senza altri commenti o markdown aggiuntivi:
-{"name": "Nome spesa", "amount": 00.00}`;
+L'utente ha detto: "${customQuestion}"
+Determina se fa riferimento a "Spesa Luca e Lisa", "Spesa Animali" o ad un'altra voce e restituisci SOLO questo JSON:
+{"name": "Nome spesa", "amount": 0.00}`;
     } else if (customQuestion) {
-      promptText = `${baseContext}
-
-Domanda dell'utente:
-"${customQuestion}"
-
-Rispondi in modo diretto, concreto e senza convenevoli. Basa la risposta sui numeri reali forniti, indicando cifre e percentuali d'impatto.`;
+      promptText = `${baseContext}\nDomanda: "${customQuestion}"\nRispondi in modo diretto, concreto e motivante.`;
     } else {
-      promptText = `${baseContext}
-
-Fornisci un'analisi generale del mese in 3 punti sintetici e diretti (stile fintech, senza convenevoli):
-1. **Stato Finanziario**: giudizio rapido sul bilancio entrate/uscite del mese.
-2. **Consiglio Pratico**: una mossa pratica per ottimizzare i costi o gestire la liquidità residua.
-3. **Obiettivo Vacanze**: raccomandazione sull'accantonamento per il salvadanaio vacanze.`;
+      promptText = `${baseContext}\nFornisci 3 raccomandazioni concise (Stato attuale, Spese alimentari/cura, Risparmi).`;
     }
 
-    const modelsToTry = ['gemini-3.6-flash', 'gemini-2.5-flash'];
+    const modelsToTry = ['gemini-2.5-flash', 'gemini-1.5-flash'];
     let reply = null;
 
     for (const model of modelsToTry) {
@@ -1918,24 +2095,40 @@ Fornisci un'analisi generale del mese in 3 punti sintetici e diretti (stile fint
         const cleanJson = reply.replace(/```json/g, '').replace(/```/g, '').trim();
         const parsed = JSON.parse(cleanJson);
         if (parsed.name && parsed.amount) {
+          const lower = parsed.name.toLowerCase();
+          
+          // Se la voce vocale appartiene a una delle due categorie principali, aggiorna direttamente la spesa del giorno
+          if (lower.includes('alimentar') || lower.includes('spesa') || lower.includes('cibo') || lower.includes('lisa') || lower.includes('luca')) {
+            $('inputDailyFood').value = num(parsed.amount);
+            $('submitDailyExpenseBtn').click();
+            out.innerHTML = `<div style="color: var(--accent-green); font-weight: 700;">
+              <i class="fa-solid fa-circle-check"></i> Aggiunto a Spesa Luca e Lisa: ${money(parsed.amount)}
+            </div>`;
+            return;
+          } else if (lower.includes('anim') || lower.includes('gatt') || lower.includes('can') || lower.includes('pet')) {
+            $('inputDailyPets').value = num(parsed.amount);
+            $('submitDailyExpenseBtn').click();
+            out.innerHTML = `<div style="color: var(--accent-green); font-weight: 700;">
+              <i class="fa-solid fa-circle-check"></i> Aggiunto a Spesa Animali: ${money(parsed.amount)}
+            </div>`;
+            return;
+          }
+
           state.expense.push({
             name: parsed.name,
             amount: num(parsed.amount),
             date: defaultDateForSelectedMonth(),
-            isRecurring: false
+            isRecurring: false,
+            isAuto: false
           });
           render('expense');
           await saveNow();
-          triggerHaptic(30);
           out.innerHTML = `<div style="color: var(--accent-green); font-weight: 700;">
-            <i class="fa-solid fa-circle-check"></i> Spesa registrata con successo: ${parsed.name} (${money(parsed.amount)})
+            <i class="fa-solid fa-circle-check"></i> Registrata: ${parsed.name} (${money(parsed.amount)})
           </div>`;
           return;
         }
-      } catch (e) {
-        out.innerHTML = `<span style="color: var(--accent-red);">Non sono riuscito a interpretare la spesa vocale. Riprova.</span>`;
-        return;
-      }
+      } catch (e) {}
     }
 
     const formatted = reply
@@ -1974,7 +2167,7 @@ Fornisci un'analisi generale del mese in 3 punti sintetici e diretti (stile fint
       try {
         recognition.start();
         micBtn.classList.add('listening');
-        $('aiCoachText').innerHTML = `<span style="color: #38bdf8;"><i class="fa-solid fa-microphone fa-beat"></i> Ti sto ascoltando... Detta la spesa (es: "Ho speso 20 euro di caffè")</span>`;
+        $('aiCoachText').innerHTML = `<span style="color: #38bdf8;"><i class="fa-solid fa-microphone fa-beat"></i> Ti sto ascoltando...</span>`;
       } catch (e) {
         micBtn.classList.remove('listening');
       }
@@ -1989,17 +2182,15 @@ Fornisci un'analisi generale del mese in 3 punti sintetici e diretti (stile fint
 
     recognition.onerror = () => {
       micBtn.classList.remove('listening');
-      $('aiCoachText').innerHTML = `<span style="color: var(--accent-red);">Errore microfono o riconoscimento vocale non disponibile.</span>`;
+      $('aiCoachText').innerHTML = `<span style="color: var(--accent-red);">Riconoscimento non riuscito.</span>`;
     };
 
-    recognition.onend = () => {
-      micBtn.classList.remove('listening');
-    };
+    recognition.onend = () => micBtn.classList.remove('listening');
   } else {
-    micBtn.onclick = () => alert("Il tuo browser non supporta le API di riconoscimento vocale native.");
+    micBtn.onclick = () => alert("Riconoscimento vocale non supportato dal browser in uso.");
   }
 
-  // Calcolatrice
+  // Calcolatrice Apple
   const calcModal = $('calcModal');
   $('calcToggleBtn').onclick = () => { triggerHaptic(12); calcModal.classList.add('open'); };
   $('closeCalcBtn').onclick = () => calcModal.classList.remove('open');
@@ -2051,7 +2242,7 @@ Fornisci un'analisi generale del mese in 3 punti sintetici e diretti (stile fint
     appleCalcUpdateDisplay();
   };
 
-  // Consumi Live Tuya
+  // Consumi Live
   let currentWatts = 0, accumulatedKwh = 0;
   const kwhRate = 0.28;
   const setWattBtn = $('setWattBtn');
