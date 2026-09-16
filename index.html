@@ -458,7 +458,7 @@
       margin-top: 10px;
     }
     .grocery-list {
-      max-height: 180px;
+      max-height: 220px;
       overflow-y: auto;
       margin-top: 8px;
       display: flex;
@@ -944,14 +944,14 @@
             <input type="file" id="pdfIngInput" accept="application/pdf">
             <i class="fa-solid fa-building-columns"></i>
             <strong>Carica Estratto Conto ING</strong>
-            <span id="nameIngFile">Trascina o clicca per selezionare il PDF ING</span>
+            <span id="nameIngFile">Trascina o seleziona il PDF ING</span>
           </div>
 
           <div class="drop-box">
             <input type="file" id="pdfRevolutInput" accept="application/pdf">
             <i class="fa-solid fa-credit-card"></i>
             <strong>Carica Estratto Conto Revolut</strong>
-            <span id="nameRevolutFile">Trascina o clicca per selezionare il PDF Revolut</span>
+            <span id="nameRevolutFile">Trascina o seleziona il PDF Revolut</span>
           </div>
         </div>
 
@@ -1215,7 +1215,6 @@
   import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js';
   import { getFirestore, doc, onSnapshot, setDoc, getDoc } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js';
 
-  // Configura PDF.js worker
   if (window.pdfjsLib) {
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
   }
@@ -1272,7 +1271,6 @@
   const money = n => new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(Number(n) || 0);
   function num(v) { return Number(String(v ?? '').replace(',', '.')) || 0; }
 
-  // GIORNO DELLA SETTIMANA
   const dayNames = ['Domenica', 'Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato'];
 
   function updateDetectedDayLabel(dateStr) {
@@ -1510,7 +1508,7 @@
   };
 
   // ==========================================
-  // LOGICA ESTRATTI CONTO (PDF ING & REVOLUT)
+  // PARSER ESTRATTI CONTO (ING & REVOLUT CORRETTO)
   // ==========================================
   let pdfIngFile = null, pdfRevolutFile = null;
   let parsedStatements = {
@@ -1518,8 +1516,7 @@
     expense: 0,
     net: 0,
     grocery: 0,
-    groceryItems: [],
-    details: []
+    groceryItems: []
   };
 
   $('pdfIngInput').onchange = e => {
@@ -1545,11 +1542,15 @@
     return fullText;
   }
 
-  function parseAmount(str) {
-    if (!str) return 0;
-    // Rimuove valute, spazi e converte virgole in punti
-    const clean = str.replace(/[€$£\s]/g, '').replace(/\./g, '').replace(',', '.');
-    return Number(clean) || 0;
+  function parseMoney(valStr) {
+    if (!valStr) return 0;
+    let s = valStr.trim().replace(/[€$£]/g, '').trim();
+    if (s.includes('.') && s.includes(',')) {
+      s = s.replace(/\./g, '').replace(',', '.');
+    } else if (s.includes(',')) {
+      s = s.replace(',', '.');
+    }
+    return parseFloat(s) || 0;
   }
 
   $('processPdfsBtn').onclick = async () => {
@@ -1559,14 +1560,14 @@
     }
 
     triggerHaptic(20);
-    $('processPdfsBtn').innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Elaborazione estratti conto...`;
+    $('processPdfsBtn').innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Elaborazione in corso...`;
 
     let ingText = "", revolutText = "";
     try {
       if (pdfIngFile) ingText = await extractTextFromPdf(pdfIngFile);
       if (pdfRevolutFile) revolutText = await extractTextFromPdf(pdfRevolutFile);
     } catch (err) {
-      alert("Errore durante la lettura del file PDF: " + err.message);
+      alert("Errore lettura PDF: " + err.message);
       $('processPdfsBtn').innerHTML = `<i class="fa-solid fa-calculator"></i> Elabora Estratti e Calcola Bilancio`;
       return;
     }
@@ -1576,75 +1577,70 @@
     let grocerySum = 0;
     const groceryList = [];
 
-    const lines = (ingText + "\n" + revolutText).split(/\r?\n/);
-    const groceryKeywords = ['conad', 'dem', 'lidl', 'supermercati dem', 'conad city', 'spazio conad'];
-
-    lines.forEach(line => {
-      const lower = line.toLowerCase();
-      // Trova cifre monetarie tipiche italiane o internazionali (es: 1.250,00 o 35,40 o +1.500,00 o -25,00)
-      const amountMatches = line.match(/([+-]?\s*\d{1,3}(?:\.\d{3})*,\d{2})/g);
-
-      if (amountMatches && amountMatches.length > 0) {
-        // Cerca se è associato a supermercati CONAD, DEM, LIDL
-        const isGrocery = groceryKeywords.some(kw => lower.includes(kw));
-
-        // Esamina l'importo
-        amountMatches.forEach(rawVal => {
-          const val = parseAmount(rawVal);
-          if (val === 0) return;
-
-          // Se è spesa alimentare
-          if (isGrocery && val > 0) {
-            grocerySum += val;
-            groceryList.push({ desc: line.trim().slice(0, 45), amount: val });
-          }
-
-          // Segno esplicito o contesto
-          if (rawVal.includes('+') || lower.includes('stipendio') || lower.includes('bonifico a vostro favore') || lower.includes('accredito')) {
-            detectedIncome += Math.abs(val);
-          } else if (rawVal.includes('-') || isGrocery || lower.includes('pagamento pos') || lower.includes('addebit')) {
-            detectedExpense += Math.abs(val);
-          }
-        });
+    // 1. REVOLUT: Usa i totali del conto escludendo i ricarichi da ING per evitare doppi conteggi
+    if (revolutText) {
+      const totalMatch = revolutText.match(/Conto\s*\(conto corrente\)\s*\|\s*[\d,]+€\s*\|\s*([\d,]+)€\s*\|\s*([\d,]+)€/i) ||
+                         revolutText.match(/Totale\s*\|\s*[\d,]+€\s*\|\s*([\d,]+)€\s*\|\s*([\d,]+)€/i);
+      if (totalMatch) {
+        // [1] = Uscite, [2] = Entrate
+        const revOut = parseMoney(totalMatch[1]);
+        detectedExpense += revOut;
       }
-    });
 
-    // Se non trova entrate o uscite strutturate dai pattern, tenta estrazione tramite Gemini se configurata
-    if ((detectedExpense === 0 && detectedIncome === 0) && userGeminiApiKey) {
-      try {
-        const aiPrompt = `Analizza questo testo estratto dagli estratti conto ING e Revolut.
-Testo:
-"""${(ingText + "\n" + revolutText).slice(0, 8000)}"""
-
-Restituisci ESCLUSIVAMENTE questo JSON valido:
-{
-  "totalIncome": 0.00,
-  "totalExpense": 0.00,
-  "groceryTotal": 0.00,
-  "groceryItems": [{"desc": "string", "amount": 0.00}]
-}
-Considera come groceryTotal solo gli acquisti nei supermercati Conad, DEM e Lidl.`;
-
-        const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(userGeminiApiKey)}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ contents: [{ parts: [{ text: aiPrompt }] }] })
-        });
-        const d = await resp.json();
-        const jsonText = d.candidates?.[0]?.content?.parts?.[0]?.text?.replace(/```json/g, '').replace(/```/g, '').trim();
-        const parsed = JSON.parse(jsonText);
-        if (parsed) {
-          detectedIncome = Number(parsed.totalIncome) || 0;
-          detectedExpense = Number(parsed.totalExpense) || 0;
-          grocerySum = Number(parsed.groceryTotal) || 0;
-          if (Array.isArray(parsed.groceryItems)) groceryList.push(...parsed.groceryItems);
+      // Estrazione Alimentari Revolut (Lidl, Conad, DEM)
+      const revLines = revolutText.split(/\r?\n/);
+      revLines.forEach(line => {
+        const lower = line.toLowerCase();
+        if (lower.includes('lidl') || lower.includes('conad') || lower.includes('dem')) {
+          if (!lower.includes('ricarica') && !lower.includes('apple pay')) {
+            const m = line.match(/(\d+,\d{2})\s*€/);
+            if (m) {
+              const val = parseMoney(m[1]);
+              const store = lower.includes('lidl') ? 'Lidl' : (lower.includes('conad') ? 'Conad' : 'DEM');
+              grocerySum += val;
+              groceryList.push({ desc: `Revolut: ${store}`, amount: val });
+            }
+          }
         }
-      } catch (e) {
-        console.warn("AI Fallback non riuscito:", e);
-      }
+      });
     }
 
-    // REGOLA UTENTE RICHIESTA: +450€ fissi di Lisa al 1° del mese
+    // 2. ING: Rimuove il Capitale Versato societario che falsava il calcolo e legge le transazioni
+    if (ingText) {
+      const cleanIng = ingText.replace(/Capitale Versato[^\n\r]*/gi, '');
+      const lines = cleanIng.split(/\r?\n/);
+
+      lines.forEach(line => {
+        const match = line.match(/([+-]\d{1,3}(?:\.\d{3})*,\d{2}|[+-]\d+,\d{2})/);
+        if (match) {
+          const rawAmount = match[1];
+          const val = Math.abs(parseMoney(rawAmount));
+          const isIncome = rawAmount.startsWith('+');
+          const isExpense = rawAmount.startsWith('-');
+          const lower = line.toLowerCase();
+
+          // Ignora le uscite ING dirette verso Revolut per non duplicare le spese già contate in Revolut
+          const isTransferToRevolut = lower.includes('revolut') && isExpense;
+
+          if (isIncome) {
+            detectedIncome += val;
+          } else if (isExpense && !isTransferToRevolut) {
+            detectedExpense += val;
+          }
+
+          // Estrazione Alimentari ING (Conad, DEM, Lidl)
+          if (lower.includes('conad') || lower.includes('lidl') || lower.includes('dem')) {
+            if (isExpense) {
+              const store = lower.includes('conad') ? 'Conad' : (lower.includes('lidl') ? 'Lidl' : 'DEM');
+              grocerySum += val;
+              groceryList.push({ desc: `ING: ${store}`, amount: val });
+            }
+          }
+        }
+      });
+    }
+
+    // REGOLA UTENTE: +450€ fissi di Lisa al 1° del mese
     const lisaContribution = 450.00;
     const finalIncome = detectedIncome + lisaContribution;
     const finalNet = finalIncome - detectedExpense;
@@ -1657,7 +1653,6 @@ Considera come groceryTotal solo gli acquisti nei supermercati Conad, DEM e Lidl
       groceryItems: groceryList
     };
 
-    // Visualizzazione Risultati
     $('calcStmtIncome').textContent = money(finalIncome);
     $('calcStmtExpense').textContent = money(detectedExpense);
     $('calcStmtNet').textContent = money(finalNet);
@@ -1667,7 +1662,7 @@ Considera come groceryTotal solo gli acquisti nei supermercati Conad, DEM e Lidl
     const gContainer = $('groceryListContainer');
     gContainer.innerHTML = '';
     if (groceryList.length > 0) {
-      $('groceryCountBadge').textContent = `${groceryList.length} transazioni`;
+      $('groceryCountBadge').textContent = `${groceryList.length} spese`;
       groceryList.forEach(item => {
         const row = document.createElement('div');
         row.className = 'grocery-item';
@@ -1678,8 +1673,8 @@ Considera come groceryTotal solo gli acquisti nei supermercati Conad, DEM e Lidl
         gContainer.appendChild(row);
       });
     } else {
-      $('groceryCountBadge').textContent = `0 transazioni`;
-      gContainer.innerHTML = `<div style="color: var(--muted); font-size: 12px;">Nessuna voce Conad, DEM o Lidl rilevata automaticamente nei PDF caricati.</div>`;
+      $('groceryCountBadge').textContent = `0 spese`;
+      gContainer.innerHTML = `<div style="color: var(--muted); font-size: 12px;">Nessuna spesa Conad, DEM o Lidl rilevata.</div>`;
     }
 
     $('statementResults').style.display = 'block';
@@ -1687,7 +1682,7 @@ Considera come groceryTotal solo gli acquisti nei supermercati Conad, DEM e Lidl
     $('processPdfsBtn').innerHTML = `<i class="fa-solid fa-circle-check"></i> Calcolo Completato`;
   };
 
-  // Sincronizza i risultati dell'estratto conto nel bilancio mensile
+  // Sincronizzazione nel Bilancio
   $('applyToBudgetBtn').onclick = async () => {
     if (!ref) return alert("Firebase non connesso.");
     triggerHaptic(25);
@@ -1695,19 +1690,16 @@ Considera come groceryTotal solo gli acquisti nei supermercati Conad, DEM e Lidl
     const mKey = getMonthKey(selectedDate);
     const dateFirst = `${mKey}-01`;
 
-    // 1. Aggiunge o aggiorna quota Lisa (+450€)
     const hasLisa = state.income.some(x => (x.name || '').toLowerCase().includes('lisa'));
     if (!hasLisa) {
       state.income.push({ name: 'Contributo Spese Lisa', amount: 450.00, date: dateFirst, isRecurring: true });
     }
 
-    // 2. Se è stata rilevata la mia entrata dall'estratto conto, la registra
     const myIncome = parsedStatements.income - 450.00;
     if (myIncome > 0) {
       state.income.push({ name: 'Entrate Estratto Conto (ING/Revolut)', amount: myIncome, date: dateFirst, isRecurring: false });
     }
 
-    // 3. Registra la voce alimentari estratta nella Spesa Luca e Lisa
     if (parsedStatements.grocery > 0) {
       const curMonKey = mondayOf(new Date(dateFirst + 'T00:00:00')).toISOString().slice(0, 10);
       const currW = allWeeks[curMonKey] || { food: 0, pets: 0, entries: [] };
@@ -1716,7 +1708,6 @@ Considera come groceryTotal solo gli acquisti nei supermercati Conad, DEM e Lidl
       syncWeeklyExpenses();
     }
 
-    // 4. Salva su Firebase
     try {
       await setDoc(ref, {
         income: state.income,
@@ -1735,7 +1726,7 @@ Considera come groceryTotal solo gli acquisti nei supermercati Conad, DEM e Lidl
   };
 
   // ==========================================
-  // SINCRONIZZAZIONE DATABASE & INIZIALIZZAZIONE
+  // SINCRONIZZAZIONE DATABASE & DASHBOARD
   // ==========================================
   function subscribeSelectedMonth() {
     if (unsubBudget) unsubBudget();
