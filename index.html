@@ -1,348 +1,2493 @@
-Ecco il codice completo per index.html integrato con tutta la logica concordata:
- * Entrate fisse e stipendio: Base Lisa +450,00 € a cui viene sottratto l'addebito SDD di American Express; stipendio CentroAutoVT estratto da ING.
- * Esclusione entrate interne: Vengono ignorati tutti i bonifici personali da UniCredit o Revolut e le ricariche.
- * Filtro uscite ING: Vengono ignorate le ricariche verso Revolut (Revolut**0668*) e i giroconti personali (Auto, Vacanze); l'affitto a Federica viene invece conteggiato regolarmente come spesa. Gestione automatica di eventuali storni/rimborsi (come Lidl).
- * Uscite Revolut: Lettura diretta del totale Denaro in uscita dal riepilogo del PDF.
- * Costi fissi: Aggiunta automatica dei 376,00 € della rata auto.
- * Formula finale: \text{Entrate} - \text{Spese} = \text{Risparmio o Deficit}.
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Budget & Estratti Conto</title>
-  <!-- PDF.js CDN per il parsing dei file PDF -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>AI-BUDGET</title>
+
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="AI-BUDGET">
+  <meta name="theme-color" content="#0b0f19">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js"></script>
+  <!-- PDF.js per lettura locale estratti conto -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-  <script>
-    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-  </script>
+
   <style>
+    :root {
+      --bg: #0b0f19;
+      --card-bg: rgba(17, 24, 39, 0.75);
+      --border: rgba(255, 255, 255, 0.08);
+      --border-focus: #6366f1;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --primary-grad: linear-gradient(135deg, #6366f1 0%, #38bdf8 100%);
+      --ai-grad: linear-gradient(135deg, #a855f7 0%, #38bdf8 100%);
+      --accent-green: #10b981;
+      --accent-green-bg: rgba(16, 185, 129, 0.12);
+      --accent-red: #f43f5e;
+      --accent-red-bg: rgba(244, 63, 94, 0.12);
+      --radius: 24px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background-color: #f4f5f7;
-      color: #1f2937;
-      margin: 0;
-      padding: 24px;
+      background-color: var(--bg);
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.15) 0, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(56, 189, 248, 0.10) 0, transparent 50%),
+        radial-gradient(at 50% 50%, rgba(15, 23, 42, 0.5) 0, transparent 100%);
+      background-attachment: fixed;
+      color: var(--text);
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+      overscroll-behavior-y: contain;
     }
-    .container {
-      max-width: 800px;
-      margin: 0 auto;
-      background: #ffffff;
-      padding: 28px;
-      border-radius: 12px;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+
+    button, a, input { font: inherit; outline: none; }
+
+    .login {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(11, 15, 25, 0.88);
+      backdrop-filter: blur(25px);
+      z-index: 99;
     }
-    h1 {
-      font-size: 1.5rem;
-      margin-bottom: 20px;
-      color: #111827;
-    }
-    .upload-section {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
-      margin-bottom: 24px;
-    }
-    .dropzone {
-      border: 2px dashed #cbd5e1;
-      padding: 20px;
-      border-radius: 8px;
+    .loginbox {
+      width: min(420px, 90%);
+      padding: 40px;
+      border: 1px solid var(--border);
+      border-radius: 28px;
+      background: var(--card-bg);
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.1);
       text-align: center;
-      background: #f8fafc;
     }
-    .dropzone label {
+    .loginbox h1 { font-size: 28px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 8px; }
+    .loginbox p { color: var(--muted); font-size: 14px; margin-bottom: 24px; }
+
+    .btn {
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 10px 16px;
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text);
+      cursor: pointer;
       font-weight: 600;
-      display: block;
-      margin-bottom: 8px;
+      font-size: 13px;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      user-select: none;
     }
-    button.btn-calcola {
-      width: 100%;
-      background: #2563eb;
+    .btn:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.18);
+      transform: translateY(-1px);
+    }
+    .btn:active { transform: scale(0.97); }
+    .btn.primary {
+      background: var(--primary-grad);
       color: #fff;
-      font-size: 1rem;
-      font-weight: 600;
-      padding: 12px;
       border: none;
-      border-radius: 8px;
+      box-shadow: 0 4px 18px rgba(99, 102, 241, 0.35);
+    }
+    .btn.ai-btn {
+      background: var(--ai-grad);
+      color: #fff;
+      border: none;
+      box-shadow: 0 4px 18px rgba(168, 85, 247, 0.35);
+    }
+    .btn.danger {
+      background: var(--accent-red-bg);
+      color: var(--accent-red);
+      border-color: rgba(244, 63, 94, 0.3);
+    }
+
+    .app { display: none; }
+    .shell {
+      display: grid;
+      grid-template-columns: 280px minmax(0, 1fr);
+      gap: 20px;
+      padding: 20px;
+      max-width: 1440px;
+      margin: 0 auto;
+    }
+
+    .side, .top, .card, .sum {
+      background: var(--card-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+    }
+
+    .side {
+      position: sticky;
+      top: 20px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      height: fit-content;
+    }
+    .side-brand {
+      font-size: 22px;
+      font-weight: 800;
+      background: var(--primary-grad);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .user-tag {
+      font-size: 12px;
+      color: var(--muted);
+      background: rgba(255, 255, 255, 0.03);
+      padding: 8px 12px;
+      border-radius: 100px;
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .user-avatar-small {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+    .menu { display: flex; flex-direction: column; gap: 8px; }
+    .nav { width: 100%; justify-content: flex-start; padding: 12px 16px; border-radius: 14px; }
+
+    .main { 
+      display: flex; 
+      flex-direction: column; 
+      gap: 20px; 
+      min-width: 0; 
+      transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.22s ease;
+      will-change: transform, opacity;
+    }
+    .main.swipe-left { transform: translateX(-35px); opacity: 0.3; }
+    .main.swipe-right { transform: translateX(35px); opacity: 0.3; }
+
+    .top {
+      padding: 16px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .top h3 { font-size: 18px; font-weight: 800; letter-spacing: -0.3px; }
+    .top .muted { font-size: 13px; margin-top: 2px; }
+
+    .month-navigator {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      padding: 3px 8px;
+    }
+    .month-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.06);
+      color: #fff;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      font-weight: 700;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      padding: 0;
+      line-height: 1;
+    }
+    .month-btn:hover { background: rgba(56, 189, 248, 0.25); border-color: #38bdf8; color: #38bdf8; }
+    .month-btn:active { transform: scale(0.9); }
+    #currentMonthDisplay {
+      font-size: 13px;
+      font-weight: 700;
+      color: #38bdf8;
+      padding: 0 6px;
+      min-width: 128px;
+      text-align: center;
+      letter-spacing: 0.2px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .top-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .calc-toggle-btn {
+      width: 38px;
+      height: 38px;
+      padding: 0;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      color: var(--muted);
+    }
+    .calc-toggle-btn:hover { color: #fff; }
+    
+    .profile-pill {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 4px 6px 4px 12px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+    }
+    .profile-pill img {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      border: 1.5px solid #6366f1;
+    }
+    .profile-pill span {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      max-width: 140px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .logout-btn-top {
+      background: none;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      padding: 6px;
+      font-size: 14px;
+      border-radius: 50%;
+    }
+    .logout-btn-top:hover { color: var(--accent-red); }
+
+    /* Modale */
+    .calc-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.65);
+      backdrop-filter: blur(12px);
+      z-index: 100;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .calc-modal.open { display: flex; }
+    .calc-popup-content {
+      width: min(350px, 95%);
+      background: rgba(13, 20, 36, 0.95);
+      border: 1px solid var(--border);
+      border-radius: 28px;
+      padding: 20px;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6);
+    }
+    .calc-popup-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* Calcolatrice */
+    .apple-calc-display {
+      height: 52px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: flex-end;
+      color: #fff;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 26px;
+      padding: 0 8px 6px;
+      overflow: hidden;
+      background: rgba(0, 0, 0, 0.35);
+      border-radius: 14px;
+      margin-bottom: 12px;
+      border: 1px solid var(--border);
+    }
+    .apple-calc-buttons { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+    .calc-btn {
+      aspect-ratio: 1;
+      border: 0;
+      border-radius: 14px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+    }
+    .calc-number { background: rgba(255, 255, 255, 0.07); color: #fff; }
+    .calc-function { background: rgba(255, 255, 255, 0.14); color: #fff; }
+    .calc-operator { background: #f59e0b; color: #fff; font-size: 19px; }
+    .calc-special { background: rgba(255, 255, 255, 0.07); color: var(--muted); }
+
+    /* Summary */
+    .summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .sum { padding: 22px; border-radius: var(--radius); }
+    .label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); font-weight: 700; }
+    .value { font-size: 26px; font-weight: 800; letter-spacing: -0.5px; margin-top: 6px; font-family: 'JetBrains Mono', monospace; }
+    .positive { color: var(--accent-green); }
+    .negative { color: var(--accent-red); }
+
+    /* AI Coach Card */
+    .ai-coach-card {
+      border: 1px solid rgba(168, 85, 247, 0.3);
+      background: linear-gradient(135deg, rgba(168, 85, 247, 0.06) 0%, rgba(56, 189, 248, 0.04) 100%), rgba(17, 24, 39, 0.85);
+      position: relative;
+      overflow: hidden;
+    }
+    .ai-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #c084fc;
+      background: rgba(168, 85, 247, 0.15);
+      border: 1px solid rgba(168, 85, 247, 0.3);
+      padding: 4px 10px;
+      border-radius: 100px;
+    }
+    .ai-output-box {
+      background: rgba(5, 8, 17, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 16px;
+      padding: 16px;
+      font-size: 13px;
+      line-height: 1.6;
+      color: #e2e8f0;
+      min-height: 70px;
+      margin-top: 14px;
+    }
+    .mic-btn {
+      background: rgba(168, 85, 247, 0.15);
+      border: 1px solid rgba(168, 85, 247, 0.4);
+      color: #c084fc;
+      border-radius: 12px;
+      padding: 10px 14px;
       cursor: pointer;
     }
-    button.btn-calcola:hover {
-      background: #1d4ed8;
+
+    /* CARD ESTRATTI CONTO (ING / REVOLUT) */
+    .statement-card {
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      background: linear-gradient(135deg, rgba(56, 189, 248, 0.05) 0%, rgba(17, 24, 39, 0.85) 100%);
     }
-    .results-card {
-      margin-top: 24px;
-      border-top: 1px solid #e2e8f0;
-      padding-top: 20px;
+    .upload-zone-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin: 16px 0;
+    }
+    .drop-box {
+      border: 2px dashed rgba(255, 255, 255, 0.15);
+      border-radius: 18px;
+      padding: 20px;
+      text-align: center;
+      background: rgba(5, 8, 17, 0.4);
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+    }
+    .drop-box:hover { border-color: #38bdf8; background: rgba(56, 189, 248, 0.06); }
+    .drop-box input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+    .drop-box i { font-size: 26px; color: #38bdf8; margin-bottom: 8px; display: block; }
+    .drop-box strong { font-size: 14px; display: block; margin-bottom: 4px; }
+    .drop-box span { font-size: 11px; color: var(--muted); }
+
+    .statement-results {
+      background: rgba(5, 8, 17, 0.7);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 18px;
+      margin-top: 14px;
       display: none;
     }
-    .grid-stats {
+    .results-grid {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 16px;
-      margin-bottom: 20px;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 16px;
     }
-    .stat-box {
-      padding: 16px;
-      border-radius: 8px;
-      background: #f8fafc;
-      border: 1px solid #e2e8f0;
+    .res-box {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px;
+      text-align: center;
     }
-    .stat-box .title {
-      font-size: 0.85rem;
-      color: #64748b;
-      margin-bottom: 4px;
-    }
-    .stat-box .value {
-      font-size: 1.3rem;
-      font-weight: 700;
-    }
-    .positive { color: #16a34a; }
-    .negative { color: #dc2626; }
-    .log-box {
-      background: #0f172a;
-      color: #e2e8f0;
+    .res-box .r-label { font-size: 11px; color: var(--muted); font-weight: 700; text-transform: uppercase; }
+    .res-box .r-val { font-size: 18px; font-weight: 800; font-family: 'JetBrains Mono', monospace; margin-top: 4px; }
+
+    .grocery-highlight-box {
+      background: rgba(245, 158, 11, 0.08);
+      border: 1px solid rgba(245, 158, 11, 0.25);
+      border-radius: 16px;
       padding: 14px;
-      border-radius: 8px;
-      font-family: monospace;
-      font-size: 0.85rem;
-      max-height: 220px;
+      margin-top: 10px;
+    }
+    .grocery-list {
+      max-height: 180px;
       overflow-y: auto;
-      white-space: pre-wrap;
+      margin-top: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .grocery-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(0, 0, 0, 0.3);
+      padding: 8px 12px;
+      border-radius: 10px;
+      font-size: 12px;
+    }
+
+    /* Griglia Classica */
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+    .card { padding: 24px; border-radius: var(--radius); }
+    .section-title { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+    .section-title h2 { font-size: 16px; font-weight: 700; }
+    .section-toggle {
+      width: 32px;
+      height: 32px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.05);
+      color: #fff;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+    }
+
+    /* Riga Entrate/Spese */
+    .entry {
+      display: grid;
+      grid-template-columns: 1fr 100px 120px 36px 36px;
+      gap: 6px;
+      margin-bottom: 10px;
+      align-items: center;
+    }
+    .entry.auto-locked {
+      background: rgba(99, 102, 241, 0.06);
+      border: 1px dashed rgba(99, 102, 241, 0.25);
+      border-radius: 14px;
+      padding: 4px;
+    }
+    .entry input {
+      padding: 10px 14px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: rgba(5, 8, 17, 0.5);
+      color: #fff;
+      font-size: 13px;
+    }
+    .entry input:disabled { opacity: 0.85; background: rgba(255, 255, 255, 0.03); cursor: not-allowed; }
+    .smallbtn {
+      width: 36px;
+      height: 36px;
+      border: none;
+      border-radius: 10px;
+      background: var(--accent-red-bg);
+      color: var(--accent-red);
+      font-weight: bold;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .rec-toggle-btn {
+      width: 36px;
+      height: 36px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+    }
+    .rec-toggle-btn.active {
+      background: rgba(168, 85, 247, 0.2);
+      border-color: #c084fc;
+      color: #c084fc;
+    }
+
+    .add { width: 100%; border-radius: 12px; margin-top: 6px; }
+    .collapsed #incomeList, .collapsed #expenseList, .collapsed .add { display: none; }
+
+    /* Box Spesa del Giorno */
+    .daily-expense-panel {
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 18px;
+      margin-bottom: 16px;
+    }
+    .day-detector-box {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(99, 102, 241, 0.08);
+      border: 1px solid rgba(99, 102, 241, 0.2);
+      border-radius: 14px;
+      padding: 10px 14px;
+      margin-bottom: 12px;
+    }
+    .day-badge { font-weight: 800; color: #38bdf8; font-size: 14px; display: flex; align-items: center; gap: 6px; }
+    .daily-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 10px; }
+    .daily-cat-card {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .daily-cat-card input {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: rgba(5, 8, 17, 0.6);
+      color: #fff;
+      font-size: 14px;
+      font-weight: 600;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .weekbox {
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 18px;
+    }
+    .week-selector { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+    .week-selector button {
+      width: 32px;
+      height: 32px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.05);
+      color: #fff;
+      cursor: pointer;
+    }
+    .weekrow {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      font-size: 13px;
+    }
+    .weekamount { font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+    .chartwrap { height: 260px; margin-top: 14px; }
+
+    /* Griglia Metà e Metà */
+    .grid-halves { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: stretch; }
+    .energy-live-card { display: flex; flex-direction: column; justify-content: space-between; gap: 14px; padding: 24px; }
+    .live-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--accent-green);
+      background: var(--accent-green-bg);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      padding: 4px 10px;
+      border-radius: 100px;
+    }
+    .live-dot {
+      width: 7px;
+      height: 7px;
+      background: var(--accent-green);
+      border-radius: 50%;
+      box-shadow: 0 0 8px var(--accent-green);
+    }
+    .energy-main-stat {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      background: rgba(0, 0, 0, 0.25);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 14px;
+    }
+    .energy-watts-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-width: 95px;
+      padding: 12px;
+      border-radius: 14px;
+      background: rgba(99, 102, 241, 0.08);
+      border: 1px solid rgba(99, 102, 241, 0.2);
+    }
+    .energy-val { font-size: 30px; font-weight: 800; font-family: 'JetBrains Mono', monospace; color: #38bdf8; line-height: 1; }
+    .energy-unit { font-size: 11px; color: var(--muted); font-weight: 700; margin-top: 4px; text-transform: uppercase; }
+    .energy-substats { flex: 1; display: flex; flex-direction: column; gap: 5px; font-size: 12px; }
+    .stat-row { display: flex; justify-content: space-between; align-items: center; }
+    .stat-label { color: var(--muted); }
+    .stat-value { font-weight: 600; font-family: 'JetBrains Mono', monospace; }
+    .energy-footer-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+    /* Ampolla */
+    .ampolla-card { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 24px; }
+    .ampolla-container { position: relative; width: 140px; height: 190px; flex-shrink: 0; display: flex; justify-content: center; align-items: center; }
+    .ampolla-flask {
+      position: relative;
+      width: 125px;
+      height: 175px;
+      border-radius: 65px 65px 35px 35px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 2px solid rgba(255, 255, 255, 0.18);
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #waveCanvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; }
+    .ampolla-center-text {
+      position: absolute;
+      inset: 0;
+      margin: auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 6;
+      pointer-events: none;
+      width: 100%;
+    }
+    .ampolla-center-text strong { font-size: 15px; font-weight: 800; color: #fff; font-family: 'JetBrains Mono', monospace; }
+    .ampolla-center-text span { font-size: 11px; font-weight: 700; color: #6ee7b7; margin-top: 3px; }
+    .ampolla-info { flex: 1; min-width: 0; }
+    .ampolla-title { font-size: 17px; font-weight: 700; margin-bottom: 4px; }
+    .ampolla-euro { font-size: 28px; font-weight: 800; color: var(--accent-green); font-family: 'JetBrains Mono', monospace; }
+    .ampolla-percent { font-size: 12px; color: var(--muted); margin-bottom: 14px; }
+    .ampolla-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .deposit-input {
+      padding: 8px 12px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: rgba(5, 8, 17, 0.5);
+      color: #fff;
+      font-size: 13px;
+      width: 110px;
+    }
+
+    .status { font-size: 12px; color: var(--muted); text-align: right; padding: 4px 10px; }
+
+    /* Toast */
+    .swipe-indicator {
+      position: fixed;
+      top: 18px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-60px);
+      background: rgba(13, 20, 36, 0.92);
+      border: 1px solid #38bdf8;
+      color: #fff;
+      padding: 6px 14px;
+      border-radius: 100px;
+      font-size: 12px;
+      font-weight: 700;
+      z-index: 101;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: transform 0.25s, opacity 0.25s;
+      opacity: 0;
+      pointer-events: none;
+    }
+    .swipe-indicator.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+    .mobile-bottom-bar { display: none; }
+
+    @media (max-width: 980px) {
+      .grid-halves, .upload-zone-grid, .results-grid { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 860px) {
+      .shell { grid-template-columns: 1fr; padding: 10px 10px 85px 10px; }
+      .side { display: none; }
+      .summary, .grid, .daily-grid { grid-template-columns: 1fr; }
+      .entry { grid-template-columns: 1fr 90px 110px 34px 34px; }
+      .ampolla-card { flex-direction: column; text-align: center; }
+      .ampolla-actions { justify-content: center; }
+      .top { flex-direction: column; align-items: stretch; gap: 12px; }
+      .top-actions { justify-content: space-between; }
+
+      .mobile-bottom-bar {
+        display: flex;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 64px;
+        background: rgba(11, 15, 25, 0.88);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-top: 1px solid var(--border);
+        justify-content: space-around;
+        align-items: center;
+        z-index: 95;
+        padding-bottom: env(safe-area-inset-bottom, 0);
+      }
+      .mobile-tab-btn {
+        background: none;
+        border: none;
+        color: var(--muted);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 3px;
+        font-size: 10px;
+        font-weight: 700;
+        cursor: pointer;
+        padding: 6px;
+      }
+      .mobile-tab-btn i { font-size: 16px; }
+      .mobile-tab-btn.active { color: #38bdf8; }
     }
   </style>
 </head>
 <body>
 
-<div class="container">
-  <h1>Analisi Estratti Conto (ING + Revolut)</h1>
+<div id="swipeToast" class="swipe-indicator">
+  <i class="fa-solid fa-arrows-left-right"></i> <span id="swipeToastText">Mese</span>
+</div>
 
-  <div class="upload-section">
-    <div class="dropzone">
-      <label for="fileIng">Estratto Conto ING (.pdf)</label>
-      <input type="file" id="fileIng" accept="application/pdf" />
-    </div>
-    <div class="dropzone">
-      <label for="fileRevolut">Estratto Conto Revolut (.pdf)</label>
-      <input type="file" id="fileRevolut" accept="application/pdf" />
-    </div>
-  </div>
-
-  <button class="btn-calcola" onclick="eseguiAnalisi()">Calcola Bilancio</button>
-
-  <div id="resultsCard" class="results-card">
-    <div class="grid-stats">
-      <div class="stat-box">
-        <div class="title">Entrate Totali</div>
-        <div id="resEntrate" class="value positive">0,00 €</div>
-      </div>
-      <div class="stat-box">
-        <div class="title">Spese Totali</div>
-        <div id="resSpese" class="value negative">0,00 €</div>
-      </div>
-      <div class="stat-box">
-        <div class="title" id="lblBilancio">Risparmio / Deficit</div>
-        <div id="resBilancio" class="value">0,00 €</div>
-      </div>
-    </div>
-
-    <strong>Dettagli e Note:</strong>
-    <div id="logOutput" class="log-box"></div>
+<!-- Login Overlay Iniziale -->
+<div id="login" class="login">
+  <div class="loginbox">
+    <h1>💰 AI-BUDGET</h1>
+    <p>Accedi con Google per sincronizzare i tuoi dati in tempo reale.</p>
+    <button id="loginScreenBtn" class="btn primary" style="width: 100%;">Accedi con Google</button>
+    <div id="loginError" class="status" style="margin-top: 14px; text-align: center;"></div>
   </div>
 </div>
 
-<script>
-  // Costanti fisse
-  const QUOTA_LISA_BASE = 450.00;
-  const RATA_AUTO = 376.00;
+<!-- Modal Configurazione Gemini API Key -->
+<div id="geminiModal" class="calc-modal">
+  <div class="calc-popup-content" style="width: min(420px, 95%);">
+    <div class="calc-popup-header">
+      <span><i class="fa-solid fa-wand-magic-sparkles" style="color: #c084fc;"></i> Chiave Gemini API</span>
+      <button class="btn" id="closeGeminiModalBtn" style="padding: 4px 8px; border-radius: 8px;"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <p style="font-size: 12px; color: var(--muted); margin-bottom: 14px; line-height: 1.5;">
+      La chiave è gratuita su <a href="https://aistudio.google.com/" target="_blank" style="color: #38bdf8; text-decoration: underline;">Google AI Studio</a>. Viene salvata nel tuo profilo Firebase privato senza comparire su GitHub.
+    </p>
+    <div style="margin-bottom: 14px;">
+      <label style="font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; display: block; margin-bottom: 6px;">Gemini API Key</label>
+      <input type="password" id="geminiApiKeyInput" placeholder="AIzaSy..." style="width: 100%; padding: 10px 14px; border-radius: 12px; border: 1px solid var(--border); background: rgba(5, 8, 17, 0.6); color: #fff; font-size: 13px;">
+    </div>
+    <button class="btn ai-btn" id="saveGeminiKeyBtn" style="width: 100%;">
+      <i class="fa-solid fa-cloud-arrow-up"></i> Salva su Firebase
+    </button>
+  </div>
+</div>
 
-  // Funzione per estrarre tutto il testo da un file PDF
+<!-- Calcolatrice Modale -->
+<div id="calcModal" class="calc-modal">
+  <div class="calc-popup-content">
+    <div class="calc-popup-header">
+      <span>Calcolatrice</span>
+      <button class="btn" id="closeCalcBtn" style="padding: 4px 8px; border-radius: 8px;"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="apple-calc-display" id="appleCalcDisplay">0</div>
+    <div class="apple-calc-buttons">
+      <button class="calc-btn calc-function" onclick="appleCalcClear()">AC</button>
+      <button class="calc-btn calc-function" onclick="appleCalcPlusMinus()">+/-</button>
+      <button class="calc-btn calc-function" onclick="appleCalcPercent()">%</button>
+      <button class="calc-btn calc-operator" onclick="appleCalcOperator('÷')">÷</button>
+      
+      <button class="calc-btn calc-number" onclick="appleCalcNumber('7')">7</button>
+      <button class="calc-btn calc-number" onclick="appleCalcNumber('8')">8</button>
+      <button class="calc-btn calc-number" onclick="appleCalcNumber('9')">9</button>
+      <button class="calc-btn calc-operator" onclick="appleCalcOperator('×')">×</button>
+      
+      <button class="calc-btn calc-number" onclick="appleCalcNumber('4')">4</button>
+      <button class="calc-btn calc-number" onclick="appleCalcNumber('5')">5</button>
+      <button class="calc-btn calc-number" onclick="appleCalcNumber('6')">6</button>
+      <button class="calc-btn calc-operator" onclick="appleCalcOperator('-')">−</button>
+      
+      <button class="calc-btn calc-number" onclick="appleCalcNumber('1')">1</button>
+      <button class="calc-btn calc-number" onclick="appleCalcNumber('2')">2</button>
+      <button class="calc-btn calc-number" onclick="appleCalcNumber('3')">3</button>
+      <button class="calc-btn calc-operator" onclick="appleCalcOperator('+')">+</button>
+      
+      <button class="calc-btn calc-special" onclick="appleCalcClear()">▦</button>
+      <button class="calc-btn calc-number" onclick="appleCalcNumber('0')">0</button>
+      <button class="calc-btn calc-decimal" onclick="appleCalcDecimal()">,</button>
+      <button class="calc-btn calc-operator" onclick="appleCalcEquals()">=</button>
+    </div>
+  </div>
+</div>
+
+<div id="app" class="app">
+  <div class="shell">
+    <aside class="side">
+      <div class="side-brand">💰 AI-BUDGET</div>
+      <div id="userInfo" class="user-tag"></div>
+      
+      <div class="menu">
+        <button class="btn nav" onclick="location.href='risparmi.html'">📊 Risparmi</button>
+        <button class="btn nav" onclick="location.href='vacanze.html'">🏖️ Vacanze</button>
+        <button class="btn nav" onclick="location.href='consumi.html'" style="border-color: rgba(56, 189, 248, 0.3);">⚡ Consumi tempo reale</button>
+        <button class="btn nav" onclick="location.href='comparatori.html'">🛒 Comparatori</button>
+        <button class="btn nav" onclick="location.href='spesa-settimanale.html'">🛒 Spesa settimanale</button>
+        <button id="logoutBtn" class="btn nav">🚪 Esci</button>
+      </div>
+    </aside>
+
+    <main class="main" id="mainContainer">
+      <div class="top">
+        <div>
+          <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+            <h3>Dashboard Mensile</h3>
+            <div class="month-navigator">
+              <button type="button" id="monthPrevBtn" class="month-btn" title="Mese precedente">‹</button>
+              <span id="currentMonthDisplay" title="Clicca per tornare al mese corrente">Settembre 2026</span>
+              <button type="button" id="monthNextBtn" class="month-btn" title="Mese successivo">›</button>
+            </div>
+          </div>
+          <div class="muted" id="currentMonthSubtext">Gestione flussi di cassa e risparmi (Swipe per cambiare mese)</div>
+        </div>
+
+        <div class="top-actions">
+          <button id="openGeminiModalBtn" class="btn calc-toggle-btn" title="Configura Gemini AI" style="color: #c084fc;">
+            <i class="fa-solid fa-wand-magic-sparkles"></i>
+          </button>
+
+          <button id="calcToggleBtn" class="btn calc-toggle-btn" title="Apri Calcolatrice">
+            <i class="fa-solid fa-calculator"></i>
+          </button>
+          
+          <div id="topUserProfile" class="profile-pill" style="display: none;">
+            <img id="topUserImg" src="" alt="Avatar">
+            <span id="topUserName">Utente</span>
+            <button id="topLogoutBtn" class="logout-btn-top" title="Esci"><i class="fa-solid fa-arrow-right-from-bracket"></i></button>
+          </div>
+
+          <button id="topLogin" class="btn primary">Accedi</button>
+        </div>
+      </div>
+
+      <div class="summary">
+        <div class="sum">
+          <div class="label">Entrate</div>
+          <div id="incomeTotal" class="value positive">€ 0,00</div>
+        </div>
+        <div class="sum">
+          <div class="label">Spese</div>
+          <div id="expenseTotal" class="value negative">€ 0,00</div>
+        </div>
+        <div class="sum">
+          <div class="label">Risparmio Netto</div>
+          <div id="balanceTotal" class="value">€ 0,00</div>
+        </div>
+      </div>
+
+      <!-- SEZIONE ESTRATTI CONTO (ING E REVOLUT) -->
+      <section class="card statement-card">
+        <div class="section-title">
+          <div>
+            <h2>📑 Estratti Conto • ING & Revolut</h2>
+            <p class="muted" style="margin-top: 2px;">Carica i PDF degli estratti conto. Entrate (Stipendio CentroAuto + Lisa 450€ - Amex), Uscite ING filtrate, Revolut e rata auto (376€).</p>
+          </div>
+          <span class="live-pill" style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; border-color: rgba(56, 189, 248, 0.3);">
+            <i class="fa-solid fa-file-pdf"></i> PDF PARSER
+          </span>
+        </div>
+
+        <div class="upload-zone-grid">
+          <div class="drop-box">
+            <input type="file" id="pdfIngInput" accept="application/pdf">
+            <i class="fa-solid fa-building-columns"></i>
+            <strong>Carica Estratto Conto ING</strong>
+            <span id="nameIngFile">Trascina o clicca per selezionare il PDF ING</span>
+          </div>
+
+          <div class="drop-box">
+            <input type="file" id="pdfRevolutInput" accept="application/pdf">
+            <i class="fa-solid fa-credit-card"></i>
+            <strong>Carica Estratto Conto Revolut</strong>
+            <span id="nameRevolutFile">Trascina o clicca per selezionare il PDF Revolut</span>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+          <button id="processPdfsBtn" class="btn primary" style="flex: 1; padding: 12px; font-size: 13px;">
+            <i class="fa-solid fa-calculator"></i> Elabora Estratti e Calcola Bilancio
+          </button>
+          <button id="applyToBudgetBtn" class="btn" style="padding: 12px 18px; font-size: 13px; display: none;">
+            <i class="fa-solid fa-cloud-arrow-up"></i> Sincronizza nel Bilancio Mensile
+          </button>
+        </div>
+
+        <div id="statementResults" class="statement-results">
+          <div class="results-grid">
+            <div class="res-box">
+              <div class="r-label">Totale Entrate (Stipendio + Lisa Netta)</div>
+              <div class="r-val positive" id="calcStmtIncome">€ 0,00</div>
+            </div>
+            <div class="res-box">
+              <div class="r-label">Uscite Complessive (+ Rata Auto)</div>
+              <div class="r-val negative" id="calcStmtExpense">€ 0,00</div>
+            </div>
+            <div class="res-box">
+              <div class="r-label">Risultato Netto</div>
+              <div class="r-val" id="calcStmtNet">€ 0,00</div>
+            </div>
+            <div class="res-box" style="border-color: rgba(245, 158, 11, 0.4);">
+              <div class="r-label" style="color: #f59e0b;">Spesa Conad/DEM/Lidl</div>
+              <div class="r-val" style="color: #f59e0b;" id="calcStmtGrocery">€ 0,00</div>
+            </div>
+          </div>
+
+          <div class="grocery-highlight-box">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <strong style="font-size: 13px; color: #f59e0b;"><i class="fa-solid fa-basket-shopping"></i> Dettaglio Spese Rilevate (Conad, DEM, Lidl):</strong>
+              <span id="groceryCountBadge" style="font-size: 11px; background: rgba(245, 158, 11, 0.2); padding: 2px 8px; border-radius: 8px; color: #f59e0b; font-weight: 700;">0 transazioni</span>
+            </div>
+            <div class="grocery-list" id="groceryListContainer">
+              <div style="color: var(--muted); font-size: 12px;">Nessuna voce Conad, DEM o Lidl rilevata automaticamente nei PDF caricati.</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- AI COACH + VOCALE -->
+      <section class="card ai-coach-card">
+        <div class="section-title" style="margin-bottom: 8px;">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <h2><i class="fa-solid fa-brain" style="color: #c084fc;"></i> AI Financial Coach</h2>
+            <span class="ai-badge"><i class="fa-solid fa-bolt"></i> Gemini 2.5 Flash</span>
+          </div>
+          <button id="askAiCoachBtn" class="btn ai-btn" style="padding: 7px 14px; font-size: 12px;">
+            <i class="fa-solid fa-sparkles"></i> Analisi Completa
+          </button>
+        </div>
+
+        <div style="display: flex; gap: 8px; margin-top: 10px;">
+          <input type="text" id="aiUserQuestionInput" placeholder="Chiedi al Coach o detta una spesa..." 
+                 style="flex: 1; padding: 10px 14px; border-radius: 12px; border: 1px solid rgba(168, 85, 247, 0.3); background: rgba(5, 8, 17, 0.7); color: #fff; font-size: 13px;">
+          <button id="micVoiceBtn" class="mic-btn" title="Detta spesa o domanda a voce">
+            <i class="fa-solid fa-microphone"></i>
+          </button>
+          <button id="sendAiQuestionBtn" class="btn primary" style="padding: 10px 16px; font-size: 13px;">
+            <i class="fa-solid fa-paper-plane"></i> Invia
+          </button>
+        </div>
+
+        <div id="aiCoachText" class="ai-output-box">
+          <span style="color: var(--muted); font-style: italic;">
+            Puoi registrare le spese giornaliere, caricare gli estratti conto o chiedere consigli personalizzati al coach.
+          </span>
+        </div>
+      </section>
+
+      <!-- REGISTRAZIONE DIRETTA SPESA GIORNALIERA -->
+      <section class="card">
+        <div class="section-title">
+          <div>
+            <h2>🛒 Registra Spesa del Giorno</h2>
+            <p class="muted" style="margin-top: 2px;">Solo le due categorie: Spesa Luca e Lisa e Spesa Animali. Riconoscimento automatico del giorno.</p>
+          </div>
+          <button class="btn" onclick="location.href='spesa-settimanale.html'" style="font-size: 12px;">
+            Vedi dettaglio storico →
+          </button>
+        </div>
+
+        <div class="daily-expense-panel">
+          <div class="day-detector-box">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <span style="font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase;">Giorno:</span>
+              <span class="day-badge" id="detectedDayLabel"><i class="fa-regular fa-calendar-check"></i> Oggi</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <label for="dailyExpenseDate" style="font-size: 11px; color: var(--muted); font-weight: 700;">DATA:</label>
+              <input type="date" id="dailyExpenseDate" style="padding: 6px 10px; border-radius: 10px; background: rgba(5, 8, 17, 0.6); color: #fff; border: 1px solid var(--border); font-size: 12px;">
+            </div>
+          </div>
+
+          <div class="daily-grid">
+            <div class="daily-cat-card">
+              <strong>🥗 Spesa Luca e Lisa</strong>
+              <input type="number" id="inputDailyFood" step="0.01" min="0" placeholder="€ 0,00">
+            </div>
+
+            <div class="daily-cat-card">
+              <strong>🐈 Spesa Animali</strong>
+              <input type="number" id="inputDailyPets" step="0.01" min="0" placeholder="€ 0,00">
+            </div>
+          </div>
+
+          <div style="margin-top: 14px; display: flex; justify-content: flex-end;">
+            <button id="submitDailyExpenseBtn" class="btn primary" style="width: 100%; padding: 12px; font-size: 14px;">
+              <i class="fa-solid fa-floppy-disk"></i> Registra e Sincronizza nelle Spese
+            </button>
+          </div>
+        </div>
+
+        <!-- Riepilogo Settimana & Grafico -->
+        <div class="weekbox">
+          <div class="week-selector">
+            <button type="button" onclick="changeWeek(-1)">‹</button>
+            <strong id="selectedWeekLabel">Settimana corrente</strong>
+            <button type="button" onclick="changeWeek(1)">›</button>
+          </div>
+          <div class="weekrow">
+            <span>🥗 Spesa Luca e Lisa</span>
+            <span class="weekamount" id="weekFood">€ 0,00</span>
+          </div>
+          <div class="weekrow">
+            <span>🐈 Spesa Animali</span>
+            <span class="weekamount" id="weekPets">€ 0,00</span>
+          </div>
+          <div class="weekrow" style="margin-top: 4px; border-top: 1px solid var(--border);">
+            <strong style="color: var(--text);">📅 Totale settimana selezionata</strong>
+            <strong class="weekamount" style="color: var(--accent-green);" id="weekTotal">€ 0,00</strong>
+          </div>
+          <div class="muted" id="weekRange" style="margin-top: 8px; font-size: 11px;">Settimana corrente</div>
+          <div class="chartwrap"><canvas id="monthlyChart"></canvas></div>
+        </div>
+      </section>
+
+      <!-- ENTRATE & USCITE MENSILI -->
+      <div class="grid">
+        <section id="incomeCard" class="card collapsed">
+          <div class="section-title">
+            <h2>📥 Entrate Fisse & Extra</h2>
+            <button class="section-toggle" type="button" onclick="toggleCollapse('incomeCard',this)">+</button>
+          </div>
+          <div id="incomeList"></div>
+          <button class="btn primary add" onclick="addRow('income')">+ Aggiungi Entrata</button>
+        </section>
+
+        <section id="expenseCard" class="card">
+          <div class="section-title">
+            <h2>📤 Uscite del Mese (con Spesa e Animali)</h2>
+            <button class="section-toggle" type="button" onclick="toggleCollapse('expenseCard',this)">−</button>
+          </div>
+          <div id="expenseList"></div>
+          <button class="btn primary add" onclick="addRow('expense')">+ Aggiungi Altra Spesa</button>
+        </section>
+      </div>
+
+      <!-- SEZIONE METÀ E METÀ: ENERGIA & SALVADANAIO -->
+      <div class="grid-halves">
+        <section class="card energy-live-card">
+          <div class="section-title" style="margin-bottom: 4px;">
+            <h2>⚡ Consumi Live • Presa Clima</h2>
+            <span class="live-pill"><span class="live-dot"></span> LIVE TUYA</span>
+          </div>
+
+          <div class="energy-main-stat">
+            <div class="energy-watts-box">
+              <span class="energy-val" id="liveWattValue">0</span>
+              <span class="energy-unit">Watt</span>
+            </div>
+            <div class="energy-substats">
+              <div class="stat-row">
+                <span class="stat-label">Dispositivo:</span>
+                <span class="stat-value">Condizionatore Clima</span>
+              </div>
+              <div class="stat-row">
+                <span class="stat-label">Tensione / Rete:</span>
+                <span class="stat-value">228.6 V • 50 Hz</span>
+              </div>
+              <div class="stat-row">
+                <span class="stat-label">Energia Oggi:</span>
+                <span class="stat-value" id="liveKwhToday" style="color: var(--accent-green);">0.00 kWh</span>
+              </div>
+              <div class="stat-row">
+                <span class="stat-label">Costo Stimato:</span>
+                <span class="stat-value" id="liveCostToday" style="color: #f59e0b;">€ 0,00</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="energy-footer-actions">
+            <input type="number" id="simWattInput" placeholder="Simula W" class="deposit-input" style="width: 105px;">
+            <button class="btn" id="setWattBtn" style="padding: 7px 12px; font-size: 12px;">Imposta</button>
+            <button class="btn primary" onclick="location.href='consumi.html'" style="margin-left: auto; font-size: 12px; padding: 7px 14px;">
+              Dettagli Tuya →
+            </button>
+          </div>
+        </section>
+
+        <section class="card ampolla-card">
+          <div class="ampolla-container">
+            <div class="ampolla-flask">
+              <canvas id="waveCanvas" width="125" height="175"></canvas>
+              <div class="ampolla-center-text">
+                <strong id="ampollaInside">€ 0,00</strong>
+                <span id="ampollaPercentBadge">0%</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="ampolla-info">
+            <div class="ampolla-title">🏖️ Salvadanaio Vacanze</div>
+            <div id="ampollaEuro" class="ampolla-euro">€ 0,00</div>
+            <div id="ampollaPercent" class="ampolla-percent">0% dell'obiettivo di € 120,00</div>
+            <div class="ampolla-actions">
+              <input id="depositAmount" class="deposit-input" type="number" min="0.01" step="0.01" placeholder="Importo €">
+              <button class="btn primary" id="addVacanza">Versa +</button>
+              <button class="btn danger" id="resetVacanza">Svuota</button>
+              <button class="btn" id="openVacanze">Dettagli</button>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div id="syncStatus" class="status">In attesa di autenticazione...</div>
+    </main>
+  </div>
+
+  <!-- BARRA INFERIORE SMARTPHONE -->
+  <nav class="mobile-bottom-bar">
+    <button class="mobile-tab-btn active" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">
+      <i class="fa-solid fa-house"></i>
+      <span>Home</span>
+    </button>
+    <button class="mobile-tab-btn" onclick="location.href='consumi.html'">
+      <i class="fa-solid fa-bolt"></i>
+      <span>Consumi</span>
+    </button>
+    <button class="mobile-tab-btn" onclick="location.href='vacanze.html'">
+      <i class="fa-solid fa-umbrella-beach"></i>
+      <span>Vacanze</span>
+    </button>
+    <button class="mobile-tab-btn" onclick="location.href='spesa-settimanale.html'">
+      <i class="fa-solid fa-basket-shopping"></i>
+      <span>Spesa</span>
+    </button>
+    <button class="mobile-tab-btn" onclick="$('calcToggleBtn').click()">
+      <i class="fa-solid fa-calculator"></i>
+      <span>Calcola</span>
+    </button>
+  </nav>
+</div>
+
+<script type="module">
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js';
+  import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js';
+  import { getFirestore, doc, onSnapshot, setDoc, getDoc } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js';
+
+  // Configura PDF.js worker
+  if (window.pdfjsLib) {
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  }
+
+  const firebaseConfig = {
+    apiKey: 'AIzaSyAdZbBv6JYbYnl6CxuFVfHhSftvIxwf2DY',
+    authDomain: 'budget-luca.firebaseapp.com',
+    projectId: 'budget-luca',
+    storageBucket: 'budget-luca.firebasestorage.app',
+    messagingSenderId: '67496424698',
+    appId: '1:67496424698:web:efc07408543',
+    measurementId: 'G-7LEYRZE9QN'
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+  const provider = new GoogleAuthProvider();
+  provider.setCustomParameters({ prompt: 'select_account' });
+
+  function triggerHaptic(ms = 18) {
+    if ('vibrate' in navigator) {
+      try { navigator.vibrate(ms); } catch (e) {}
+    }
+  }
+
+  let selectedDate = new Date();
+  selectedDate.setDate(1);
+
+  function getMonthKey(d) {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    return `${y}-${m}`;
+  }
+
+  const monthKey = () => getMonthKey(selectedDate);
+  const today = () => new Date().toISOString().slice(0, 10);
+
+  function defaultDateForSelectedMonth() {
+    const currentMKey = new Date().toISOString().slice(0, 7);
+    const selMKey = getMonthKey(selectedDate);
+    if (selMKey === currentMKey) return today();
+    return `${selMKey}-01`;
+  }
+
+  let ref = null, refVacanze = null, refGemini = null;
+  let unsubBudget = null, unsubVacanze = null;
+  let state = { income: [], expense: [] };
+  let saveTimer = null, editing = false, monthlyChart = null, allWeeks = {}, selectedWeekOffset = 0;
+  let lastBudgetDoc = {}, lastVacanzeDoc = {};
+  let userGeminiApiKey = "";
+
+  const $ = id => document.getElementById(id);
+  const money = n => new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(Number(n) || 0);
+  function num(v) { return Number(String(v ?? '').replace(',', '.')) || 0; }
+
+  // GIORNO DELLA SETTIMANA
+  const dayNames = ['Domenica', 'Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato'];
+
+  function updateDetectedDayLabel(dateStr) {
+    if (!dateStr) return;
+    const parts = dateStr.split('-');
+    const d = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+    const name = dayNames[d.getDay()];
+    const isToday = today() === dateStr;
+    $('detectedDayLabel').innerHTML = `<i class="fa-regular fa-calendar-check"></i> ${name} ${isToday ? '<b>(Oggi)</b>' : ''}`;
+  }
+
+  const dailyDateInput = $('dailyExpenseDate');
+  dailyDateInput.value = today();
+  updateDetectedDayLabel(today());
+  dailyDateInput.addEventListener('change', e => updateDetectedDayLabel(e.target.value));
+
+  function showToast(text) {
+    const t = $('swipeToast');
+    $('swipeToastText').textContent = text;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 1200);
+  }
+
+  function updateMonthHeader() {
+    const monthNames = [
+      'Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno',
+      'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'
+    ];
+    const mName = monthNames[selectedDate.getMonth()] + ' ' + selectedDate.getFullYear();
+    $('currentMonthDisplay').textContent = mName;
+
+    const currentMKey = new Date().toISOString().slice(0, 7);
+    const isCurrent = getMonthKey(selectedDate) === currentMKey;
+    if ($('currentMonthSubtext')) {
+      $('currentMonthSubtext').textContent = isCurrent 
+        ? 'Gestione flussi di cassa e risparmi (Mese corrente)' 
+        : `Gestione flussi di cassa e risparmi • Mese: ${mName}`;
+    }
+  }
+
+  $('monthPrevBtn').onclick = () => changeMonth(-1);
+  $('monthNextBtn').onclick = () => changeMonth(1);
+
+  $('currentMonthDisplay').onclick = () => {
+    const now = new Date();
+    if (getMonthKey(selectedDate) !== getMonthKey(now)) {
+      triggerHaptic(25);
+      selectedDate = new Date();
+      selectedDate.setDate(1);
+      updateMonthHeader();
+      subscribeSelectedMonth();
+      showToast($('currentMonthDisplay').textContent);
+    }
+  };
+
+  function changeMonth(delta, animatedDirection = null) {
+    if (editing) finishEdit();
+    triggerHaptic(20);
+
+    const container = $('mainContainer');
+    if (animatedDirection) {
+      container.classList.add(animatedDirection === 'left' ? 'swipe-left' : 'swipe-right');
+      setTimeout(() => {
+        selectedDate.setMonth(selectedDate.getMonth() + delta);
+        updateMonthHeader();
+        subscribeSelectedMonth();
+        showToast($('currentMonthDisplay').textContent);
+        container.classList.remove('swipe-left', 'swipe-right');
+      }, 150);
+    } else {
+      selectedDate.setMonth(selectedDate.getMonth() + delta);
+      updateMonthHeader();
+      subscribeSelectedMonth();
+      showToast($('currentMonthDisplay').textContent);
+    }
+  }
+
+  // TOUCH SWIPE
+  let touchStartX = 0, touchStartY = 0, touchEndX = 0, touchEndY = 0;
+  const minSwipeDistance = 55;
+
+  document.addEventListener('touchstart', e => {
+    if (e.target.closest('.calc-modal, input, button, select, canvas')) return;
+    touchStartX = e.changedTouches[0].screenX;
+    touchStartY = e.changedTouches[0].screenY;
+  }, { passive: true });
+
+  document.addEventListener('touchend', e => {
+    if (e.target.closest('.calc-modal, input, button, select, canvas')) return;
+    touchEndX = e.changedTouches[0].screenX;
+    touchEndY = e.changedTouches[0].screenY;
+    const deltaX = touchEndX - touchStartX;
+    const deltaY = touchEndY - touchStartY;
+    if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > minSwipeDistance) {
+      if (deltaX < 0) changeMonth(1, 'left');
+      else changeMonth(-1, 'right');
+    }
+  }, { passive: true });
+
+  function mondayOf(d) {
+    const x = new Date(d);
+    x.setHours(0, 0, 0, 0);
+    const day = x.getDay() || 7;
+    x.setDate(x.getDate() - day + 1);
+    return x;
+  }
+
+  function weekKey(offset = 0) {
+    const d = mondayOf(new Date());
+    d.setDate(d.getDate() + offset * 7);
+    return d.toISOString().slice(0, 10);
+  }
+
+  function weekValues(k) {
+    const w = allWeeks[k] || {};
+    const food = w.food !== undefined ? num(w.food) : (num(w.food1) + num(w.food2));
+    const pets = w.pets !== undefined ? num(w.pets) : (num(w.pet1) + num(w.pet2));
+    return { food, pets };
+  }
+
+  function getMonthFoodAndPetsTotals() {
+    const y = selectedDate.getFullYear();
+    const m = selectedDate.getMonth();
+    let totalFood = 0;
+    let totalPets = 0;
+
+    Object.entries(allWeeks).forEach(([k, w]) => {
+      if (Array.isArray(w.entries) && w.entries.length > 0) {
+        w.entries.forEach(entry => {
+          const ed = new Date(entry.date + 'T00:00:00');
+          if (ed.getFullYear() === y && ed.getMonth() === m) {
+            totalFood += num(entry.food);
+            totalPets += num(entry.pets);
+          }
+        });
+      } else {
+        const d = new Date(k + 'T00:00:00');
+        if (d.getFullYear() === y && d.getMonth() === m) {
+          const v = weekValues(k);
+          totalFood += v.food;
+          totalPets += v.pets;
+        }
+      }
+    });
+
+    return { totalFood, totalPets };
+  }
+
+  function isAutoCategory(name) {
+    const n = (name || '').trim().toLowerCase();
+    return n === 'spesa luca e lisa' || n === 'spesa animali' || n === 'spese alimentari luca e lisa';
+  }
+
+  function syncWeeklyExpenses() {
+    const { totalFood, totalPets } = getMonthFoodAndPetsTotals();
+    const manual = state.expense.filter(x => !isAutoCategory(x.name));
+    
+    state.expense = [
+      ...manual,
+      { name: 'Spesa Luca e Lisa', amount: totalFood, date: defaultDateForSelectedMonth(), isAuto: true },
+      { name: 'Spesa Animali', amount: totalPets, date: defaultDateForSelectedMonth(), isAuto: true }
+    ];
+  }
+
+  function renderSelectedWeek() {
+    const k = weekKey(selectedWeekOffset);
+    const v = weekValues(k);
+    $('weekFood').textContent = money(v.food);
+    $('weekPets').textContent = money(v.pets);
+    $('weekTotal').textContent = money(v.food + v.pets);
+    $('weekRange').textContent = 'Settimana dal ' + k;
+    $('selectedWeekLabel').textContent = selectedWeekOffset === 0 ? 'Settimana corrente' : ('Settimana ' + k);
+  }
+
+  window.changeWeek = delta => {
+    triggerHaptic(12);
+    selectedWeekOffset += delta;
+    renderSelectedWeek();
+  };
+
+  // REGISTRAZIONE GIORNALIERA CON SALVATAGGIO
+  $('submitDailyExpenseBtn').onclick = async () => {
+    if (!auth.currentUser || !ref) return;
+
+    const chosenDate = dailyDateInput.value || today();
+    const foodVal = num($('inputDailyFood').value);
+    const petsVal = num($('inputDailyPets').value);
+
+    if (foodVal <= 0 && petsVal <= 0) {
+      alert("Inserisci almeno un importo per 'Spesa Luca e Lisa' o 'Spesa Animali'.");
+      return;
+    }
+
+    triggerHaptic(25);
+
+    const dateObj = new Date(chosenDate + 'T00:00:00');
+    const mondayKeyStr = mondayOf(dateObj).toISOString().slice(0, 10);
+
+    const currentW = allWeeks[mondayKeyStr] || { food: 0, pets: 0, entries: [] };
+    const currentFood = currentW.food !== undefined ? num(currentW.food) : (num(currentW.food1) + num(currentW.food2));
+    const currentPets = currentW.pets !== undefined ? num(currentW.pets) : (num(currentW.pet1) + num(currentW.pet2));
+
+    currentW.food = currentFood + foodVal;
+    currentW.pets = currentPets + petsVal;
+
+    if (!Array.isArray(currentW.entries)) currentW.entries = [];
+    currentW.entries.push({
+      date: chosenDate,
+      food: foodVal,
+      pets: petsVal,
+      timestamp: Date.now()
+    });
+
+    allWeeks[mondayKeyStr] = currentW;
+    syncWeeklyExpenses();
+
+    try {
+      await setDoc(ref, {
+        expense: state.expense,
+        spesaSettimanale: { weeks: allWeeks },
+        updatedAt: Date.now()
+      }, { merge: true });
+
+      $('inputDailyFood').value = '';
+      $('inputDailyPets').value = '';
+
+      render('expense');
+      renderSelectedWeek();
+      drawMonthly();
+
+      showToast(`Registrato: ${dayNames[dateObj.getDay()]} (${money(foodVal + petsVal)})`);
+    } catch (e) {
+      alert("Errore salvataggio: " + e.message);
+    }
+  };
+
+  // ==========================================
+  // LOGICA ESTRATTI CONTO (PDF ING & REVOLUT)
+  // ==========================================
+  let pdfIngFile = null, pdfRevolutFile = null;
+  const QUOTA_LISA_BASE = 450.00;
+  const RATA_AUTO_FISSA = 376.00;
+
+  let parsedStatements = {
+    income: 0,
+    expense: 0,
+    net: 0,
+    grocery: 0,
+    groceryItems: [],
+    details: [],
+    stipendioCentroauto: 0,
+    amexSpesa: 0,
+    quotaLisaNetta: 450.00,
+    speseIng: 0,
+    usciteRevolut: 0
+  };
+
+  $('pdfIngInput').onchange = e => {
+    pdfIngFile = e.target.files[0];
+    if (pdfIngFile) $('nameIngFile').textContent = `Caricato: ${pdfIngFile.name}`;
+  };
+
+  $('pdfRevolutInput').onchange = e => {
+    pdfRevolutFile = e.target.files[0];
+    if (pdfRevolutFile) $('nameRevolutFile').textContent = `Caricato: ${pdfRevolutFile.name}`;
+  };
+
   async function extractTextFromPdf(file) {
     const arrayBuffer = await file.arrayBuffer();
     const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
     let fullText = "";
-
-    for (let i = 1; i <= pdf.numPages; i++) {
-      const page = await pdf.getPage(i);
+    for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+      const page = await pdf.getPage(pageNum);
       const textContent = await page.getTextContent();
-      const pageStrings = textContent.items.map(item => item.str);
-      fullText += pageStrings.join(" ") + "\n";
+      const pageText = textContent.items.map(item => item.str).join(' ');
+      fullText += pageText + "\n";
     }
     return fullText;
   }
 
-  // Parser ING con regole personalizzate
-  function parseIng(text) {
+  function parseAmount(str) {
+    if (!str) return 0;
+    const clean = str.replace(/[€$£\s]/g, '').replace(/\./g, '').replace(',', '.');
+    return Number(clean) || 0;
+  }
+
+  function elaboraDatiEstratti(ingText, revolutText) {
     let stipendioCentroauto = 0;
     let amexSpesa = 0;
     let speseIng = 0;
-    let logs = [];
+    let grocerySum = 0;
+    const groceryList = [];
 
-    // Normalizza separatori decimali e spazi
-    const lines = text.split("\n");
-
-    // 1. Rileva spesa American Express
-    const amexMatch = text.match(/AMERICAN\s+EXPRESS[^\n]*?(\d+[\.,]\d{2})/i) ||
-                      text.match(/IT07AEX[^\n]*?Imp\.\s*(\d+[\.,]\d{2})/i);
-    if (amexMatch) {
-      amexSpesa = parseFloat(amexMatch[1].replace('.', '').replace(',', '.'));
-      logs.push(`Addebito American Express rilevato: -${amexSpesa.toFixed(2)} € (scalato dalla quota Lisa)`);
-    }
-
-    // 2. Rileva stipendio CentroAuto
-    const stipendioMatch = text.match(/CENTROAUTO[^\n]*?\+([\d\.]+,\d{2})/i) ||
-                           text.match(/STIPENDIO[^\n]*?\+([\d\.]+,\d{2})/i);
-    if (stipendioMatch) {
-      stipendioCentroauto = parseFloat(stipendioMatch[1].replace('.', '').replace(',', '.'));
-      logs.push(`Stipendio CentroAutoVT rilevato: +${stipendioCentroauto.toFixed(2)} €`);
-    }
-
-    // 3. Elaborazione uscite e filtraggio
-    // Regex per individuare righe con causali o importi con segno
-    const movementRegex = /([+-]\s*\d+(?:\.\d{3})*,\d{2})/g;
-    
-    // Iterazione sui singoli movimenti
-    // Consideriamo l'intero testo linearizzato per non perdere righe spezzate
-    const chunks = text.split(/(?=[0-3][0-9]\/[0-1][0-9]\/20\d{2})/); // suddivide per data GG/MM/AAAA
-
-    chunks.forEach(chunk => {
-      // Ignora testate o righe prive di data
-      if (!chunk.trim()) return;
-
-      const importoMatch = chunk.match(/([+-])\s*(\d+(?:\.\d{3})*,\d{2})/);
-      if (!importoMatch) return;
-
-      const segno = importoMatch[1];
-      const valore = parseFloat(importoMatch[2].replace('.', '').replace(',', '.'));
-
-      if (segno === '-') {
-        // Filtro: ESCLUDI ricariche Revolut
-        if (/Revolut/i.test(chunk)) {
-          logs.push(`Esclusa ricarica verso Revolut: -${valore.toFixed(2)} €`);
-          return;
-        }
-
-        // Filtro: ESCLUDI giroconti interni personali (es. Auto, Vacanze)
-        if (/Giroconto/i.test(chunk) && (/Auto/i.test(chunk) || /Vacanze/i.test(chunk))) {
-          logs.push(`Escluso giroconto interno accantonamento: -${valore.toFixed(2)} €`);
-          return;
-        }
-
-        // Filtro: ESCLUDI Amex dalle spese (già scalata dai 450 €)
-        if (/AMERICAN\s+EXPRESS/i.test(chunk)) {
-          return;
-        }
-
-        // Se è l'affitto a Federica Demilio: TIENILO tra le spese
-        if (/Demilio/i.test(chunk) || /Affitto/i.test(chunk)) {
-          speseIng += valore;
-          logs.push(`Incluso Bonifico Affitto: -${valore.toFixed(2)} €`);
-          return;
-        }
-
-        // Tutte le altre sono spese/addebiti ordinari
-        speseIng += valore;
-      } else if (segno === '+') {
-        // Se c'è uno storno rimborso (es. Lidl stornato), sottrai la spesa corrispondente
-        if (/LIDL/i.test(chunk)) {
-          speseIng -= valore;
-          logs.push(`Storno rimborso Lidl rilevato ed equilibrato: -${valore.toFixed(2)} € sulle spese`);
-        }
-        // Tutti gli altri accrediti (UniCredit, Revolut, ecc.) vengono ignorati
+    // --- 1. PARSING ING BANK ---
+    if (ingText) {
+      // 1A. Rilevamento Amex
+      const amexMatch = ingText.match(/AMERICAN\s+EXPRESS[\s\S]*?Imp\.\s*([\d\.,]+)/i) ||
+                        ingText.match(/AMERICAN\s+EXPRESS[\s\S]*?[-–]\s*([\d\.,]+)/i) ||
+                        ingText.match(/IT07AEX[\s\S]*?Imp\.\s*([\d\.,]+)/i);
+      if (amexMatch) {
+        amexSpesa = parseAmount(amexMatch[1]);
       }
-    });
 
-    return { stipendioCentroauto, amexSpesa, speseIng, logs };
-  }
+      // 1B. Rilevamento Stipendio CentroAutoVT
+      const stipMatch = ingText.match(/CENTROAUTO[\s\S]*?\+([\d\.]+[,]\\d{2})/i) ||
+                        ingText.match(/STIPENDIO[\s\S]*?\+([\d\.]+[,]\\d{2})/i) ||
+                        ingText.match(/CENTROAUTOVT[\s\S]*?\+([\d\.,]+)/i);
+      if (stipMatch) {
+        stipendioCentroauto = parseAmount(stipMatch[1]);
+      }
 
-  // Parser Revolut
-  function parseRevolut(text) {
-    let usciteRevolut = 0;
-    let logs = [];
+      // 1C. Movimenti riga per data contabile (GG/MM/AAAA)
+      const blocchi = ingText.split(/(?=[0-3][0-9]\/[0-1][0-9]\/20\d{2})/);
+      blocchi.forEach(b => {
+        if (!b.trim()) return;
 
-    // Cerca il totale di riepilogo "Denaro in uscita" del conto corrente
-    const matchUscita = text.match(/Conto\s*\(conto corrente\)[^€\n]*?(\d+[\.,]\d{2})€/i) ||
-                        text.match(/Denaro in uscita\s*\|\s*([\d\.,]+)\s*€/i) ||
-                        text.match(/Denaro in uscita\s*([\d\.,]+)\s*€/i);
+        // Cerca importi con segno [+-]
+        const impMatch = b.match(/([+-])\s*(\d+(?:\.\d{3})*,\d{2})/);
+        if (!impMatch) return;
 
-    if (matchUscita) {
-      usciteRevolut = parseFloat(matchUscita[1].replace('.', '').replace(',', '.'));
-      logs.push(`Totale Denaro in uscita Revolut (da riepilogo): ${usciteRevolut.toFixed(2)} €`);
-    } else {
-      logs.push("Attenzione: riepilogo uscite Revolut non trovato automaticamente nel PDF.");
+        const segno = impMatch[1];
+        const val = parseAmount(impMatch[2]);
+        const lowerB = b.toLowerCase();
+
+        if (segno === '-') {
+          // ESCLUSIONI RIGOROSE:
+          // 1. Ricariche e uscite verso Revolut (evita doppio conteggio)
+          if (/revolut/i.test(b)) return;
+          // 2. Giroconti interni personali di risparmio (Auto, Vacanze)
+          if (/giroconto/i.test(b) && (/auto/i.test(b) || /vacanze/i.test(b))) return;
+          // 3. Spesa Amex (già scalata dalla quota Lisa a monte)
+          if (/american\s+express/i.test(b) || /it07aex/i.test(b)) return;
+
+          // SE È AFFITTO (Federica Demilio): conteggia come spesa effettiva
+          if (/demilio/i.test(b) || /affitto/i.test(b)) {
+            speseIng += val;
+            return;
+          }
+
+          // Tutte le altre sono spese/uscite ordinarie valide
+          speseIng += val;
+
+          // Rilevamento Grocery (Lidl, Conad, DEM) su ING
+          if (lowerB.includes('lidl') || lowerB.includes('conad') || lowerB.includes('dem')) {
+            grocerySum += val;
+            groceryList.push({ desc: b.trim().slice(0, 45).replace(/\s+/g, ' '), amount: val, source: 'ING' });
+          }
+        } else if (segno === '+') {
+          // Se c'è uno storno rimborso (es. rimborso Lidl +33,97), riduce la spesa per compensare
+          if (/lidl/i.test(b) && (/rimborso/i.test(b) || /accredito/i.test(b) || /trasferimento/i.test(b))) {
+            speseIng -= val;
+            grocerySum -= val;
+          }
+          // Tutti gli altri accrediti (+110 Unicredit, +3.30 Unicredit, +20 Revolut) vengono ignorati al 100%
+        }
+      });
     }
 
-    return { usciteRevolut, logs };
+    // --- 2. PARSING REVOLUT (Solo denaro in uscita) ---
+    let usciteRevolut = 0;
+    if (revolutText) {
+      // Cerca il totale sintetico "Denaro in uscita" del Conto (conto corrente)
+      const matchUsciteRev = revolutText.match(/Conto\s*\(conto corrente\)[^€\n]*?[\d\.,]+€\s*\|\s*([\d\.,]+)€/i) ||
+                             revolutText.match(/Denaro in uscita\s*\|\s*([\d\.,]+)\s*€/i) ||
+                             revolutText.match(/Denaro in uscita\s*([\d\.,]+)\s*€/i);
+      if (matchUsciteRev) {
+        usciteRevolut = parseAmount(matchUsciteRev[1]);
+      } else {
+        // Fallback sommando le uscite se il riassunto non viene trovato
+        const revLines = revolutText.split(/\r?\n/);
+        revLines.forEach(l => {
+          const m = l.match(/(\d+[,.]\d{2})\s*€/);
+          if (m && !l.includes('Ricarica') && !l.includes('Saldo')) {
+            usciteRevolut += parseAmount(m[1]);
+          }
+        });
+      }
+
+      // Rilevamento supermercati alimentare anche su Revolut
+      const revLines = revolutText.split(/\r?\n/);
+      revLines.forEach(l => {
+        const lowerL = l.toLowerCase();
+        if (lowerL.includes('lidl') || lowerL.includes('conad') || lowerL.includes('dem')) {
+          const amtM = l.match(/([\d\.,]+)\s*€/);
+          if (amtM) {
+            const aVal = parseAmount(amtM[1]);
+            if (aVal > 0 && !lowerL.includes('saldo') && !lowerL.includes('ricarica')) {
+              grocerySum += aVal;
+              groceryList.push({ desc: l.trim().slice(0, 45).replace(/\s+/g, ' '), amount: aVal, source: 'Revolut' });
+            }
+          }
+        }
+      });
+    }
+
+    // --- 3. CALCOLO BILANCIO COMPLESSIVO ---
+    const quotaLisaNetta = QUOTA_LISA_BASE - amexSpesa;
+    const finalIncome = stipendioCentroauto + quotaLisaNetta;
+    const finalExpense = speseIng + usciteRevolut + RATA_AUTO_FISSA;
+    const finalNet = finalIncome - finalExpense;
+
+    return {
+      income: finalIncome,
+      expense: finalExpense,
+      net: finalNet,
+      grocery: Math.max(0, grocerySum),
+      groceryItems: groceryList,
+      stipendioCentroauto,
+      amexSpesa,
+      quotaLisaNetta,
+      speseIng,
+      usciteRevolut
+    };
   }
 
-  // Funzione Principale
-  async function eseguiAnalisi() {
-    const fileIngInput = document.getElementById('fileIng').files[0];
-    const fileRevInput = document.getElementById('fileRevolut').files[0];
-
-    if (!fileIngInput || !fileRevInput) {
-      alert("Carica entrambi i file PDF (ING e Revolut) per procedere.");
+  $('processPdfsBtn').onclick = async () => {
+    if (!pdfIngFile && !pdfRevolutFile) {
+      alert("Seleziona almeno un estratto conto in PDF (ING o Revolut).");
       return;
     }
 
+    triggerHaptic(20);
+    $('processPdfsBtn').innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Elaborazione in corso...`;
+
+    let ingText = "", revolutText = "";
     try {
-      const ingText = await extractTextFromPdf(fileIngInput);
-      const revText = await extractTextFromPdf(fileRevInput);
-
-      const ingData = parseIng(ingText);
-      const revData = parseRevolut(revText);
-
-      // Calcolo entrate
-      const quotaLisaNetta = QUOTA_LISA_BASE - ingData.amexSpesa;
-      const entrateTotali = ingData.stipendioCentroauto + quotaLisaNetta;
-
-      // Calcolo spese
-      const speseTotali = ingData.speseIng + revData.usciteRevolut + RATA_AUTO;
-
-      // Calcolo differenziale
-      const saldoFinale = entrateTotali - speseTotali;
-
-      // Visualizzazione dati
-      document.getElementById('resEntrate').innerText = `+${entrateTotali.toFixed(2)} €`;
-      document.getElementById('resSpese').innerText = `-${speseTotali.toFixed(2)} €`;
-      
-      const resBilancio = document.getElementById('resBilancio');
-      const lblBilancio = document.getElementById('lblBilancio');
-
-      if (saldoFinale >= 0) {
-        lblBilancio.innerText = "Risparmio";
-        resBilancio.innerText = `+${saldoFinale.toFixed(2)} €`;
-        resBilancio.className = "value positive";
-      } else {
-        lblBilancio.innerText = "Deficit";
-        resBilancio.innerText = `${saldoFinale.toFixed(2)} €`;
-        resBilancio.className = "value negative";
-      }
-
-      // Log dettagliato
-      let logBuffer = [
-        "--- RESOCONTO OPERAZIONI ---",
-        `Quota Lisa Base: +${QUOTA_LISA_BASE.toFixed(2)} €`,
-        `Spesa Amex detratta da Lisa: -${ingData.amexSpesa.toFixed(2)} €`,
-        `Quota netta effettiva Lisa: +${quotaLisaNetta.toFixed(2)} €`,
-        ...ingData.logs,
-        ...revData.logs,
-        `Rata Auto fissa applicata: -${RATA_AUTO.toFixed(2)} €`,
-        "----------------------------",
-        `TOTALE ENTRATE: +${entrateTotali.toFixed(2)} €`,
-        `TOTALE SPESE:   -${speseTotali.toFixed(2)} €`,
-        `BILANCIO:       ${saldoFinale >= 0 ? '+' : ''}${saldoFinale.toFixed(2)} € (${saldoFinale >= 0 ? 'RISPARMIO' : 'DEFICIT'})`
-      ];
-
-      document.getElementById('logOutput').innerText = logBuffer.join("\n");
-      document.getElementById('resultsCard').style.display = "block";
-
+      if (pdfIngFile) ingText = await extractTextFromPdf(pdfIngFile);
+      if (pdfRevolutFile) revolutText = await extractTextFromPdf(pdfRevolutFile);
     } catch (err) {
-      console.error(err);
-      alert("Si è verificato un errore durante la lettura dei PDF. Assicurati che siano documenti testuali validi.");
+      alert("Errore durante la lettura del file PDF: " + err.message);
+      $('processPdfsBtn').innerHTML = `<i class="fa-solid fa-calculator"></i> Elabora Estratti e Calcola Bilancio`;
+      return;
+    }
+
+    parsedStatements = elaboraDatiEstratti(ingText, revolutText);
+
+    // Visualizzazione Risultati
+    $('calcStmtIncome').textContent = money(parsedStatements.income);
+    $('calcStmtExpense').textContent = money(parsedStatements.expense);
+    $('calcStmtNet').textContent = (parsedStatements.net >= 0 ? '+ ' : '') + money(parsedStatements.net);
+    $('calcStmtNet').className = 'r-val ' + (parsedStatements.net >= 0 ? 'positive' : 'negative');
+    $('calcStmtGrocery').textContent = money(parsedStatements.grocery);
+
+    const gContainer = $('groceryListContainer');
+    gContainer.innerHTML = '';
+    if (parsedStatements.groceryItems.length > 0) {
+      $('groceryCountBadge').textContent = `${parsedStatements.groceryItems.length} transazioni`;
+      parsedStatements.groceryItems.forEach(item => {
+        const row = document.createElement('div');
+        row.className = 'grocery-item';
+        row.innerHTML = `
+          <span><b>🛒 [${item.source}] ${item.desc}</b></span>
+          <span style="font-family: 'JetBrains Mono', monospace; font-weight: 700; color: #f59e0b;">${money(item.amount)}</span>
+        `;
+        gContainer.appendChild(row);
+      });
+    } else {
+      $('groceryCountBadge').textContent = `0 transazioni`;
+      gContainer.innerHTML = `<div style="color: var(--muted); font-size: 12px;">Nessuna voce Conad, DEM o Lidl rilevata automaticamente nei PDF caricati.</div>`;
+    }
+
+    $('statementResults').style.display = 'block';
+    $('applyToBudgetBtn').style.display = 'inline-flex';
+    $('processPdfsBtn').innerHTML = `<i class="fa-solid fa-circle-check"></i> Calcolo Completato`;
+  };
+
+  // Sincronizza i risultati dell'estratto conto nel bilancio mensile
+  $('applyToBudgetBtn').onclick = async () => {
+    if (!ref) return alert("Firebase non connesso.");
+    triggerHaptic(25);
+
+    const mKey = getMonthKey(selectedDate);
+    const dateFirst = `${mKey}-01`;
+
+    // 1. Aggiunge o aggiorna quota Lisa (+450€ - spesa Amex)
+    const quotaLisa = parsedStatements.quotaLisaNetta > 0 ? parsedStatements.quotaLisaNetta : 450.00;
+    const lisaIdx = state.income.findIndex(x => (x.name || '').toLowerCase().includes('lisa'));
+    if (lisaIdx >= 0) {
+      state.income[lisaIdx].amount = quotaLisa;
+      state.income[lisaIdx].date = dateFirst;
+    } else {
+      state.income.push({ name: 'Contributo Spese Lisa (netto Amex)', amount: quotaLisa, date: dateFirst, isRecurring: true });
+    }
+
+    // 2. Registra stipendio CentroAutoVT
+    if (parsedStatements.stipendioCentroauto > 0) {
+      const stipIdx = state.income.findIndex(x => (x.name || '').toLowerCase().includes('centroauto'));
+      if (stipIdx >= 0) {
+        state.income[stipIdx].amount = parsedStatements.stipendioCentroauto;
+        state.income[stipIdx].date = dateFirst;
+      } else {
+        state.income.push({ name: 'Stipendio CentroAutoVT', amount: parsedStatements.stipendioCentroauto, date: dateFirst, isRecurring: false });
+      }
+    }
+
+    // 3. Registra la Rata Auto tra le uscite (376 €)
+    const autoIdx = state.expense.findIndex(x => (x.name || '').toLowerCase().includes('rata auto'));
+    if (autoIdx >= 0) {
+      state.expense[autoIdx].amount = RATA_AUTO_FISSA;
+    } else {
+      state.expense.push({ name: 'Rata Auto', amount: RATA_AUTO_FISSA, date: dateFirst, isRecurring: true, isAuto: false });
+    }
+
+    // 4. Registra le spese vive estratte (ING + Revolut)
+    const speseEstratto = parsedStatements.speseIng + parsedStatements.usciteRevolut;
+    if (speseEstratto > 0) {
+      const expIdx = state.expense.findIndex(x => (x.name || '').toLowerCase().includes('spese estratti conto'));
+      if (expIdx >= 0) {
+        state.expense[expIdx].amount = Number(speseEstratto.toFixed(2));
+      } else {
+        state.expense.push({ name: 'Spese Estratti Conto (ING + Revolut)', amount: Number(speseEstratto.toFixed(2)), date: dateFirst, isRecurring: false, isAuto: false });
+      }
+    }
+
+    // 5. Registra la voce alimentari estratta nella Spesa Luca e Lisa
+    if (parsedStatements.grocery > 0) {
+      const curMonKey = mondayOf(new Date(dateFirst + 'T00:00:00')).toISOString().slice(0, 10);
+      const currW = allWeeks[curMonKey] || { food: 0, pets: 0, entries: [] };
+      currW.food = (num(currW.food) || 0) + parsedStatements.grocery;
+      allWeeks[curMonKey] = currW;
+      syncWeeklyExpenses();
+    }
+
+    // 6. Salva su Firebase
+    try {
+      await setDoc(ref, {
+        income: state.income,
+        expense: state.expense,
+        spesaSettimanale: { weeks: allWeeks },
+        updatedAt: Date.now()
+      }, { merge: true });
+
+      render('income');
+      render('expense');
+      drawMonthly();
+      showToast("Estratti conto sincronizzati nel bilancio!");
+    } catch (e) {
+      alert("Errore sincronizzazione: " + e.message);
+    }
+  };
+
+  // ==========================================
+  // SINCRONIZZAZIONE DATABASE & INIZIALIZZAZIONE
+  // ==========================================
+  function subscribeSelectedMonth() {
+    if (unsubBudget) unsubBudget();
+    if (unsubVacanze) unsubVacanze();
+    if (!auth.currentUser) return;
+
+    const mKey = getMonthKey(selectedDate);
+    ref = doc(db, 'users', auth.currentUser.uid, 'budgets', mKey);
+    refVacanze = doc(db, 'users', auth.currentUser.uid, 'vacanze', mKey);
+
+    $('syncStatus').textContent = `Caricamento ${mKey}...`;
+
+    unsubBudget = onSnapshot(ref, async s => {
+      if (editing) return;
+      const d = s.exists() ? s.data() : {};
+
+      lastBudgetDoc = d;
+      refreshAmpollaFromDocs();
+
+      state = {
+        income: Array.isArray(d.income) ? d.income : [],
+        expense: Array.isArray(d.expense) ? d.expense : []
+      };
+
+      allWeeks = d.spesaSettimanale?.weeks && typeof d.spesaSettimanale.weeks === 'object' ? d.spesaSettimanale.weeks : {};
+      
+      syncWeeklyExpenses();
+      render('income');
+      render('expense');
+      renderSelectedWeek();
+      drawMonthly();
+      $('syncStatus').textContent = `Cloud sincronizzato ✓ (${mKey})`;
+    }, e => $('syncStatus').textContent = 'Errore Database: ' + e.message);
+
+    unsubVacanze = onSnapshot(refVacanze, s => {
+      lastVacanzeDoc = s.exists() ? s.data() : {};
+      refreshAmpollaFromDocs();
+    }, () => {});
+  }
+
+  function render(type) {
+    const el = $(type === 'income' ? 'incomeList' : 'expenseList');
+    el.innerHTML = '';
+    state[type].forEach((x, i) => {
+      const d = document.createElement('div');
+      const isAuto = isAutoCategory(x.name) || x.isAuto === true;
+      d.className = `entry ${isAuto ? 'auto-locked' : ''}`;
+      
+      const name = document.createElement('input');
+      name.placeholder = 'Descrizione';
+      name.value = x.name || '';
+      if (isAuto) {
+        name.disabled = true;
+        name.title = "Categoria automatica gestita dalla spesa";
+      }
+      
+      const amount = document.createElement('input');
+      amount.type = 'number';
+      amount.step = '0.01';
+      amount.placeholder = '€';
+      amount.value = x.amount ?? '';
+      if (isAuto) amount.disabled = true;
+      
+      const date = document.createElement('input');
+      date.type = 'date';
+      date.value = x.date || defaultDateForSelectedMonth();
+      if (isAuto) date.disabled = true;
+
+      const recBtn = document.createElement('button');
+      recBtn.type = 'button';
+      recBtn.className = `rec-toggle-btn ${x.isRecurring ? 'active' : ''}`;
+      recBtn.innerHTML = '<i class="fa-solid fa-rotate"></i>';
+      recBtn.title = x.isRecurring ? 'Spesa ricorrente attiva' : 'Attiva ricorrente';
+      if (isAuto) {
+        recBtn.style.opacity = '0.3';
+        recBtn.disabled = true;
+      }
+      
+      const del = document.createElement('button');
+      del.className = 'smallbtn';
+      del.textContent = '✕';
+      if (isAuto) {
+        del.style.opacity = '0.3';
+        del.disabled = true;
+      }
+      
+      if (!isAuto) {
+        name.oninput = () => { state[type][i].name = name.value; updateTotals(); };
+        amount.oninput = () => { state[type][i].amount = amount.value; updateTotals(); };
+        date.onchange = () => { state[type][i].date = date.value; drawMonthly(); };
+
+        if (type === 'expense') {
+          recBtn.onclick = () => {
+            triggerHaptic(12);
+            state[type][i].isRecurring = !state[type][i].isRecurring;
+            recBtn.classList.toggle('active', state[type][i].isRecurring);
+            finishEdit();
+          };
+        }
+        
+        [name, amount, date].forEach(v => v.onblur = finishEdit);
+        del.onclick = () => {
+          triggerHaptic(15);
+          state[type].splice(i, 1);
+          render(type);
+          saveNow();
+        };
+      }
+      
+      d.append(name, amount, date);
+      if (type === 'expense') d.appendChild(recBtn);
+      d.appendChild(del);
+      el.appendChild(d);
+    });
+    updateTotals();
+    drawMonthly();
+  }
+
+  function finishEdit() {
+    editing = false;
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(saveNow, 250);
+  }
+
+  function updateTotals() {
+    const inc = state.income.reduce((s, x) => s + num(x.amount), 0);
+    const exp = state.expense.reduce((s, x) => s + num(x.amount), 0);
+    
+    $('incomeTotal').textContent = money(inc);
+    $('expenseTotal').textContent = money(exp);
+    $('balanceTotal').textContent = money(inc - exp);
+  }
+
+  window.addRow = type => {
+    triggerHaptic(15);
+    state[type].push({ name: '', amount: '', date: defaultDateForSelectedMonth(), isRecurring: false, isAuto: false });
+    render(type);
+    setTimeout(() => $(type === 'income' ? 'incomeList' : 'expenseList').lastElementChild?.querySelector('input')?.focus(), 50);
+  };
+
+  window.toggleCollapse = (id, btn) => {
+    triggerHaptic(10);
+    const card = $(id);
+    card.classList.toggle('collapsed');
+    if (btn) btn.textContent = card.classList.contains('collapsed') ? '+' : '−';
+  };
+
+  async function saveNow() {
+    if (!ref) return;
+    try {
+      await setDoc(ref, { income: state.income, expense: state.expense, updatedAt: Date.now() }, { merge: true });
+      $('syncStatus').textContent = `Cloud sincronizzato ✓ (${getMonthKey(selectedDate)})`;
+    } catch (e) {
+      $('syncStatus').textContent = 'Errore salvataggio: ' + e.message;
     }
   }
-</script>
 
+  function drawMonthly() {
+    const y = selectedDate.getFullYear();
+    const m = selectedDate.getMonth();
+    const days = new Date(y, m + 1, 0).getDate();
+    const labels = Array.from({ length: days }, (_, i) => String(i + 1).padStart(2, '0'));
+    const inc = Array(days).fill(0), exp = Array(days).fill(0);
+
+    state.income.forEach(x => {
+      const d = new Date((x.date || defaultDateForSelectedMonth()) + 'T00:00:00');
+      if (d.getFullYear() === y && d.getMonth() === m) inc[d.getDate() - 1] += num(x.amount);
+    });
+
+    state.expense.forEach(x => {
+      if (isAutoCategory(x.name)) return;
+      const d = new Date((x.date || defaultDateForSelectedMonth()) + 'T00:00:00');
+      if (d.getFullYear() === y && d.getMonth() === m) exp[d.getDate() - 1] += num(x.amount);
+    });
+
+    Object.entries(allWeeks).forEach(([k, w]) => {
+      if (Array.isArray(w.entries) && w.entries.length > 0) {
+        w.entries.forEach(en => {
+          const d = new Date(en.date + 'T00:00:00');
+          if (d.getFullYear() === y && d.getMonth() === m) {
+            exp[d.getDate() - 1] += num(en.food) + num(en.pets);
+          }
+        });
+      } else {
+        const d = new Date(k + 'T00:00:00');
+        if (d.getFullYear() === y && d.getMonth() === m) {
+          const v = weekValues(k);
+          exp[d.getDate() - 1] += v.food + v.pets;
+        }
+      }
+    });
+
+    if (monthlyChart) monthlyChart.destroy();
+    monthlyChart = new Chart($('monthlyChart'), {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [
+          {
+            label: 'Entrate',
+            data: inc,
+            tension: 0.35,
+            borderColor: '#10b981',
+            backgroundColor: 'rgba(16, 185, 129, 0.05)',
+            borderWidth: 2,
+            pointRadius: 0,
+            fill: true
+          },
+          {
+            label: 'Spese',
+            data: exp,
+            tension: 0.35,
+            borderColor: '#f43f5e',
+            backgroundColor: 'rgba(244, 63, 94, 0.05)',
+            borderWidth: 2,
+            pointRadius: 0,
+            fill: true
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: true,
+            position: 'top',
+            labels: { color: '#94a3b8', font: { family: 'Plus Jakarta Sans', size: 12 }, boxWidth: 8 }
+          },
+          tooltip: {
+            backgroundColor: 'rgba(11, 15, 25, 0.95)',
+            borderColor: 'rgba(255, 255, 255, 0.1)',
+            borderWidth: 1,
+            padding: 10,
+            callbacks: { label: c => ` ${c.dataset.label}: ${money(c.raw)}` }
+          }
+        },
+        scales: {
+          x: { ticks: { color: '#64748b' }, grid: { color: 'rgba(255, 255, 255, 0.03)' } },
+          y: { beginAtZero: true, ticks: { color: '#64748b' }, grid: { color: 'rgba(255, 255, 255, 0.03)' } }
+        }
+      }
+    });
+  }
+
+  // Ampolla Animata
+  const canvas = $('waveCanvas');
+  const ctx = canvas ? canvas.getContext('2d') : null;
+  let targetFillLevel = 0.05, currentFillLevel = 0.05, waveStep = 0;
+
+  if (canvas && ctx) {
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = 125 * dpr;
+    canvas.height = 175 * dpr;
+    ctx.scale(dpr, dpr);
+  }
+
+  function drawWave() {
+    if (!ctx) return;
+    const w = 125, h = 175;
+    ctx.clearRect(0, 0, w, h);
+    currentFillLevel += (targetFillLevel - currentFillLevel) * 0.04;
+    const baseHeight = h - (h * Math.max(0.04, Math.min(0.96, currentFillLevel)));
+
+    ctx.fillStyle = 'rgba(56, 189, 248, 0.35)';
+    ctx.beginPath();
+    ctx.moveTo(0, h);
+    for (let x = 0; x <= w; x += 2) {
+      const y = Math.sin((x / 18) + (waveStep * 0.04)) * 4 + baseHeight;
+      ctx.lineTo(x, y);
+    }
+    ctx.lineTo(w, h);
+    ctx.closePath();
+    ctx.fill();
+
+    const grad = ctx.createLinearGradient(0, baseHeight - 10, 0, h);
+    grad.addColorStop(0, '#10b981');
+    grad.addColorStop(1, '#064e3b');
+    
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.moveTo(0, h);
+    for (let x = 0; x <= w; x += 2) {
+      const y = Math.cos((x / 22) - (waveStep * 0.05)) * 5 + (baseHeight + 3);
+      ctx.lineTo(x, y);
+    }
+    ctx.lineTo(w, h);
+    ctx.closePath();
+    ctx.fill();
+
+    waveStep++;
+    requestAnimationFrame(drawWave);
+  }
+  drawWave();
+
+  function calculateVacanzaSaved(d1, d2) {
+    let target = 120, saved = 0, foundWeeksSum = 0, hasWeeklyEntries = false;
+    const docs = [d1, d2].filter(Boolean);
+    for (const d of docs) {
+      if (d.vacanzaTarget) target = num(d.vacanzaTarget);
+      if (d.target) target = num(d.target);
+      if (d.vacanzaAccantonato !== undefined) saved = Math.max(saved, num(d.vacanzaAccantonato));
+      if (d.totaleVersato !== undefined) saved = Math.max(saved, num(d.totaleVersato));
+      
+      const weekContainers = [d.weeks, d.settimane, d.vacanze, d];
+      for (const container of weekContainers) {
+        if (!container || typeof container !== 'object') continue;
+        const items = Array.isArray(container) ? container : Object.values(container);
+        items.forEach(item => {
+          if (item && typeof item === 'object') {
+            const isChecked = item.versato === true || item.checked === true;
+            const val = num(item.amount ?? item.importo ?? item.val);
+            if (isChecked) { foundWeeksSum += val; hasWeeklyEntries = true; }
+          }
+        });
+      }
+    }
+    if (hasWeeklyEntries && foundWeeksSum > 0) saved = foundWeeksSum;
+    return { saved, target: target || 120 };
+  }
+
+  function updateAmpolla(d) {
+    const saved = num(d?.vacanzaAccantonato), target = num(d?.vacanzaTarget) || 120;
+    const pct = Math.min(100, (saved / target) * 100);
+    $('ampollaEuro').textContent = money(saved);
+    $('ampollaInside').textContent = money(saved);
+    $('ampollaPercent').textContent = Math.round(pct) + '% dell\'obiettivo di ' + money(target);
+    const badge = $('ampollaPercentBadge');
+    if (badge) badge.textContent = Math.round(pct) + '%';
+    targetFillLevel = Math.max(0.04, Math.min(1, saved / target));
+  }
+
+  function refreshAmpollaFromDocs() {
+    const { saved, target } = calculateVacanzaSaved(lastBudgetDoc, lastVacanzeDoc);
+    updateAmpolla({ vacanzaAccantonato: saved, vacanzaTarget: target });
+  }
+
+  async function versaImporto() {
+    if (!auth.currentUser || !ref) return;
+    const amount = num($('depositAmount').value);
+    if (!amount || amount <= 0) return;
+    triggerHaptic(25);
+    
+    const snap = await getDoc(ref), d = snap.exists() ? snap.data() : {};
+    const snapV = refVacanze ? await getDoc(refVacanze) : null;
+    const dV = snapV && snapV.exists() ? snapV.data() : {};
+    
+    const currentData = calculateVacanzaSaved(d, dV);
+    const saved = currentData.saved + amount;
+    const target = currentData.target || 120;
+    
+    state.expense.push({ name: 'Versamento Salvadanaio Vacanze', amount: amount, date: defaultDateForSelectedMonth(), isRecurring: false, isAuto: false });
+    await setDoc(ref, { vacanzaAccantonato: saved, vacanzaTarget: target, expense: state.expense, updatedAt: Date.now() }, { merge: true });
+
+    if (refVacanze) {
+      await setDoc(refVacanze, { totaleVersato: saved, vacanzaAccantonato: saved, target: target, updatedAt: Date.now() }, { merge: true });
+    }
+    $('depositAmount').value = '';
+    render('expense');
+    updateAmpolla({ vacanzaAccantonato: saved, vacanzaTarget: target });
+  }
+
+  async function svuotaSalvadanaio() {
+    if (!auth.currentUser || !ref) return;
+    if (!confirm("Azzerare il salvadanaio vacanze per questo mese?")) return;
+    triggerHaptic(35);
+    await setDoc(ref, { vacanzaAccantonato: 0, vacanzaTarget: 120, updatedAt: Date.now() }, { merge: true });
+    if (refVacanze) {
+      await setDoc(refVacanze, { totaleVersato: 0, vacanzaAccantonato: 0, target: 120, updatedAt: Date.now() }, { merge: true });
+    }
+    updateAmpolla({ vacanzaAccantonato: 0, vacanzaTarget: 120 });
+  }
+
+  $('openVacanze').onclick = () => location.href = 'vacanze.html';
+  $('addVacanza').onclick = versaImporto;
+  $('resetVacanza').onclick = svuotaSalvadanaio;
+  $('depositAmount').addEventListener('keydown', e => { if (e.key === 'Enter') versaImporto(); });
+
+  $('loginScreenBtn').onclick = async () => {
+    try { await signInWithPopup(auth, provider); }
+    catch (e) { $('loginError').textContent = 'Accesso non riuscito: ' + (e.code || e.message); }
+  };
+  $('topLogin').onclick = () => $('loginScreenBtn').click();
+  $('logoutBtn').onclick = () => signOut(auth);
+  $('topLogoutBtn').onclick = () => signOut(auth);
+
+  onAuthStateChanged(auth, user => {
+    if (!user) {
+      $('login').style.display = 'flex';
+      $('app').style.display = 'none';
+      $('topLogin').style.display = 'inline-flex';
+      $('topUserProfile').style.display = 'none';
+      return;
+    }
+    $('login').style.display = 'none';
+    $('app').style.display = 'block';
+
+    const photo = user.photoURL || 'https://via.placeholder.com/32';
+    const name = user.displayName || user.email || 'Utente';
+    $('userInfo').innerHTML = `<img src="${photo}" class="user-avatar-small" alt="Avatar"> <span>${user.email || ''}</span>`;
+    $('topUserImg').src = photo;
+    $('topUserName').textContent = name;
+    $('topLogin').style.display = 'none';
+    $('topUserProfile').style.display = 'flex';
+    
+    refGemini = doc(db, 'users', user.uid, 'settings', 'gemini');
+    onSnapshot(refGemini, s => {
+      if (s.exists()) {
+        userGeminiApiKey = s.data().apiKey || "";
+        $('geminiApiKeyInput').value = userGeminiApiKey;
+      }
+    });
+
+    updateMonthHeader();
+    subscribeSelectedMonth();
+  });
+
+  const geminiModal = $('geminiModal');
+  $('openGeminiModalBtn').onclick = () => { triggerHaptic(12); geminiModal.classList.add('open'); };
+  $('closeGeminiModalBtn').onclick = () => geminiModal.classList.remove('open');
+  geminiModal.onclick = e => { if (e.target === geminiModal) geminiModal.classList.remove('open'); };
+
+  $('saveGeminiKeyBtn').onclick = async () => {
+    if (!auth.currentUser || !refGemini) return;
+    const k = $('geminiApiKeyInput').value.trim();
+    if (!k) return alert("Inserisci una chiave valida.");
+    try {
+      await setDoc(refGemini, { apiKey: k, updatedAt: Date.now() }, { merge: true });
+      userGeminiApiKey = k;
+      geminiModal.classList.remove('open');
+      alert("Chiave Gemini salvata in modo sicuro nel tuo cloud privato!");
+    } catch (e) {
+      alert("Errore salvataggio chiave: " + e.message);
+    }
+  };
+
+  // AI COACH & DETTATURA VOCALE
+  async function queryAiCoach(customQuestion = null, isVoiceExpense = false) {
+    if (!userGeminiApiKey) {
+      geminiModal.classList.add('open');
+      return alert("Inserisci prima la tua chiave gratuita di Gemini per attivare il Coach!");
+    }
+
+    triggerHaptic(20);
+    const out = $('aiCoachText');
+    const mName = $('currentMonthDisplay').textContent;
+    
+    out.innerHTML = `<div style="display: flex; align-items: center; gap: 8px; color: #38bdf8;">
+      <i class="fa-solid fa-spinner fa-spin"></i> ${isVoiceExpense ? 'Elaborazione spesa vocale con AI...' : `Gemini sta analizzando i dati di ${mName}...`}
+    </div>`;
+
+    const incTot = state.income.reduce((s, x) => s + num(x.amount), 0);
+    const expTot = state.expense.reduce((s, x) => s + num(x.amount), 0);
+    const netBal = incTot - expTot;
+    const savedVacanza = num(lastBudgetDoc?.vacanzaAccantonato || 0);
+
+    const baseContext = `Sei l'AI Financial Coach di "AI-BUDGET".
+Mese: ${mName}
+- Entrate: € ${incTot.toFixed(2)}
+- Uscite Totali: € ${expTot.toFixed(2)}
+- Risparmio Netto: € ${netBal.toFixed(2)}
+- Fondo Vacanze: € ${savedVacanza.toFixed(2)}`;
+
+    let promptText = "";
+
+    if (isVoiceExpense) {
+      promptText = `${baseContext}
+L'utente ha detto: "${customQuestion}"
+Determina se fa riferimento a "Spesa Luca e Lisa", "Spesa Animali" o ad un'altra voce e restituisci SOLO questo JSON:
+{"name": "Nome spesa", "amount": 0.00}`;
+    } else if (customQuestion) {
+      promptText = `${baseContext}\nDomanda: "${customQuestion}"\nRispondi in modo diretto, concreto e motivante.`;
+    } else {
+      promptText = `${baseContext}\nFornisci 3 raccomandazioni concise (Stato attuale, Spese alimentari/cura, Risparmi).`;
+    }
+
+    const modelsToTry = ['gemini-2.5-flash', 'gemini-1.5-flash'];
+    let reply = null;
+
+    for (const model of modelsToTry) {
+      try {
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(userGeminiApiKey)}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ contents: [{ parts: [{ text: promptText }] }] })
+        });
+        const data = await response.json();
+        if (!data.error) {
+          reply = data.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (reply) break;
+        }
+      } catch (err) {}
+    }
+
+    if (!reply) {
+      out.innerHTML = `<span style="color: var(--accent-red);"><i class="fa-solid fa-triangle-exclamation"></i> Errore elaborazione AI.</span>`;
+      return;
+    }
+
+    if (isVoiceExpense) {
+      try {
+        const cleanJson = reply.replace(/```json/g, '').replace(/```/g, '').trim();
+        const parsed = JSON.parse(cleanJson);
+        if (parsed.name && parsed.amount) {
+          const lower = parsed.name.toLowerCase();
+          
+          if (lower.includes('alimentar') || lower.includes('spesa') || lower.includes('cibo') || lower.includes('lisa') || lower.includes('luca')) {
+            $('inputDailyFood').value = num(parsed.amount);
+            $('submitDailyExpenseBtn').click();
+            out.innerHTML = `<div style="color: var(--accent-green); font-weight: 700;">
+              <i class="fa-solid fa-circle-check"></i> Aggiunto a Spesa Luca e Lisa: ${money(parsed.amount)}
+            </div>`;
+            return;
+          } else if (lower.includes('anim') || lower.includes('gatt') || lower.includes('can') || lower.includes('pet')) {
+            $('inputDailyPets').value = num(parsed.amount);
+            $('submitDailyExpenseBtn').click();
+            out.innerHTML = `<div style="color: var(--accent-green); font-weight: 700;">
+              <i class="fa-solid fa-circle-check"></i> Aggiunto a Spesa Animali: ${money(parsed.amount)}
+            </div>`;
+            return;
+          }
+
+          state.expense.push({
+            name: parsed.name,
+            amount: num(parsed.amount),
+            date: defaultDateForSelectedMonth(),
+            isRecurring: false,
+            isAuto: false
+          });
+          render('expense');
+          await saveNow();
+          out.innerHTML = `<div style="color: var(--accent-green); font-weight: 700;">
+            <i class="fa-solid fa-circle-check"></i> Registrata: ${parsed.name} (${money(parsed.amount)})
+          </div>`;
+          return;
+        }
+      } catch (e) {}
+    }
+
+    const formatted = reply
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\n\n/g, '</p><p>')
+      .replace(/\n/g, '<br>');
+
+    out.innerHTML = `<p>${formatted}</p>`;
+  }
+
+  $('askAiCoachBtn').onclick = () => queryAiCoach();
+
+  function handleSendUserQuestion() {
+    const q = $('aiUserQuestionInput').value.trim();
+    if (!q) return;
+    queryAiCoach(q);
+    $('aiUserQuestionInput').value = '';
+  }
+
+  $('sendAiQuestionBtn').onclick = handleSendUserQuestion;
+  $('aiUserQuestionInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') handleSendUserQuestion();
+  });
+
+  const micBtn = $('micVoiceBtn');
+  const speechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+  if (speechRecognition) {
+    const recognition = new speechRecognition();
+    recognition.lang = 'it-IT';
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    micBtn.onclick = () => {
+      triggerHaptic(20);
+      try {
+        recognition.start();
+        micBtn.classList.add('listening');
+        $('aiCoachText').innerHTML = `<span style="color: #38bdf8;"><i class="fa-solid fa-microphone fa-beat"></i> Ti sto ascoltando...</span>`;
+      } catch (e) {
+        micBtn.classList.remove('listening');
+      }
+    };
+
+    recognition.onresult = event => {
+      micBtn.classList.remove('listening');
+      const speechText = event.results[0][0].transcript;
+      $('aiUserQuestionInput').value = speechText;
+      queryAiCoach(speechText, true);
+    };
+
+    recognition.onerror = () => {
+      micBtn.classList.remove('listening');
+      $('aiCoachText').innerHTML = `<span style="color: var(--accent-red);">Riconoscimento non riuscito.</span>`;
+    };
+
+    recognition.onend = () => micBtn.classList.remove('listening');
+  } else {
+    micBtn.onclick = () => alert("Riconoscimento vocale non supportato.");
+  }
+
+  // Calcolatrice
+  const calcModal = $('calcModal');
+  $('calcToggleBtn').onclick = () => { triggerHaptic(12); calcModal.classList.add('open'); };
+  $('closeCalcBtn').onclick = () => calcModal.classList.remove('open');
+  calcModal.onclick = e => { if (e.target === calcModal) calcModal.classList.remove('open'); };
+
+  let appleCalcCurrent = '0', appleCalcPrevious = null, appleCalcOperatorValue = null, appleCalcWaitingForNewNumber = false;
+  
+  function appleCalcUpdateDisplay() {
+    const d = $('appleCalcDisplay');
+    if (d) d.textContent = appleCalcCurrent.length > 9 ? Number(appleCalcCurrent).toLocaleString('it-IT', { maximumFractionDigits: 6 }) : appleCalcCurrent;
+  }
+  window.appleCalcNumber = n => {
+    triggerHaptic(8);
+    if (appleCalcCurrent === '0' || appleCalcWaitingForNewNumber) { appleCalcCurrent = n; appleCalcWaitingForNewNumber = false; }
+    else appleCalcCurrent += n;
+    appleCalcUpdateDisplay();
+  };
+  window.appleCalcDecimal = () => {
+    triggerHaptic(8);
+    if (appleCalcWaitingForNewNumber) { appleCalcCurrent = '0.'; appleCalcWaitingForNewNumber = false; }
+    else if (!appleCalcCurrent.includes('.')) appleCalcCurrent += '.';
+    appleCalcUpdateDisplay();
+  };
+  window.appleCalcClear = () => {
+    triggerHaptic(12);
+    appleCalcCurrent = '0'; appleCalcPrevious = null; appleCalcOperatorValue = null; appleCalcWaitingForNewNumber = false;
+    appleCalcUpdateDisplay();
+  };
+  window.appleCalcPlusMinus = () => { triggerHaptic(10); if (appleCalcCurrent !== '0') appleCalcCurrent = String(Number(appleCalcCurrent) * -1); appleCalcUpdateDisplay(); };
+  window.appleCalcPercent = () => { triggerHaptic(10); appleCalcCurrent = String(Number(appleCalcCurrent) / 100); appleCalcUpdateDisplay(); };
+  window.appleCalcOperator = op => {
+    triggerHaptic(12);
+    if (appleCalcOperatorValue && !appleCalcWaitingForNewNumber) window.appleCalcEquals();
+    appleCalcPrevious = Number(appleCalcCurrent);
+    appleCalcOperatorValue = op;
+    appleCalcWaitingForNewNumber = true;
+  };
+  window.appleCalcEquals = () => {
+    triggerHaptic(15);
+    if (appleCalcPrevious === null || !appleCalcOperatorValue) return;
+    const c = Number(appleCalcCurrent);
+    let r = 0;
+    if (appleCalcOperatorValue === '+') r = appleCalcPrevious + c;
+    if (appleCalcOperatorValue === '-') r = appleCalcPrevious - c;
+    if (appleCalcOperatorValue === '×') r = appleCalcPrevious * c;
+    if (appleCalcOperatorValue === '÷') r = c === 0 ? 0 : appleCalcPrevious / c;
+    appleCalcCurrent = String(Number(r.toFixed(8)));
+    appleCalcPrevious = null; appleCalcOperatorValue = null; appleCalcWaitingForNewNumber = true;
+    appleCalcUpdateDisplay();
+  };
+
+  // Consumi Tuya Live
+  let currentWatts = 0, accumulatedKwh = 0;
+  const kwhRate = 0.28;
+  const setWattBtn = $('setWattBtn');
+  if (setWattBtn) {
+    setWattBtn.onclick = () => {
+      triggerHaptic(12);
+      const v = num($('simWattInput').value);
+      currentWatts = Math.max(0, v);
+      $('liveWattValue').textContent = currentWatts;
+      $('simWattInput').value = '';
+    };
+  }
+
+  setInterval(() => {
+    if (currentWatts > 0) {
+      accumulatedKwh += (currentWatts * (5 / 3600)) / 1000;
+      const cost = accumulatedKwh * kwhRate;
+      if ($('liveKwhToday')) $('liveKwhToday').textContent = accumulatedKwh.toFixed(3) + ' kWh';
+      if ($('liveCostToday')) $('liveCostToday').textContent = money(cost);
+    }
+  }, 5000);
+</script>
 </body>
 </html>
-
