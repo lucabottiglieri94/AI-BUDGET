@@ -1576,10 +1576,18 @@
 
   // Spese alimentari da mantenere separate
   const isGrocery = (description) => {
-    return /lidl|conad|\bdem\b|demilio/i.test(
-      String(description || '')
-    );
-  };
+  const s = String(description || '').toLowerCase();
+
+  // Bonifici e affitto non sono spese alimentari
+  if (
+    /bonifico|affitto|federica|demilio.*bonifico|bonifico.*demilio/.test(s)
+  ) {
+    return false;
+  }
+
+  // Solo spese alimentari
+  return /lidl|conad|\bdem\b/.test(s);
+};
 
   const addGrocery = (description, amount, source) => {
     if (!amount || amount <= 0) return;
