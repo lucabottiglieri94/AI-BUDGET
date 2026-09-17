@@ -144,6 +144,7 @@ body{margin:0;background:radial-gradient(circle at 0 0,#162749,#07101d 58%);colo
 <input id="billPdf" type="file" accept="application/pdf,image/*" style="display:none">
 <button id="uploadPdfBtn" class="btn" type="button"><i class="fa-solid fa-file-pdf"></i> Importa bolletta PDF</button>
 <button id="saveBill" class="btn primary"><i class="fa-solid fa-file-invoice"></i> Salva bolletta e calcola</button>
+<button id="clearBillsBtn" class="btn" type="button" style="border-color:#ef4444;color:#fca5a5"><i class="fa-solid fa-trash-can"></i> Pulisci dati bollette</button>
 </div>
 </div>
 <div class="rows" style="margin-top:14px">
@@ -413,6 +414,37 @@ $('generateChartBtn').onclick=()=>{
   const ok=drawBillChart();
   $('generateChartBtn').textContent=ok?'✓ Grafico aggiornato':'📈 Genera grafico';
   if(ok) setTimeout(()=>$('generateChartBtn').textContent='📈 Genera grafico',1800);
+};
+
+// ==================== PULIZIA DATI BOLLETTE ====================
+// Cancella esclusivamente lo storico e i dati riepilogativi delle bollette,
+// senza eliminare dispositivo, consumi Tuya o account Firebase.
+$('clearBillsBtn').onclick=async()=>{
+  const conferma=confirm('Eliminare tutti i dati salvati delle bollette e lo storico del grafico? Questa operazione non elimina il dispositivo.');
+  if(!conferma) return;
+  const btn=$('clearBillsBtn');
+  btn.disabled=true;
+  btn.innerHTML='⏳ Pulizia in corso...';
+  try{
+    settings={...settings, billTotal:0, billKwh:0, billNet:0, billShare:0,
+      billPeriod:'', billYear:0, kwhRate:0.285, billHistory:{}, billFileUrl:''};
+    $('billTotal').value='';
+    $('billKwh').value='';
+    $('billYear').value=new Date().getFullYear();
+    $('billPdf').value='';
+    $('billStatus').textContent='Dati bollette eliminati. Puoi importare un nuovo PDF.';
+    $('billStatus').style.color='#34d399';
+    await save();
+    render();
+    drawBillChart();
+  }catch(e){
+    console.error('Pulizia bollette fallita',e);
+    $('billStatus').textContent='Errore durante la pulizia: '+(e.message||e);
+    $('billStatus').style.color='#f59e0b';
+  }finally{
+    btn.disabled=false;
+    btn.innerHTML='<i class="fa-solid fa-trash-can"></i> Pulisci dati bollette';
+  }
 };
 
 onAuthStateChanged(auth,user=>{
