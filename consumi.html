@@ -2,13 +2,22 @@
 num=x=>Number(String(x).replace(/\./g,'').replace(',','.')),
 pick=arr=>{for(const r of arr){const m=text.match(r);if(m)return num(m[1])}return 0},
 total=pick([/(?:totale da pagare|totale bolletta|importo totale)[^0-9]{0,40}(\d+[.,]\d{2})/i]),
-kwhSpecific=pick([/(?:consumo fatturato|energia (?:attiva )?consumata|consumo del periodo|consumi fatturati)[^0-9]{0,40}(\d+[.,]\d{1,3})\s*kwh/i]);
-let kwh=kwhSpecific;
-if(!kwh){const all=[...text.matchAll(/(\d+[.,]\d{1,3})\s*kwh/gi)];for(const m of all){const ctx=text.slice(Math.max(0,(m.index||0)-40),m.index||0).toLowerCase();if(!/annuo|annua|stimat/.test(ctx)){kwh=num(m[1]);break}}}
+kwhLabelled=pick([
+  /consumo del periodo(?:\s*di\s*fatturazione)?[^0-9]{0,40}(\d[\d.,]*)\s*kwh/i,
+  /(?:consumo fatturato|energia (?:attiva )?consumata|consumi fatturati|kwh fatturati)[^0-9]{0,40}(\d[\d.,]*)\s*kwh/i
+]);
+const kwhCandidates=[...text.matchAll(/(\d[\d.,]*)\s*kwh/gi)].map(m=>{
+  const val=num(m[1]),i=m.index||0,start=Math.max(0,i-55),end=Math.min(text.length,i+15),ctx=text.slice(start,end).toLowerCase();
+  return{val,excluded:/annuo|annua|stimat|previst|storico|in un anno|hai consumato/.test(ctx)}
+}).filter(c=>c.val>0);
+let kwh=kwhLabelled;
+if(!kwh){const plausible=kwhCandidates.filter(c=>!c.excluded&&c.val<=1800);if(plausible.length)kwh=plausible[0].val}
+if(!kwh&&kwhCandidates.length)kwh=Math.min(...kwhCandidates.map(c=>c.val));
 $('billTotal').value=total||'';$('billKwh').value=kwh||'';
 const det=detectPeriodAndYear(text);
 if(det){$('billPeriod').value=det.period;$('billYear').value=det.year}else initBillDefaults();
-if(!total||!kwh)throw Error('PDF letto ma dati non riconosciuti: verifica la pagina riepilogo')}catch(e){alert(e.message)}};$('saveBill').onclick=async()=>{const total=Number($('billTotal').value)||0,kwh=Number($('billKwh').value)||0,period=$('billPeriod').value,year=Number($('billYear').value)||new Date().getFullYear();
+$('billStatus').textContent=(total&&kwh)?'Dati letti dal PDF: verifica i campi e premi Salva':'PDF letto ma dati incompleti: controlla/correggi i campi';
+if(!total||!kwh)throw Error('PDF letto ma dati non riconosciuti: verifica/correggi i campi a mano prima di salvare')}catch(e){alert(e.message)}};$('saveBill').onclick=async()=>{const total=Number($('billTotal').value)||0,kwh=Number($('billKwh').value)||0,period=$('billPeriod').value,year=Number($('billYear').value)||new Date().getFullYear();
 if(total<=0||kwh<=0){alert('Inserisci totale bolletta e kWh del bimestre');return}
 const rai=raiForPeriod(period),net=Math.max(0,total-rai),share=net/2,unitRate=kwh?net/kwh:0;
 const historyKey=`${year}_${period}`;
