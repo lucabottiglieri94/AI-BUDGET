@@ -12,34 +12,32 @@
   const u='https://raw.githubusercontent.com/lucabottiglieri94/AI-BUDGET/fee9e9fca55d47c94c69f8ca61208f88af41498c/consumi.html';
   let s=await (await fetch(u,{cache:'no-store'})).text();
   
-  // 1. La tua logica esatta (NON TOCCATA)
-  s=s.replace('<label>Canone RAI (€)<input id="billRai" type="number" step="0.01" value="0" placeholder="0.00"></label>','');
-  s=s.replace('<label>Periodo bolletta<input id="billPeriod" type="text" placeholder="Luglio - Agosto 2026"></label>','<label>Bimestre bolletta<select id="billPeriod"><option>Gennaio - Febbraio</option><option>Marzo - Aprile</option><option>Maggio - Giugno</option><option>Luglio - Agosto</option><option>Settembre - Ottobre</option><option>Novembre - Dicembre</option></select></label>');
-  s=s.replace('Il calcolo esclude il Canone RAI e divide la spesa rimanente in due per la quota personale.','Calcolo automatico: totale bolletta − 18 € Canone RAI. La quota personale da pagare è il totale netto diviso 2.');
-  s=s.replace('Totale escluso Canone RAI','Totale netto bolletta');
-  s=s.replace('Quota personale divisa per 2','Quota personale da pagare (netto ÷ 2)');
-  s=s.replace('const total=Number($(\'billTotal\').value)||0,rai=Number($(\'billRai\').value)||0,kwh=Number($(\'billKwh\').value)||0;','const total=Number($(\'billTotal\').value)||0,kwh=Number($(\'billKwh\').value)||0,rai=18;');
-  s=s.replace("$('billRai').value=rai||0;",'');
+  // 1. NASCONDO il Canone RAI anziché cancellarlo, così il tuo sistema originale non va in errore e completa i calcoli
+  s=s.replace('<label>Canone RAI (€)<input id="billRai" type="number" step="0.01" value="0" placeholder="0.00"></label>',
+              '<div style="display:none;"><label>Canone RAI (€)<input id="billRai" type="number" step="0.01" value="18" placeholder="0.00"></label></div>');
+              
+  // 2. Inserisco la tendina del Bimestre. Quando cambia, aggiorna di nascosto il Canone RAI e ricalcola
+  s=s.replace('<label>Periodo bolletta<input id="billPeriod" type="text" placeholder="Luglio - Agosto 2026"></label>',
+              '<label>Bimestre bolletta<select id="billPeriod" onchange="document.getElementById(\\'billRai\\').value = (this.value === \\'Novembre - Dicembre\\') ? 0 : 18; document.getElementById(\\'billKwh\\').dispatchEvent(new Event(\\'input\\'));"><option>Gennaio - Febbraio</option><option>Marzo - Aprile</option><option>Maggio - Giugno</option><option>Luglio - Agosto</option><option>Settembre - Ottobre</option><option>Novembre - Dicembre</option></select></label>');
 
-  // 2. Aggiunta calcolatore per il "Prezzo unitario al kW" in basso
+  // 3. Rinomino i kWh e rimuovo l'eventuale numero annuo fuorviante (2125)
+  s=s.replace('kWh fatturati', 'kWh del bimestre');
+  s=s.replace('placeholder="2125"', 'placeholder="Es. 350"');
+  s=s.replace('value="2125"', 'value=""');
+
+  // 4. Testi descrittivi sistemati per riflettere la tua esatta logica
+  s=s.replace('Il calcolo esclude il Canone RAI e divide la spesa rimanente in due per la quota personale.',
+              'Logica: (Totale bolletta − 18€ Canone RAI) ÷ 2 = Quota da pagare. La tariffa è calcolata sul totale netto.');
+  s=s.replace('Totale escluso Canone RAI','Totale netto bolletta');
+  s=s.replace('Quota personale divisa per 2','Quota personale da pagare (Netto ÷ 2)');
+
+  // 5. Inizializzo forzatamente il valore del Canone a 18 all'avvio per assicurare la correttezza del primo calcolo
   s += `
-  <div style="margin: 20px auto; padding: 15px; max-width: 500px; background-color: #f1f8ff; border-left: 5px solid #007bff; border-radius: 8px; font-family: Arial, sans-serif; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-      <strong style="color: #333;">Prezzo Unitario:</strong> 
-      <span id="displayCostoKw" style="color: #007bff; font-weight: bold; font-size: 1.1em;">0.000</span> <span style="color: #555;">€ / kWh</span>
-      <div style="font-size: 0.85em; color: #777; margin-top: 5px;">Calcolato sul totale netto (senza canone RAI)</div>
-  </div>
   <script>
-      document.addEventListener('input', function() {
-          const tot = Number(document.getElementById('billTotal')?.value) || 0;
-          const kw = Number(document.getElementById('billKwh')?.value) || 0;
-          if (tot > 0 && kw > 0) {
-              const netto = tot - 18; // Tolgo i 18€ del bimestre
-              const costoUnitario = netto / kw;
-              document.getElementById('displayCostoKw').innerText = costoUnitario.toFixed(3);
-          } else {
-              document.getElementById('displayCostoKw').innerText = "0.000";
-          }
-      });
+      setTimeout(() => {
+          let rai = document.getElementById('billRai');
+          if(rai && rai.value === "0") { rai.value = "18"; }
+      }, 500);
   <\/script>
   `;
 
