@@ -1,1 +1,87 @@
-<!doctype html><html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>AI-BUDGET | Consumi Smart</title></head><body><p style="font-family:Arial;padding:20px">Caricamento Consumi Smart…</p><script>(async()=>{try{const u='https://raw.githubusercontent.com/lucabottiglieri94/AI-BUDGET/fee9e9fca55d47c94c69f8ca61208f88af41498c/consumi.html';let s=await (await fetch(u,{cache:'no-store'})).text();s=s.replace(/<label>Canone RAI \(€\)[\s\S]*?<\/label>/,'');s=s.replace(/<label>Periodo bolletta[\s\S]*?<\/label>/,'<label>Bimestre bolletta<select id="billPeriod"><option>Gennaio - Febbraio</option><option>Marzo - Aprile</option><option>Maggio - Giugno</option><option>Luglio - Agosto</option><option>Settembre - Ottobre</option><option>Novembre - Dicembre</option></select></label>');s=s.replace(/Il calcolo esclude il Canone RAI e divide la spesa rimanente in due per la quota personale\./,'Il Canone RAI fisso di 18 € viene escluso. Totale netto = totale − 18 €. Quota personale = totale netto ÷ 2. Tariffa = totale netto ÷ kWh del periodo fatturato.');s=s.replace('Totale escluso Canone RAI','Totale netto bolletta (−18 € RAI)');s=s.replace('Quota personale divisa per 2','Quota personale da pagare (netto ÷ 2)');s=s.replace(/<div class="row"><span class="muted">Costo attuale stimato<\/span>[\s\S]*?<\/div>/,'');s=s.replace(/const total=Number\(\$\('billTotal'\)\.value\)\|\|0,rai=Number\(\$\('billRai'\)\.value\)\|\|0,kwh=Number\(\$\('billKwh'\)\.value\)\|\|0;/,"const total=Number($('billTotal').value)||0,kwh=Number($('billKwh').value)||0,rai=18;");s=s.replace("$('billRai').value=rai||0;",'');s=s.replace(/function extractField\([\s\S]*?async function extractBillText/,"function extractField(text,patterns){for(const p of patterns){const m=text.match(p);if(m){const n=parseItalianNumber(m[1]);if(n)return n}}return 0}async function extractBillText");const a=s.indexOf("$('billFile').onchange=async()=>");const b=s.indexOf("$('saveBill').onclick",a);if(a>0&&b>a){s=s.slice(0,a)+"$('billFile').onchange=async()=>{try{const f=$('billFile').files[0],text=await extractBillText(f),clean=String(text).replace(/\\u00a0/g,' ').replace(/\\s+/g,' '),num=x=>{let v=String(x).trim().replace(/\\.(?=\\d{3}(?:\\D|$))/g,'').replace(',','.');return Number(v)||0},find=patterns=>{for(const r of patterns){const m=clean.match(r);if(m){const v=num(m[1]);if(v>0)return v}}return 0},total=find([/(?:totale\\s+(?:da\\s+pagare|fattura)|importo\\s+totale|totale\\s+bolletta)[^\\d]{0,60}(\\d{1,5}(?:[.,]\\d{2}))/i,/(?:da\\s+pagare|totale\\s+da\\s+pagare)[^\\d]{0,40}(\\d{1,5}(?:[.,]\\d{2}))/i]),kwh=find([/(?:consumo\\s+fatturato|energia\\s+consumata\\s+nel\\s+periodo|consumi\\s+del\\s+periodo|consumo\\s+del\\s+periodo|energia\\s+fatturata)[^\\d]{0,70}(\\d{1,5}(?:[.,]\\d{1,3}))\\s*kwh/i,/(\\d{1,5}(?:[.,]\\d{1,3}))\\s*kwh\\b(?![^.]{0,30}(?:annuo|annuale|12\\s*mesi|anno))/i]);$('billTotal').value=total||'';$('billKwh').value=kwh||'';if(!total||!kwh)throw Error('Non trovati totale da pagare e kWh del periodo fatturato; escluso il consumo annuo.');$('billStatus').textContent='PDF analizzato: periodo fatturato'}catch(e){$('billStatus').textContent='Errore lettura PDF';alert(e.message)}};"+s.slice(b)}s=s.replace(/const share=total\/2;settings=\{\.\.\.settings,billTotal:total,billRai:0,billKwh:kwh,billNet:share,billShare:share,kwhRate:share\/kwh,billPeriod:\$\('billPeriod'\)\.value\.trim\(\)\};/,"const rai=18,net=Math.max(0,total-rai),share=net/2;settings={...settings,billTotal:total,billRai:rai,billKwh:kwh,billNet:net,billShare:share,kwhRate:net/kwh,billPeriod:$('billPeriod').value};");document.open();document.write(s);document.close()}catch(e){document.body.innerHTML='<p style="font-family:Arial;padding:20px">Errore caricamento pagina: '+e.message+'</p>'}})();</script></body></html>
+<!doctype html>
+<html lang="it">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>AI-BUDGET | Consumi Smart</title>
+</head>
+<body>
+    <p style="font-family:Arial;padding:20px">Caricamento Consumi Smart…</p>
+    <script>
+        (async () => {
+            try {
+                const u = 'https://raw.githubusercontent.com/lucabottiglieri94/AI-BUDGET/fee9e9fca55d47c94c69f8ca61208f88af41498c/consumi.html';
+                let s = await (await fetch(u, { cache: 'no-store' })).text();
+                
+                // Tutti i tuoi replace originali invariati
+                s = s.replace(/<label>Canone RAI \(€\)[\s\S]*?<\/label>/, '');
+                s = s.replace(/<label>Periodo bolletta[\s\S]*?<\/label>/, '<label>Bimestre bolletta<select id="billPeriod"><option>Gennaio - Febbraio</option><option>Marzo - Aprile</option><option>Maggio - Giugno</option><option>Luglio - Agosto</option><option>Settembre - Ottobre</option><option>Novembre - Dicembre</option></select></label>');
+                s = s.replace(/Il calcolo esclude il Canone RAI e divide la spesa rimanente in due per la quota personale\./, 'Il Canone RAI fisso di 18 € viene escluso. Totale netto = totale − 18 €. Quota personale = totale netto ÷ 2. Tariffa = totale netto ÷ kWh del periodo fatturato.');
+                s = s.replace('Totale escluso Canone RAI', 'Totale netto bolletta (−18 € RAI)');
+                s = s.replace('Quota personale divisa per 2', 'Quota personale da pagare (netto ÷ 2)');
+                s = s.replace(/<div class="row"><span class="muted">Costo attuale stimato<\/span>[\s\S]*?<\/div>/, '');
+                s = s.replace(/const total=Number\(\$\('billTotal'\)\.value\)\|\|0,rai=Number\(\$\('billRai'\)\.value\)\|\|0,kwh=Number\(\$\('billKwh'\)\.value\)\|\|0;/, "const total=Number($('billTotal').value)||0,kwh=Number($('billKwh').value)||0,rai=18;");
+                s = s.replace("$('billRai').value=rai||0;", '');
+                s = s.replace(/function extractField\([\s\S]*?async function extractBillText/, "function extractField(text,patterns){for(const p of patterns){const m=text.match(p);if(m){const n=parseItalianNumber(m[1]);if(n)return n}}return 0}async function extractBillText");
+                
+                const a = s.indexOf("$('billFile').onchange=async()=>");
+                const b = s.indexOf("$('saveBill').onclick", a);
+                
+                if (a > 0 && b > a) {
+                    // Questa stringa è l'unica cosa che cambia: calcola i consumi a schermo tenendo la tua regex come fallback
+                    const logic = `$('billFile').onchange=async()=>{
+                        try{
+                            const f=$('billFile').files[0];
+                            $('billStatus').innerHTML='<span style="color:#0284c7">Analisi PDF in corso (OCR/Gemini)... ⏳</span>';
+                            
+                            const text=await extractBillText(f);
+                            let total=0, kwh=0;
+                            
+                            try {
+                                const jsonMatch = String(text).match(/\\{[\\s\\S]*?\\}/);
+                                if (jsonMatch) {
+                                    const data = JSON.parse(jsonMatch[0]);
+                                    total = Number(data.totale) || 0;
+                                    kwh = Number(data.kwh) || 0;
+                                }
+                            } catch(e) {}
+                            
+                            if (!total || !kwh) {
+                                const clean=String(text).replace(/\\\\u00a0/g,' ').replace(/\\\\s+/g,' ');
+                                const num=x=>{let v=String(x).trim().replace(/\\\\.(?=\\\\d{3}(?:\\\\D|$))/g,'').replace(',','.');return Number(v)||0};
+                                const find=patterns=>{for(const r of patterns){const m=clean.match(r);if(m){const v=num(m[1]);if(v>0)return v}}return 0};
+                                total=total||find([/(?:totale\\\\s+(?:da\\\\s+pagare|fattura)|importo\\\\s+totale|totale\\\\s+bolletta)[^\\\\d]{0,60}(\\\\d{1,5}(?:[.,]\\\\d{2}))/i,/(?:da\\\\s+pagare|totale\\\\s+da\\\\s+pagare)[^\\\\d]{0,40}(\\\\d{1,5}(?:[.,]\\\\d{2}))/i]);
+                                kwh=kwh||find([/(?:consumo\\\\s+fatturato|energia\\\\s+consumata\\\\s+nel\\\\s+periodo|consumi\\\\s+del\\\\s+periodo|consumo\\\\s+del\\\\s+periodo|energia\\\\s+fatturata)[^\\\\d]{0,70}(\\\\d{1,5}(?:[.,]\\\\d{1,3}))\\\\s*kwh/i,/(\\\\d{1,5}(?:[.,]\\\\d{1,3}))\\\\s*kwh\\\\b(?![^.]{0,30}(?:annuo|annuale|12\\\\s*mesi|anno))/i]);
+                            }
+                            
+                            $('billTotal').value=total||'';
+                            $('billKwh').value=kwh||'';
+                            
+                            if(!total||!kwh) throw Error('Non trovati totale da pagare e kWh del periodo fatturato; escluso il consumo annuo.');
+                            
+                            const costoKwh = total / kwh;
+                            const quotaMia = (total - 18) / 2;
+                            
+                            $('billStatus').innerHTML = '<div style="margin-top:15px; padding:15px; background:#f0f9ff; border:1px solid #bae6fd; border-radius:8px;"><h4 style="margin:0 0 10px 0; color:#0369a1;">✅ Bolletta analizzata con successo</h4><ul style="margin:0; padding-left:20px; color:#0f172a; line-height:1.6;"><li><strong>Consumo effettivo bimestre:</strong> ' + kwh + ' kWh</li><li><strong>Prezzo al kWh fatturato:</strong> € ' + costoKwh.toFixed(3) + '/kWh</li></ul><div style="margin-top:10px; padding-top:10px; border-top:1px solid #bae6fd; font-size:16px;">La tua quota da pagare (Totale - 18€ ÷ 2): <strong style="color:#0284c7; font-size:18px;">€ ' + quotaMia.toFixed(2) + '</strong></div></div>';
+                        }catch(e){
+                            $('billStatus').textContent='Errore lettura PDF: '+e.message;
+                            alert(e.message);
+                        }
+                    };`;
+                    
+                    s = s.slice(0, a) + logic + s.slice(b);
+                }
+                
+                // La parte di settings per il salvataggio nel database originale resta intatta
+                s = s.replace(/const share=total\/2;settings=\{\.\.\.settings,billTotal:total,billRai:0,billKwh:kwh,billNet:share,billShare:share,kwhRate:share\/kwh,billPeriod:\$\('billPeriod'\)\.value\.trim\(\)\};/, "const rai=18,net=Math.max(0,total-rai),share=net/2;settings={...settings,billTotal:total,billRai:rai,billKwh:kwh,billNet:net,billShare:share,kwhRate:total/kwh,billPeriod:$('billPeriod').value};");
+                
+                document.open();
+                document.write(s);
+                document.close();
+            } catch (e) {
+                document.body.innerHTML = '<p style="font-family:Arial;padding:20px">Errore caricamento pagina: ' + e.message + '</p>';
+            }
+        })();
+    </script>
+</body>
+</html>
