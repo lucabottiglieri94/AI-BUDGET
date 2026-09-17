@@ -17,11 +17,16 @@ $('billTotal').value=total||'';$('billKwh').value=kwh||'';
 const det=detectPeriodAndYear(text);
 if(det){$('billPeriod').value=det.period;$('billYear').value=det.year}else initBillDefaults();
 $('billStatus').textContent=(total&&kwh)?'Dati letti dal PDF: verifica i campi e premi Salva':'PDF letto ma dati incompleti: controlla/correggi i campi';
-if(!total||!kwh)throw Error('PDF letto ma dati non riconosciuti: verifica/correggi i campi a mano prima di salvare')}catch(e){alert(e.message)}};$('saveBill').onclick=async()=>{const total=Number($('billTotal').value)||0,kwh=Number($('billKwh').value)||0,period=$('billPeriod').value,year=Number($('billYear').value)||new Date().getFullYear();
+if(!total||!kwh)throw Error('PDF letto ma dati non riconosciuti: verifica/correggi i campi a mano prima di salvare')}catch(e){alert(e.message)}};$('saveBill').onclick=async()=>{try{
+const total=Number($('billTotal').value)||0,kwh=Number($('billKwh').value)||0,period=$('billPeriod').value,year=Number($('billYear').value)||new Date().getFullYear();
 if(total<=0||kwh<=0){alert('Inserisci totale bolletta e kWh del bimestre');return}
 const rai=raiForPeriod(period),net=Math.max(0,total-rai),share=net/2,unitRate=kwh?net/kwh:0;
 const historyKey=`${year}_${period}`;
 settings={...settings,billTotal:total,billKwh:kwh,billNet:net,billShare:share,kwhRate:unitRate,billPeriod:period,billYear:year,billHistory:{...(settings.billHistory||{}),[historyKey]:{period,year,total,net,share,kwh,rate:unitRate,savedAt:Date.now()}}};
-const file=$('billFile').files[0];if(file&&auth.currentUser){try{const r=storageRef(storage,`users/${auth.currentUser.uid}/bollette/${Date.now()}_${file.name}`),snap=await uploadBytes(r,file);settings.billFileUrl=await getDownloadURL(snap.ref)}catch(e){console.warn('Upload bolletta non riuscito',e)}}
-await save();render();alert('Bolletta salvata su Firebase. Tariffa reale aggiornata.')};
+const file=$('billFile').files[0];
+if(file&&auth.currentUser){try{const r=storageRef(storage,`users/${auth.currentUser.uid}/bollette/${Date.now()}_${file.name}`),snap=await uploadBytes(r,file);settings.billFileUrl=await getDownloadURL(snap.ref)}catch(e){console.warn('Upload bolletta non riuscito',e)}}
+render();
+try{await save();alert('Bolletta salvata su Firebase. Tariffa reale aggiornata.')}
+catch(e){console.error('Errore salvataggio Firebase',e);alert('Calcolo aggiornato qui sotto, ma il salvataggio su Firebase è fallito ('+(e&&e.message?e.message:'errore sconosciuto')+'). Controlla accesso/permessi: i dati potrebbero non essere permanenti.')}
+}catch(e){console.error('Errore calcolo bolletta',e);alert('Errore nel calcolo: '+(e&&e.message?e.message:e))}};
 $('viewBillBtn').onclick=()=>{if(settings.billFileUrl)window.open(settings.billFileUrl,'_blank')};onAuthStateChanged(auth,user=>{if(user){ref=doc(db,'users',user.uid,'consumi','settings');onSnapshot(ref,s=>{if(s.exists()){const x=s.data();settings={...settings,...(x.settings||{})};stats=x.stats||stats;plug={...plug,...(x.plug||{})}}render()})}render()});initBillDefaults();render();setTimeout(requestInfo,700);</script></body></html>
