@@ -211,135 +211,72 @@ function initBillDefaults(){if(!$('billPeriod').value)$('billPeriod').value=bime
 let billChartInstance=null;
 
 // === NUOVA FUNZIONE GRAFICO STILE NEON ===
+function getBillHistoryEntries(){
+  const sources = [
+    settings.billHistory,
+    settings.history,
+    settings.bills,
+    window.__topLevelBillHistory
+  ];
+  const out = [];
+  for(const src of sources){
+    if(!src) continue;
+    const arr = Array.isArray(src) ? src : Object.values(src);
+    for(const e of arr){
+      if(!e) continue;
+      const period = e.period || e.bimestre || e.billPeriod;
+      const year = Number(e.year || e.billYear || new Date().getFullYear());
+      const share = Number(e.share ?? e.billShare ?? e.quota ?? e.personalShare);
+      if(period && Number.isFinite(share) && share > 0){
+        out.push({period, year, share});
+      }
+    }
+  }
+  // Elimina duplicati per anno/bimestre, mantenendo l'ultimo valore
+  const unique = {};
+  out.forEach(e => unique[`${e.year}_${e.period}`] = e);
+  return Object.values(unique).sort((a,b)=>(a.year*100+(MONTH_ORDER[a.period]||0))-(b.year*100+(MONTH_ORDER[b.period]||0)));
+}
+
 function drawBillChart(){
   const el = $('billChart');
-  if(!el || typeof Chart === 'undefined') return;
-
-  // Recupera lo storico salvato. Se non esiste, usa almeno la bolletta attuale.
-  let entries = Object.values(settings.billHistory || {}).filter(e => e && Number(e.share) > 0);
-
-  if(entries.length === 0 && Number(settings.billShare) > 0){
-    entries = [{
-      period: settings.billPeriod || bimestreLabelForMonth(new Date().getMonth()+1),
-      year: Number(settings.billYear) || new Date().getFullYear(),
-      share: Number(settings.billShare) || 0
-    }];
-  }
-
-  // Se non ci sono ancora bollette, mostra un messaggio nel contenitore.
+  if(!el || typeof Chart === 'undefined') return false;
+  const entries = getBillHistoryEntries();
   const parent = el.parentElement;
   let emptyMsg = parent ? parent.querySelector('.chart-empty-message') : null;
-  if(entries.length === 0){
-    if(billChartInstance){ billChartInstance.destroy(); billChartInstance = null; }
+
+  if(!entries.length){
+    if(billChartInstance){ billChartInstance.destroy(); billChartInstance=null; }
     if(parent && !emptyMsg){
-      emptyMsg = document.createElement('div');
-      emptyMsg.className = 'chart-empty-message';
-      emptyMsg.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#93a4bc;font-size:13px;pointer-events:none;';
-      emptyMsg.textContent = 'Salva una bolletta per visualizzare l’andamento';
+      emptyMsg=document.createElement('div');
+      emptyMsg.className='chart-empty-message';
+      emptyMsg.style.cssText='position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#93a4bc;font-size:13px;pointer-events:none;text-align:center;padding:20px';
+      emptyMsg.textContent='Nessuna bolletta trovata nello storico Firebase';
       parent.appendChild(emptyMsg);
     }
-    return;
+    return false;
   }
   if(emptyMsg) emptyMsg.remove();
 
-  entries.sort((a,b)=>(Number(a.year)*100+(MONTH_ORDER[a.period]||0))-(Number(b.year)*100+(MONTH_ORDER[b.period]||0)));
-
-  const labels = entries.map(e => `${MONTH_SHORT[e.period] || e.period} ${e.year}`);
-  const shares = entries.map(e => Number(e.share) || 0);
-
+  const labels=entries.map(e=>`${MONTH_SHORT[e.period]||e.period} ${e.year}`);
+  const shares=entries.map(e=>e.share);
   if(billChartInstance) billChartInstance.destroy();
-
-  const ctx = el.getContext('2d');
-  const gradientLine = ctx.createLinearGradient(0, 0, el.clientWidth || 800, 0);
-  gradientLine.addColorStop(0, '#00f2fe');
-  gradientLine.addColorStop(1, '#a855f7');
-
-  const gradientFill = ctx.createLinearGradient(0, 0, 0, el.clientHeight || 300);
-  gradientFill.addColorStop(0, 'rgba(56, 189, 248, 0.35)');
-  gradientFill.addColorStop(1, 'rgba(56, 189, 248, 0.0)');
-
-  const customLabels = {
-    id: 'customLabels',
-    afterDatasetsDraw(chart){
-      const {ctx} = chart;
-      chart.data.datasets.forEach((dataset, i) => {
-        const meta = chart.getDatasetMeta(i);
-        meta.data.forEach((point, index) => {
-          const value = Number(dataset.data[index]) || 0;
-          const text = '€' + (value % 1 === 0 ? value.toFixed(0) : value.toFixed(2).replace('.', ','));
-          const width = Math.max(58, ctx.measureText(text).width + 22);
-          const x = point.x;
-          const y = point.y;
-          ctx.save();
-          ctx.beginPath();
-          ctx.roundRect(x - width/2, y - 42, width, 24, 12);
-          ctx.fillStyle = '#0f1a2c';
-          ctx.fill();
-          ctx.lineWidth = 1.5;
-          ctx.strokeStyle = '#38bdf8';
-          ctx.stroke();
-          ctx.fillStyle = '#ffffff';
-          ctx.font = '700 12px "Plus Jakarta Sans"';
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.fillText(text, x, y - 30);
-          ctx.restore();
-        });
+  const ctx=el.getContext('2d');
+  const gradientLine=ctx.createLinearGradient(0,0,Math.max(el.clientWidth,800),0);
+  gradientLine.addColorStop(0,'#00f2fe'); gradientLine.addColorStop(1,'#a855f7');
+  const gradientFill=ctx.createLinearGradient(0,0,0,Math.max(el.clientHeight,300));
+  gradientFill.addColorStop(0,'rgba(56,189,248,.35)'); gradientFill.addColorStop(1,'rgba(56,189,248,0)');
+  const customLabels={id:'customLabels',afterDatasetsDraw(chart){
+    const c=chart.ctx; chart.data.datasets.forEach((dataset,i)=>{
+      chart.getDatasetMeta(i).data.forEach((point,index)=>{
+        const value=Number(dataset.data[index])||0, text='€'+value.toFixed(2).replace('.',','), width=Math.max(62,c.measureText(text).width+22);
+        c.save(); c.beginPath(); c.roundRect(point.x-width/2,point.y-42,width,24,12); c.fillStyle='#0f1a2c'; c.fill(); c.lineWidth=1.5; c.strokeStyle='#38bdf8'; c.stroke();
+        c.fillStyle='#fff'; c.font='700 12px "Plus Jakarta Sans"'; c.textAlign='center'; c.textBaseline='middle'; c.fillText(text,point.x,point.y-30); c.restore();
       });
-    }
-  };
-
-  billChartInstance = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels,
-      datasets: [{
-        label: 'La mia quota personale',
-        data: shares,
-        borderColor: gradientLine,
-        backgroundColor: gradientFill,
-        borderWidth: 4,
-        pointBackgroundColor: '#ffffff',
-        pointBorderColor: '#38bdf8',
-        pointBorderWidth: 3,
-        pointRadius: 6,
-        pointHoverRadius: 8,
-        fill: true,
-        tension: 0.4
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      layout: {padding: {top: 48, right: 30, left: 10, bottom: 10}},
-      plugins: {
-        legend: {display: false},
-        tooltip: {
-          callbacks: {
-            label: context => 'Quota personale: ' + money(context.parsed.y)
-          }
-        }
-      },
-      scales: {
-        x: {
-          grid: {display: false},
-          ticks: {color: '#93a4bc', font: {family: 'Plus Jakarta Sans', weight: '600'}}
-        },
-        y: {
-          beginAtZero: true,
-          suggestedMax: Math.max(...shares, 0) + 40,
-          grid: {color: 'rgba(255,255,255,0.07)', borderDash: [5,5]},
-          ticks: {
-            color: '#93a4bc',
-            callback: value => '€' + value,
-            font: {family: 'Plus Jakarta Sans'},
-            stepSize: 50
-          }
-        }
-      }
-    },
-    plugins: [customLabels]
-  });
+    });
+  }};
+  billChartInstance=new Chart(ctx,{type:'line',data:{labels,datasets:[{label:'La mia quota personale',data:shares,borderColor:gradientLine,backgroundColor:gradientFill,borderWidth:4,pointBackgroundColor:'#fff',pointBorderColor:'#38bdf8',pointBorderWidth:3,pointRadius:6,pointHoverRadius:8,fill:true,tension:.4}]},options:{responsive:true,maintainAspectRatio:false,layout:{padding:{top:48,right:30,left:10,bottom:10}},plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>'Quota personale: '+money(c.parsed.y)}}},scales:{x:{grid:{display:false},ticks:{color:'#93a4bc',font:{family:'Plus Jakarta Sans',weight:'600'}}},y:{beginAtZero:true,suggestedMax:Math.max(...shares,0)+40,grid:{color:'rgba(255,255,255,.07)',borderDash:[5,5]},ticks:{color:'#93a4bc',callback:v=>'€'+v,font:{family:'Plus Jakarta Sans'},stepSize:50}}}},plugins:[customLabels]});
+  return true;
 }
 function normalize(){const p=getPeriod(),t=new Date().toISOString().slice(0,10);if(stats.period!==p.key)stats={period:p.key,months:{},bimestreKwh:0,todayKwh:0,todayDate:t,lastTime:null,lastMeter:null};if(!stats.months)stats.months={};if(stats.todayDate!==t){stats.todayDate=t;stats.todayKwh=0;stats.lastTime=null;stats.lastMeter=null}if(stats.months[p.month]==null)stats.months[p.month]=0;return p}
 const rate=()=>Number(settings.kwhRate)||0,icon=t=>t==='ac'?'fa-wind':t==='tv'?'fa-tv':t==='washer'?'fa-shirt':'fa-plug';
@@ -395,34 +332,17 @@ catch(e){console.error('Errore salvataggio Firebase',e);alert('Calcolo aggiornat
 
 $('viewBillBtn').onclick=()=>{if(settings.billFileUrl)window.open(settings.billFileUrl,'_blank')};
 $('generateChartBtn').onclick=()=>{
-  // Se la bolletta attuale è compilata ma non ancora salvata, usala per il grafico.
-  const total=Number($('billTotal').value)||0;
-  const kwh=Number($('billKwh').value)||0;
-  const period=$('billPeriod').value;
-  const year=Number($('billYear').value)||new Date().getFullYear();
-  if(total>0 && kwh>0){
-    const rai=raiForPeriod(period);
-    const net=Math.max(0,total-rai);
-    const share=net/2;
-    const key=`${year}_${period}`;
-    settings.billHistory={...(settings.billHistory||{}),[key]:{period,year,total,net,share,kwh,rate:net/kwh,savedAt:Date.now()}};
-    settings.billShare=share;
-    settings.billNet=net;
-    settings.billKwh=kwh;
-    settings.billPeriod=period;
-    settings.billYear=year;
-  }
-  drawBillChart();
-  if(billChartInstance){
-    setTimeout(()=>billChartInstance.resize(),50);
+  const ok=drawBillChart();
+  if(ok){
+    billChartInstance.resize();
     $('generateChartBtn').textContent='✓ Grafico aggiornato';
-    setTimeout(()=>{$('generateChartBtn').textContent='📈 Genera grafico'},1800);
-  } else {
-    alert('Inserisci e salva almeno una bolletta con totale e kWh validi.');
+    setTimeout(()=>$('generateChartBtn').textContent='📈 Genera grafico',1800);
+  }else{
+    alert('Lo storico Firebase non contiene bollette leggibili. Verifica che maggio-giugno e luglio-agosto siano salvati nello storico.');
   }
 };
 
-onAuthStateChanged(auth,user=>{if(user){ref=doc(db,'users',user.uid,'consumi','settings');onSnapshot(ref,s=>{if(s.exists()){const x=s.data();settings={...settings,...(x.settings||{})};stats=x.stats||stats;plug={...plug,...(x.plug||{})}}render()})}render()});
+onAuthStateChanged(auth,user=>{if(user){ref=doc(db,'users',user.uid,'consumi','settings');onSnapshot(ref,s=>{if(s.exists()){const x=s.data();settings={...settings,...(x.settings||{})}; window.__topLevelBillHistory=x.billHistory||x.history||x.bills||null; stats=x.stats||stats; plug={...plug,...(x.plug||{})}}render()})}render()});
 
 initBillDefaults();
 render();
