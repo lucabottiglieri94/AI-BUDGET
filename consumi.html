@@ -153,10 +153,10 @@ body{margin:0;background:radial-gradient(circle at 0 0,#162749,#07101d 58%);colo
 </div>
 </section>
 <section class="card">
-<div class="section-title"><h2>📊 Andamento bollette nell'anno</h2><span class="muted">La mia quota personale per bimestre (Diviso 2)</span></div>
+<div class="section-title"><h2>📊 Andamento bollette nell'anno</h2><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span class="muted">La mia quota personale per bimestre (Diviso 2)</span><button id="generateChartBtn" class="btn primary" type="button" style="padding:8px 12px;font-size:12px">📈 Genera grafico</button></div></div>
 <!-- IL CONTENITORE ORA HA UN'ALTEZZA FISSA (300px) PER EVITARE CHE IL GRAFICO SPARISCA -->
 <div style="position: relative; height: 300px; width: 100%; background:#0a1220;border:1px solid var(--line);border-radius:18px;padding:25px 16px 16px 16px;">
-<canvas id="billChart"></canvas>
+<canvas id="billChart" style="display:block;width:100%;height:100%;"></canvas>
 </div>
 </section>
 <section class="card">
@@ -394,6 +394,34 @@ catch(e){console.error('Errore salvataggio Firebase',e);alert('Calcolo aggiornat
 }catch(e){console.error('Errore calcolo bolletta',e);alert('Errore nel calcolo: '+(e&&e.message?e.message:e))}};
 
 $('viewBillBtn').onclick=()=>{if(settings.billFileUrl)window.open(settings.billFileUrl,'_blank')};
+$('generateChartBtn').onclick=()=>{
+  // Se la bolletta attuale è compilata ma non ancora salvata, usala per il grafico.
+  const total=Number($('billTotal').value)||0;
+  const kwh=Number($('billKwh').value)||0;
+  const period=$('billPeriod').value;
+  const year=Number($('billYear').value)||new Date().getFullYear();
+  if(total>0 && kwh>0){
+    const rai=raiForPeriod(period);
+    const net=Math.max(0,total-rai);
+    const share=net/2;
+    const key=`${year}_${period}`;
+    settings.billHistory={...(settings.billHistory||{}),[key]:{period,year,total,net,share,kwh,rate:net/kwh,savedAt:Date.now()}};
+    settings.billShare=share;
+    settings.billNet=net;
+    settings.billKwh=kwh;
+    settings.billPeriod=period;
+    settings.billYear=year;
+  }
+  drawBillChart();
+  if(billChartInstance){
+    setTimeout(()=>billChartInstance.resize(),50);
+    $('generateChartBtn').textContent='✓ Grafico aggiornato';
+    setTimeout(()=>{$('generateChartBtn').textContent='📈 Genera grafico'},1800);
+  } else {
+    alert('Inserisci e salva almeno una bolletta con totale e kWh validi.');
+  }
+};
+
 onAuthStateChanged(auth,user=>{if(user){ref=doc(db,'users',user.uid,'consumi','settings');onSnapshot(ref,s=>{if(s.exists()){const x=s.data();settings={...settings,...(x.settings||{})};stats=x.stats||stats;plug={...plug,...(x.plug||{})}}render()})}render()});
 
 initBillDefaults();
