@@ -154,6 +154,7 @@ body{margin:0;background:radial-gradient(circle at 0 0,#162749,#07101d 58%);colo
 </section>
 <section class="card">
 <div class="section-title"><h2>📊 Andamento bollette nell'anno</h2><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span class="muted">La mia quota personale per bimestre (Diviso 2)</span><button id="generateChartBtn" class="btn primary" type="button" style="padding:8px 12px;font-size:12px">📈 Genera grafico</button></div></div>
+<!-- IL CONTENITORE ORA HA UN'ALTEZZA FISSA (300px) PER EVITARE CHE IL GRAFICO SPARISCA -->
 <div style="position: relative; height: 300px; width: 100%; background:#0a1220;border:1px solid var(--line);border-radius:18px;padding:25px 16px 16px 16px;">
 <canvas id="billChart" style="display:block;width:100%;height:100%;"></canvas>
 </div>
@@ -209,58 +210,41 @@ function initBillDefaults(){if(!$('billPeriod').value)$('billPeriod').value=bime
 
 let billChartInstance=null;
 
-// === NUOVO METODO DI LETTURA DIRETTA DELLO STORICO (NO RICORSIONE) ===
+// === NUOVA FUNZIONE GRAFICO STILE NEON ===
 function getBillHistoryEntries(){
-  const out = [];
-  const history = settings.billHistory || {};
-  
-  console.log("[AI-BUDGET] Dati storici grezzi estratti da settings.billHistory:", history);
-
-  // Ciclo diretto sulle chiavi salvate dal tasto "Salva"
-  for (const key in history) {
-    const item = history[key];
-    if (item && item.period && item.year) {
-      let share = Number(item.share);
-      
-      // Fallback: se manca la quota personale la ricalcola (Netto diviso 2)
-      if (isNaN(share) || share <= 0) {
-         const net = Number(item.net);
-         if (net > 0) {
-             share = net / 2;
-         } else {
-             const tot = Number(item.total);
-             share = (tot - (item.period === 'Novembre - Dicembre' ? 0 : 18)) / 2;
-         }
-      }
-      
-      if (share > 0) {
-        out.push({ period: item.period, year: item.year, share: share });
-      }
+  // Fonte ufficiale dello storico: users/{uid}/consumi/settings -> billHistory
+  const history = (settings && settings.billHistory && typeof settings.billHistory === 'object')
+    ? settings.billHistory : {};
+  const out=[];
+  const aliases={
+    'gennaio - febbraio':'Gennaio - Febbraio','gen-feb':'Gennaio - Febbraio','gennaio/febbraio':'Gennaio - Febbraio',
+    'marzo - aprile':'Marzo - Aprile','mar-apr':'Marzo - Aprile','marzo/aprile':'Marzo - Aprile',
+    'maggio - giugno':'Maggio - Giugno','mag-giu':'Maggio - Giugno','maggio/giugno':'Maggio - Giugno',
+    'luglio - agosto':'Luglio - Agosto','lug-ago':'Luglio - Agosto','luglio/agosto':'Luglio - Agosto',
+    'settembre - ottobre':'Settembre - Ottobre','set-ott':'Settembre - Ottobre','settembre/ottobre':'Settembre - Ottobre',
+    'novembre - dicembre':'Novembre - Dicembre','nov-dic':'Novembre - Dicembre','novembre/dicembre':'Novembre - Dicembre'
+  };
+  const normPeriod=(v)=>{
+    const x=String(v||'').toLowerCase().trim().replace(/\s+/g,' ');
+    return aliases[x] || aliases[x.replace(/\s*[–—-]\s*/g,' - ')] || '';
+  };
+  Object.entries(history).forEach(([key,item])=>{
+    if(!item || typeof item!=='object') return;
+    let period=normPeriod(item.period||item.bimestre);
+    let year=Number(item.year)||0;
+    const m=String(key).match(/^(20\d{2})_(.+)$/);
+    if(m){ year=year||Number(m[1]); period=period||normPeriod(m[2]); }
+    const share=Number(item.share ?? item.quotaPersonale ?? item.billShare);
+    if(period && year && Number.isFinite(share) && share>0){
+      out.push({period,year,share});
     }
-  }
-
-  // Aggiungiamo anche i dati attualmente a schermo se non ci sono ancora in Firebase
-  if (settings.billPeriod && Number(settings.billShare) > 0) {
-    out.push({
-      period: settings.billPeriod,
-      year: Number(settings.billYear) || new Date().getFullYear(),
-      share: Number(settings.billShare)
-    });
-  }
-
-  // Rimozione di eventuali duplicati sovrascrivendoli
-  const unique = {};
-  out.forEach(e => unique[`${e.year}_${e.period}`] = e);
-  
-  // Ordine cronologico
-  const finalEntries = Object.values(unique).sort((a,b) => 
-    (a.year * 100 + (MONTH_ORDER[a.period] || 0)) - (b.year * 100 + (MONTH_ORDER[b.period] || 0))
-  );
-  
-  console.log("[AI-BUDGET] Bimestri trovati per il grafico (Quota personale):", finalEntries);
-  return finalEntries;
+  });
+  // Fallback: bolletta corrente, solo se non già presente nello storico.
+  const cp=normPeriod(settings.billPeriod), cy=Number(settings.billYear);
+  const cs=Number(settings.billShare);
+  if(cp && cy && cs>0 && !out.some(x=>x.period===cp && x.year===cy)) out.push({period:cp,year:cy,share:cs});
+  return out.sort((a,b)=>(a.year*100+(MONTH_ORDER[a.period]||0))-(b.year*100+(MONTH_ORDER[b.period]||0)));
 }
-
 function drawBillChart(){
   const el = $('billChart');
   if(!el || typeof Chart === 'undefined') return false;
@@ -283,113 +267,35 @@ function drawBillChart(){
 
   const labels=entries.map(e=>`${MONTH_SHORT[e.period]||e.period} ${e.year}`);
   const shares=entries.map(e=>e.share);
-
+  if(billChartInstance) billChartInstance.destroy();
   const ctx=el.getContext('2d');
-  const gradientLine=ctx.createLinearGradient(0,0,Math.max(el.clientWidth||800,800),0);
+  const gradientLine=ctx.createLinearGradient(0,0,Math.max(el.clientWidth,800),0);
   gradientLine.addColorStop(0,'#00f2fe'); gradientLine.addColorStop(1,'#a855f7');
-  const gradientFill=ctx.createLinearGradient(0,0,0,Math.max(el.clientHeight||300,300));
+  const gradientFill=ctx.createLinearGradient(0,0,0,Math.max(el.clientHeight,300));
   gradientFill.addColorStop(0,'rgba(56,189,248,.35)'); gradientFill.addColorStop(1,'rgba(56,189,248,0)');
-
-  // UPDATE IN TEMPO REALE SENZA DISTRUGGERE IL GRAFICO (Evita sparizioni o flash neri)
-  if(billChartInstance) {
-    billChartInstance.data.labels = labels;
-    billChartInstance.data.datasets[0].data = shares;
-    billChartInstance.data.datasets[0].borderColor = gradientLine;
-    billChartInstance.data.datasets[0].backgroundColor = gradientFill;
-    billChartInstance.options.scales.y.suggestedMax = Math.max(...shares,0)+40;
-    billChartInstance.update();
-    return true;
-  }
-
-  // FALLBACK PER I BORDI ARROTONDATI SUI DISPOSITIVI MOBILE
-  const customLabels={
-    id:'customLabels',
-    afterDatasetsDraw(chart){
-      const c=chart.ctx; 
-      chart.data.datasets.forEach((dataset,i)=>{
-        const meta = chart.getDatasetMeta(i);
-        if(!meta.hidden){
-          meta.data.forEach((point,index)=>{
-            const value=Number(dataset.data[index])||0;
-            const text='€'+value.toFixed(2).replace('.',',');
-            const width=Math.max(62,c.measureText(text).width+22);
-            
-            c.save(); 
-            c.beginPath(); 
-            
-            if (typeof c.roundRect === 'function') {
-              c.roundRect(point.x-width/2, point.y-42, width, 24, 12);
-            } else {
-              const rx = point.x-width/2, ry = point.y-42, rw = width, rh = 24, r = 12;
-              c.moveTo(rx+r, ry);
-              c.arcTo(rx+rw, ry, rx+rw, ry+rh, r);
-              c.arcTo(rx+rw, ry+rh, rx, ry+rh, r);
-              c.arcTo(rx, ry+rh, rx, ry, r);
-              c.arcTo(rx, ry, rx+rw, ry, r);
-            }
-            
-            c.fillStyle='#0f1a2c'; c.fill(); 
-            c.lineWidth=1.5; c.strokeStyle='#38bdf8'; c.stroke();
-            c.fillStyle='#fff'; c.font='700 12px "Plus Jakarta Sans"'; 
-            c.textAlign='center'; c.textBaseline='middle'; 
-            c.fillText(text, point.x, point.y-30); 
-            c.restore();
-          });
-        }
+  const customLabels={id:'customLabels',afterDatasetsDraw(chart){
+    const c=chart.ctx; chart.data.datasets.forEach((dataset,i)=>{
+      chart.getDatasetMeta(i).data.forEach((point,index)=>{
+        const value=Number(dataset.data[index])||0, text='€'+value.toFixed(2).replace('.',','), width=Math.max(62,c.measureText(text).width+22);
+        c.save(); c.beginPath(); c.roundRect(point.x-width/2,point.y-42,width,24,12); c.fillStyle='#0f1a2c'; c.fill(); c.lineWidth=1.5; c.strokeStyle='#38bdf8'; c.stroke();
+        c.fillStyle='#fff'; c.font='700 12px "Plus Jakarta Sans"'; c.textAlign='center'; c.textBaseline='middle'; c.fillText(text,point.x,point.y-30); c.restore();
       });
-    }
-  };
-
-  billChartInstance=new Chart(ctx,{
-    type:'line',
-    data:{
-      labels,
-      datasets:[{
-        label:'La mia quota personale',
-        data:shares,
-        borderColor:gradientLine,
-        backgroundColor:gradientFill,
-        borderWidth:4,
-        pointBackgroundColor:'#fff',
-        pointBorderColor:'#38bdf8',
-        pointBorderWidth:3,
-        pointRadius:6,
-        pointHoverRadius:8,
-        fill:true,
-        tension:.4
-      }]
-    },
-    options:{
-      responsive:true,
-      maintainAspectRatio:false,
-      layout:{padding:{top:48,right:30,left:10,bottom:10}},
-      plugins:{
-        legend:{display:false},
-        tooltip:{callbacks:{label:c=>'Quota personale: '+money(c.parsed.y)}}
-      },
-      scales:{
-        x:{grid:{display:false},ticks:{color:'#93a4bc',font:{family:'Plus Jakarta Sans',weight:'600'}}},
-        y:{
-          beginAtZero:true,
-          suggestedMax:Math.max(...shares,0)+40,
-          grid:{color:'rgba(255,255,255,.07)',borderDash:[5,5]},
-          ticks:{color:'#93a4bc',callback:v=>'€'+v,font:{family:'Plus Jakarta Sans'},stepSize:50}
-        }
-      }
-    },
-    plugins:[customLabels]
-  });
-  
+    });
+  }};
+  billChartInstance=new Chart(ctx,{type:'line',data:{labels,datasets:[{label:'La mia quota personale',data:shares,borderColor:gradientLine,backgroundColor:gradientFill,borderWidth:4,pointBackgroundColor:'#fff',pointBorderColor:'#38bdf8',pointBorderWidth:3,pointRadius:6,pointHoverRadius:8,fill:true,tension:.4}]},options:{responsive:true,maintainAspectRatio:false,layout:{padding:{top:48,right:30,left:10,bottom:10}},plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>'Quota personale: '+money(c.parsed.y)}}},scales:{x:{grid:{display:false},ticks:{color:'#93a4bc',font:{family:'Plus Jakarta Sans',weight:'600'}}},y:{beginAtZero:true,suggestedMax:Math.max(...shares,0)+40,grid:{color:'rgba(255,255,255,.07)',borderDash:[5,5]},ticks:{color:'#93a4bc',callback:v=>'€'+v,font:{family:'Plus Jakarta Sans'},stepSize:50}}}},plugins:[customLabels]});
   return true;
 }
-
-window.addEventListener('resize', () => { if(billChartInstance) billChartInstance.resize(); });
-
 function normalize(){const p=getPeriod(),t=new Date().toISOString().slice(0,10);if(stats.period!==p.key)stats={period:p.key,months:{},bimestreKwh:0,todayKwh:0,todayDate:t,lastTime:null,lastMeter:null};if(!stats.months)stats.months={};if(stats.todayDate!==t){stats.todayDate=t;stats.todayKwh=0;stats.lastTime=null;stats.lastMeter=null}if(stats.months[p.month]==null)stats.months[p.month]=0;return p}
 const rate=()=>Number(settings.kwhRate)||0,icon=t=>t==='ac'?'fa-wind':t==='tv'?'fa-tv':t==='washer'?'fa-shirt':'fa-plug';
 function render(){const p=normalize(),today=Number(stats.todayKwh)||0,month=Number(stats.months[p.month])||0,bim=Number(stats.bimestreKwh)||0,w=Number(plug.power)||0,v=Number(plug.voltage)||0,c=w/1000*rate();$('rate').textContent=rate().toFixed(3)+' €/kWh';$('heroRate').textContent=rate().toFixed(3)+' €/kWh';$('costPerHour').textContent=money(c)+' / ora';$('costHour').textContent=money(c)+' / ora';$('watts').textContent=w.toFixed(1)+' W';$('heroWatts').textContent=w.toFixed(1)+' W';$('voltage').textContent=v.toFixed(1)+' V';$('today').textContent=today.toFixed(3)+' kWh';$('cost').textContent=money(today*rate());$('histToday').textContent=today.toFixed(3)+' kWh';$('histTodayCost').textContent=money(today*rate());$('histMonth').textContent=month.toFixed(3)+' kWh';$('histMonthCost').textContent=money(month*rate());$('histBim').textContent=bim.toFixed(3)+' kWh';$('histBimCost').textContent=money(bim*rate());$('period').textContent=p.label;$('heroName').textContent=plug.name;$('heroDeviceId').textContent=plug.deviceId||'Device ID non impostato';const on=!!plug.online;$('status').textContent=on?'CONNESSO':'PRONTO';$('status').style.color=on?'#34d399':'#f59e0b';$('state').innerHTML=`<span class="dot" style="background:${on?'var(--green)':'#64748b'}"></span><span>${on?'ACCESA':'SPENTA'}</span>`;const last=plug.lastUpdated?new Date(plug.lastUpdated).toLocaleString('it-IT'):'--';$('lastHero').textContent=last;$('footLast').textContent=last;$('billNet').textContent=money(settings.billNet);$('billShare').textContent=money(settings.billShare);$('billStatus').textContent=settings.billKwh?`Bolletta ${settings.billPeriod||''} ${settings.billYear||''}: ${settings.billKwh} kWh`:'Nessuna bolletta caricata';const vb=$('viewBillBtn');if(vb)vb.style.display=settings.billFileUrl?'inline-flex':'none';drawBillChart();const cards=[plug,null,null];$('plugs').innerHTML=cards.map(d=>{if(!d)return `<div class="plug placeholder"><div class="plughead"><div class="plugname"><div class="plugicon"><i class="fa-solid fa-plus"></i></div><div><h3>Slot libero</h3><div class="muted">Predisposto per futura presa</div></div></div><b>LIBERO</b></div><div class="stats"><div class="stat"><small>Potenza</small><b>--</b></div><div class="stat"><small>Tensione</small><b>--</b></div><div class="stat"><small>Oggi</small><b class="good">--</b></div></div></div>`;return `<div class="plug"><div class="plughead"><div class="plugname"><div class="plugicon"><i class="fa-solid ${icon(d.type)}"></i></div><div><div style="display:flex;align-items:center;gap:6px"><h3>${d.name}</h3><button class="iconbtn" id="cardEdit"><i class="fa-solid fa-pen"></i></button></div><div class="muted">${d.deviceId||'--'}</div></div></div><b class="${d.online?'good':''}">${d.online?'ACCESA':'SPENTA'}</b></div><div class="stats"><div class="stat"><small>Potenza</small><b>${Number(d.power||0).toFixed(1)} W</b></div><div class="stat"><small>Tensione</small><b>${Number(d.voltage||0).toFixed(1)} V</b></div><div class="stat"><small>Oggi</small><b class="good">${today.toFixed(3)} kWh</b></div></div></div>`}).join('');const ce=$('cardEdit');if(ce)ce.onclick=openRename}
 
-async function save(){if(ref)await setDoc(ref,{settings,stats,plug,devices:[],updatedAt:Date.now()},{merge:true})}
+async function save(){
+  if(!ref) throw new Error('Utente non autenticato: impossibile salvare su Firebase');
+  // Struttura Firebase UNICA E PRECISA:
+  // users/{uid}/consumi/settings
+  //   settings.billHistory e billHistory contengono le stesse bollette.
+  await setDoc(ref,{settings, billHistory:settings.billHistory||{}, stats, plug, devices:[], updatedAt:Date.now()},{merge:true});
+}
 async function requestInfo(){const b=$('requestBtn');b.disabled=true;b.innerHTML='⏳ Lettura...';try{const r=await fetch(API,{cache:'no-store'}),j=await r.json();if(!r.ok||!j.success)throw Error(j.error||'Errore API');const d=j.data||{},now=Date.now(),p=normalize(),w=Number(d.power_watts)||0,meter=Number(d.energy_kwh);let delta=0;if(Number.isFinite(meter)&&Number.isFinite(stats.lastMeter)){delta=meter-stats.lastMeter;if(delta<0)delta=0}else if(stats.lastTime&&w>0)delta=w/1000*((now-stats.lastTime)/3600000);if(delta>0&&delta<100){stats.bimestreKwh+=delta;stats.months[p.month]=(stats.months[p.month]||0)+delta;stats.todayKwh+=delta}if(Number.isFinite(meter))stats.lastMeter=meter;stats.lastTime=now;plug={...plug,id:'main',power:w,voltage:Number(d.voltage_volts)||0,online:Boolean(d.online),deviceId:d.device_id||plug.deviceId,lastUpdated:now};await save();render()}catch(e){console.error(e);$('status').textContent='ERRORE LETTURA';$('status').style.color='#f59e0b'}finally{b.disabled=false;b.innerHTML='<i class="fa-solid fa-rotate"></i> Richiesta informazioni'}}
 function openRename(){$('renameInput').value=plug.name||'';$('renameModal').classList.add('open')}
 $('saveRename').onclick=async()=>{const n=$('renameInput').value.trim();if(!n)return;plug.name=n;await save();$('renameModal').classList.remove('open');render()};
@@ -439,29 +345,39 @@ catch(e){console.error('Errore salvataggio Firebase',e);alert('Calcolo aggiornat
 
 $('viewBillBtn').onclick=()=>{if(settings.billFileUrl)window.open(settings.billFileUrl,'_blank')};
 $('generateChartBtn').onclick=()=>{
+  if(billChartInstance){billChartInstance.destroy();billChartInstance=null;}
   const ok=drawBillChart();
   if(ok){
-    billChartInstance.resize();
+    requestAnimationFrame(()=>{if(billChartInstance) billChartInstance.resize();});
     $('generateChartBtn').textContent='✓ Grafico aggiornato';
     setTimeout(()=>$('generateChartBtn').textContent='📈 Genera grafico',1800);
   }else{
-    const st=$('billStatus');
-    if(st) st.textContent='Nessuna quota personale disponibile nello storico bollette';
+    $('billStatus').textContent='Nessuna quota personale disponibile nello storico bollette';
   }
 };
 
-onAuthStateChanged(auth,user=>{if(user){ref=doc(db,'users',user.uid,'consumi','settings');onSnapshot(ref,s=>{if(s.exists()){const x=s.data();settings={...settings,...(x.settings||{})}; window.__topLevelBillHistory=x.billHistory||x.history||x.bills||null; stats=x.stats||stats; plug={...plug,...(x.plug||{})}}render()})}render()});
+onAuthStateChanged(auth,user=>{
+  if(user){
+    ref=doc(db,'users',user.uid,'consumi','settings');
+    onSnapshot(ref,snap=>{
+      if(snap.exists()){
+        const x=snap.data()||{};
+        const nested=(x.settings&&x.settings.billHistory)||{};
+        const top=x.billHistory||{};
+        settings={...settings,...(x.settings||{}),billHistory:{...top,...nested}};
+        stats=x.stats||stats;
+        plug={...plug,...(x.plug||{})};
+      }
+      render();
+    });
+  } else render();
+});
 
 initBillDefaults();
 render();
 setTimeout(requestInfo,700);
 
-// Assicura il corretto redraw poco dopo il primo caricamento
-setTimeout(() => {
-  if (billChartInstance) billChartInstance.resize();
-  drawBillChart();
-}, 1000);
-
+// Logica per richiamare i dati al cambio del menu
 function mostraDatiSalvati() {
   const periodo = $('billPeriod').value;
   const anno = $('billYear').value || new Date().getFullYear();
@@ -475,6 +391,7 @@ function mostraDatiSalvati() {
     $('billStatus').textContent = `Dati in memoria per ${periodo} ${anno}`;
     $('billStatus').style.color = '#34d399';
     
+    // Mostra sotto i calcoli di QUEL bimestre
     $('billNet').textContent = money(storico.net);
     $('rate').textContent = (storico.rate || 0).toFixed(3) + ' €/kWh';
     $('billShare').textContent = money(storico.share);
@@ -484,6 +401,8 @@ function mostraDatiSalvati() {
     $('billStatus').textContent = `Nessun dato salvato per ${periodo} ${anno}`;
     $('billStatus').style.color = '#93a4bc';
     
+    // Ripristina alla bolletta attuale
+  
     $('billNet').textContent = money(settings.billNet);
     $('rate').textContent = (settings.kwhRate || 0).toFixed(3) + ' €/kWh';
     $('billShare').textContent = money(settings.billShare);
