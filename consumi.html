@@ -212,54 +212,49 @@ let billChartInstance=null;
 
 // === NUOVA FUNZIONE GRAFICO STILE NEON ===
 function getBillHistoryEntries(){
-  const sources = [
-    settings.billHistory,
-    settings.history,
-    settings.bills,
-    window.__topLevelBillHistory
-  ];
-  const out = [];
-  const normalizePeriod = (p) => {
+  const out=[];
+  const periodMap={
+    'gennaio-febbraio':'Gennaio - Febbraio','gennaio - febbraio':'Gennaio - Febbraio','gen-feb':'Gennaio - Febbraio','gennaio/febbraio':'Gennaio - Febbraio',
+    'marzo-aprile':'Marzo - Aprile','marzo - aprile':'Marzo - Aprile','mar-apr':'Marzo - Aprile','marzo/aprile':'Marzo - Aprile',
+    'maggio-giugno':'Maggio - Giugno','maggio - giugno':'Maggio - Giugno','mag-giu':'Maggio - Giugno','maggio/giugno':'Maggio - Giugno',
+    'luglio-agosto':'Luglio - Agosto','luglio - agosto':'Luglio - Agosto','lug-ago':'Luglio - Agosto','luglio/agosto':'Luglio - Agosto',
+    'settembre-ottobre':'Settembre - Ottobre','settembre - ottobre':'Settembre - Ottobre','set-ott':'Settembre - Ottobre','settembre/ottobre':'Settembre - Ottobre',
+    'novembre-dicembre':'Novembre - Dicembre','novembre - dicembre':'Novembre - Dicembre','nov-dic':'Novembre - Dicembre','novembre/dicembre':'Novembre - Dicembre'
+  };
+  const normalizePeriod=(p)=>{
     if(!p) return '';
-    const x=String(p).toLowerCase().trim();
-    const map={
-      'gennaio-febbraio':'Gennaio - Febbraio','gennaio - febbraio':'Gennaio - Febbraio','gen-feb':'Gennaio - Febbraio',
-      'marzo-aprile':'Marzo - Aprile','marzo - aprile':'Marzo - Aprile','mar-apr':'Marzo - Aprile',
-      'maggio-giugno':'Maggio - Giugno','maggio - giugno':'Maggio - Giugno','mag-giu':'Maggio - Giugno',
-      'luglio-agosto':'Luglio - Agosto','luglio - agosto':'Luglio - Agosto','lug-ago':'Luglio - Agosto',
-      'settembre-ottobre':'Settembre - Ottobre','settembre - ottobre':'Settembre - Ottobre','set-ott':'Settembre - Ottobre',
-      'novembre-dicembre':'Novembre - Dicembre','novembre - dicembre':'Novembre - Dicembre','nov-dic':'Novembre - Dicembre'
-    };
-    return map[x] || p;
+    const raw=String(p).toLowerCase().trim().replace(/\s+/g,' ');
+    return periodMap[raw] || periodMap[raw.replace(/\s*[-/]\s*/g,'-')] || '';
   };
-  const add = (e,key='') => {
-    if(!e || typeof e!=='object') return;
-    let period=normalizePeriod(e.period || e.bimestre || e.billPeriod || e.months);
-    let year=Number(e.year || e.billYear || 0);
-    if((!period || !year) && key){
-      const m=String(key).match(/(20\d{2})[_-](.+)/);
-      if(m){year=year||Number(m[1]);period=period||normalizePeriod(m[2]);}
+  const add=(obj,key='',inheritedYear='')=>{
+    if(!obj || typeof obj!=='object') return;
+    const keyText=String(key||'');
+    let period=normalizePeriod(obj.period||obj.bimestre||obj.billPeriod||obj.month||keyText);
+    let year=Number(obj.year||obj.billYear||inheritedYear||0);
+    const km=keyText.match(/(20\d{2})[_-](.+)/);
+    if(km){ year=year||Number(km[1]); period=period||normalizePeriod(km[2]); }
+    if(!period){
+      const lower=keyText.toLowerCase();
+      for(const k of Object.keys(periodMap)){ if(lower.includes(k)){period=periodMap[k];break;} }
     }
-    year=year||new Date().getFullYear();
-    let share=Number(e.share ?? e.billShare ?? e.quota ?? e.personalShare);
-    const net=Number(e.net ?? e.billNet ?? e.totalNet);
-    const total=Number(e.total ?? e.billTotal ?? e.amount);
-    if(!Number.isFinite(share) || share<=0){
-      if(Number.isFinite(net) && net>0) share=net/2;
-      else if(Number.isFinite(total) && total>0) share=(total-(period==='Novembre - Dicembre'?0:18))/2;
+    const total=Number(obj.total??obj.billTotal??obj.amount??obj.importo??NaN);
+    const net=Number(obj.net??obj.billNet??obj.totalNet??NaN);
+    let share=Number(obj.share??obj.billShare??obj.quota??obj.personalShare??obj.quotaPersonale??NaN);
+    if(!Number.isFinite(share)||share<=0){
+      if(Number.isFinite(net)&&net>0) share=net/2;
+      else if(Number.isFinite(total)&&total>0) share=(total-(period==='Novembre - Dicembre'?0:18))/2;
     }
-    if(period && Number.isFinite(share) && share>0) out.push({period,year,share});
+    if(period && Number.isFinite(share) && share>0) out.push({period,year:year||new Date().getFullYear(),share});
+    for(const [k,v] of Object.entries(obj)){
+      if(v && typeof v==='object') add(v,k,year||inheritedYear);
+    }
   };
-  for(const src of sources){
-    if(!src) continue;
-    if(Array.isArray(src)) src.forEach((e,i)=>add(e,String(i)));
-    else Object.entries(src).forEach(([k,e])=>add(e,k));
-  }
-  // Fallback: mostra anche la bolletta attualmente caricata
-  if(!out.length && settings.billPeriod && Number(settings.billShare)>0){
-    out.push({period:normalizePeriod(settings.billPeriod),year:Number(settings.billYear)||new Date().getFullYear(),share:Number(settings.billShare)});
-  }
-  const unique={}; out.forEach(e=>unique[`${e.year}_${e.period}`]=e);
+  add(settings,'settings');
+  if(window.__topLevelBillHistory) add(window.__topLevelBillHistory,'history');
+  const currentPeriod=normalizePeriod(settings.billPeriod);
+  if(currentPeriod && Number(settings.billShare)>0) out.push({period:currentPeriod,year:Number(settings.billYear)||new Date().getFullYear(),share:Number(settings.billShare)});
+  const unique={};
+  out.forEach(e=>unique[`${e.year}_${e.period}`]=e);
   return Object.values(unique).sort((a,b)=>(a.year*100+(MONTH_ORDER[a.period]||0))-(b.year*100+(MONTH_ORDER[b.period]||0)));
 }
 function drawBillChart(){
@@ -362,7 +357,8 @@ $('generateChartBtn').onclick=()=>{
     $('generateChartBtn').textContent='✓ Grafico aggiornato';
     setTimeout(()=>$('generateChartBtn').textContent='📈 Genera grafico',1800);
   }else{
-    alert('Nessun dato valido trovato. Controlla che le bollette abbiano totale, quota personale e bimestre salvati.');
+    const st=$('billStatus');
+    if(st) st.textContent='Nessuna quota personale disponibile nello storico bollette';
   }
 };
 
