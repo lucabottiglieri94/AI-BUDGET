@@ -210,52 +210,58 @@ function initBillDefaults(){if(!$('billPeriod').value)$('billPeriod').value=bime
 
 let billChartInstance=null;
 
-// === NUOVA FUNZIONE GRAFICO STILE NEON ===
-function getBillHistoryEntries(){
+// === FUNZIONE GRAFICO: legge direttamente lo storico bollette salvato su Firebase ===
+const PERIOD_ALIASES={
+  'gennaio-febbraio':'Gennaio - Febbraio','gennaio - febbraio':'Gennaio - Febbraio','gen-feb':'Gennaio - Febbraio','gennaio/febbraio':'Gennaio - Febbraio',
+  'marzo-aprile':'Marzo - Aprile','marzo - aprile':'Marzo - Aprile','mar-apr':'Marzo - Aprile','marzo/aprile':'Marzo - Aprile',
+  'maggio-giugno':'Maggio - Giugno','maggio - giugno':'Maggio - Giugno','mag-giu':'Maggio - Giugno','maggio/giugno':'Maggio - Giugno',
+  'luglio-agosto':'Luglio - Agosto','luglio - agosto':'Luglio - Agosto','lug-ago':'Luglio - Agosto','luglio/agosto':'Luglio - Agosto',
+  'settembre-ottobre':'Settembre - Ottobre','settembre - ottobre':'Settembre - Ottobre','set-ott':'Settembre - Ottobre','settembre/ottobre':'Settembre - Ottobre',
+  'novembre-dicembre':'Novembre - Dicembre','novembre - dicembre':'Novembre - Dicembre','nov-dic':'Novembre - Dicembre','novembre/dicembre':'Novembre - Dicembre'
+};
+function normalizePeriod(p){
+  if(!p) return '';
+  const raw=String(p).toLowerCase().trim().replace(/\s+/g,' ');
+  return PERIOD_ALIASES[raw] || PERIOD_ALIASES[raw.replace(/\s*[-/]\s*/g,'-')] || (MONTH_ORDER[p]?p:'');
+}
+// Legge una singola mappa "storico" (chiave -> {period,year,share,...}) e restituisce le voci valide
+function readHistoryMap(map){
   const out=[];
-  const periodMap={
-    'gennaio-febbraio':'Gennaio - Febbraio','gennaio - febbraio':'Gennaio - Febbraio','gen-feb':'Gennaio - Febbraio','gennaio/febbraio':'Gennaio - Febbraio',
-    'marzo-aprile':'Marzo - Aprile','marzo - aprile':'Marzo - Aprile','mar-apr':'Marzo - Aprile','marzo/aprile':'Marzo - Aprile',
-    'maggio-giugno':'Maggio - Giugno','maggio - giugno':'Maggio - Giugno','mag-giu':'Maggio - Giugno','maggio/giugno':'Maggio - Giugno',
-    'luglio-agosto':'Luglio - Agosto','luglio - agosto':'Luglio - Agosto','lug-ago':'Luglio - Agosto','luglio/agosto':'Luglio - Agosto',
-    'settembre-ottobre':'Settembre - Ottobre','settembre - ottobre':'Settembre - Ottobre','set-ott':'Settembre - Ottobre','settembre/ottobre':'Settembre - Ottobre',
-    'novembre-dicembre':'Novembre - Dicembre','novembre - dicembre':'Novembre - Dicembre','nov-dic':'Novembre - Dicembre','novembre/dicembre':'Novembre - Dicembre'
-  };
-  const normalizePeriod=(p)=>{
-    if(!p) return '';
-    const raw=String(p).toLowerCase().trim().replace(/\s+/g,' ');
-    return periodMap[raw] || periodMap[raw.replace(/\s*[-/]\s*/g,'-')] || '';
-  };
-  const add=(obj,key='',inheritedYear='')=>{
-    if(!obj || typeof obj!=='object') return;
-    const keyText=String(key||'');
-    let period=normalizePeriod(obj.period||obj.bimestre||obj.billPeriod||obj.month||keyText);
-    let year=Number(obj.year||obj.billYear||inheritedYear||0);
-    const km=keyText.match(/(20\d{2})[_-](.+)/);
-    if(km){ year=year||Number(km[1]); period=period||normalizePeriod(km[2]); }
-    if(!period){
-      const lower=keyText.toLowerCase();
-      for(const k of Object.keys(periodMap)){ if(lower.includes(k)){period=periodMap[k];break;} }
+  if(!map || typeof map!=='object') return out;
+  for(const [key,entry] of Object.entries(map)){
+    if(!entry || typeof entry!=='object') continue;
+    let period=normalizePeriod(entry.period||entry.bimestre||entry.billPeriod);
+    let year=Number(entry.year||entry.billYear||0);
+    if(!period||!year){
+      const km=String(key).match(/(20\d{2})[_-](.+)/);
+      if(km){ year=year||Number(km[1]); period=period||normalizePeriod(km[2]); }
     }
-    const total=Number(obj.total??obj.billTotal??obj.amount??obj.importo??NaN);
-    const net=Number(obj.net??obj.billNet??obj.totalNet??NaN);
-    let share=Number(obj.share??obj.billShare??obj.quota??obj.personalShare??obj.quotaPersonale??NaN);
+    let share=Number(entry.share??entry.billShare??NaN);
     if(!Number.isFinite(share)||share<=0){
+      const net=Number(entry.net??entry.billNet??NaN);
+      const total=Number(entry.total??entry.billTotal??NaN);
       if(Number.isFinite(net)&&net>0) share=net/2;
-      else if(Number.isFinite(total)&&total>0) share=(total-(period==='Novembre - Dicembre'?0:18))/2;
+      else if(Number.isFinite(total)&&total>0) share=Math.max(0,total-(period==='Novembre - Dicembre'?0:18))/2;
     }
-    if(period && Number.isFinite(share) && share>0) out.push({period,year:year||new Date().getFullYear(),share});
-    for(const [k,v] of Object.entries(obj)){
-      if(v && typeof v==='object') add(v,k,year||inheritedYear);
-    }
-  };
-  add(settings,'settings');
-  if(window.__topLevelBillHistory) add(window.__topLevelBillHistory,'history');
+    if(period && year && Number.isFinite(share) && share>0) out.push({period,year,share});
+  }
+  return out;
+}
+function getBillHistoryEntries(){
+  const out=[
+    ...readHistoryMap(settings.billHistory),
+    ...readHistoryMap(window.__topLevelBillHistory)
+  ];
+  // include anche la bolletta "corrente" mostrata in alto, se non fosse già nello storico
   const currentPeriod=normalizePeriod(settings.billPeriod);
-  if(currentPeriod && Number(settings.billShare)>0) out.push({period:currentPeriod,year:Number(settings.billYear)||new Date().getFullYear(),share:Number(settings.billShare)});
+  if(currentPeriod && settings.billYear && Number(settings.billShare)>0){
+    out.push({period:currentPeriod,year:Number(settings.billYear),share:Number(settings.billShare)});
+  }
   const unique={};
   out.forEach(e=>unique[`${e.year}_${e.period}`]=e);
-  return Object.values(unique).sort((a,b)=>(a.year*100+(MONTH_ORDER[a.period]||0))-(b.year*100+(MONTH_ORDER[b.period]||0)));
+  const result=Object.values(unique).sort((a,b)=>(a.year*100+(MONTH_ORDER[a.period]||0))-(b.year*100+(MONTH_ORDER[b.period]||0)));
+  console.log('[AI-BUDGET] Bimestri trovati per il grafico:',result);
+  return result;
 }
 function drawBillChart(){
   const el = $('billChart');
@@ -367,6 +373,10 @@ onAuthStateChanged(auth,user=>{if(user){ref=doc(db,'users',user.uid,'consumi','s
 initBillDefaults();
 render();
 setTimeout(requestInfo,700);
+// Ridisegna il grafico anche dopo che il layout è stabile (evita canvas a larghezza 0 al primo render)
+setTimeout(drawBillChart,300);
+setTimeout(drawBillChart,1200);
+window.addEventListener('resize',()=>{if(billChartInstance)billChartInstance.resize()});
 
 // Logica per richiamare i dati al cambio del menu
 function mostraDatiSalvati() {
