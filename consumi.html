@@ -219,25 +219,49 @@ function getBillHistoryEntries(){
     window.__topLevelBillHistory
   ];
   const out = [];
+  const normalizePeriod = (p) => {
+    if(!p) return '';
+    const x=String(p).toLowerCase().trim();
+    const map={
+      'gennaio-febbraio':'Gennaio - Febbraio','gennaio - febbraio':'Gennaio - Febbraio','gen-feb':'Gennaio - Febbraio',
+      'marzo-aprile':'Marzo - Aprile','marzo - aprile':'Marzo - Aprile','mar-apr':'Marzo - Aprile',
+      'maggio-giugno':'Maggio - Giugno','maggio - giugno':'Maggio - Giugno','mag-giu':'Maggio - Giugno',
+      'luglio-agosto':'Luglio - Agosto','luglio - agosto':'Luglio - Agosto','lug-ago':'Luglio - Agosto',
+      'settembre-ottobre':'Settembre - Ottobre','settembre - ottobre':'Settembre - Ottobre','set-ott':'Settembre - Ottobre',
+      'novembre-dicembre':'Novembre - Dicembre','novembre - dicembre':'Novembre - Dicembre','nov-dic':'Novembre - Dicembre'
+    };
+    return map[x] || p;
+  };
+  const add = (e,key='') => {
+    if(!e || typeof e!=='object') return;
+    let period=normalizePeriod(e.period || e.bimestre || e.billPeriod || e.months);
+    let year=Number(e.year || e.billYear || 0);
+    if((!period || !year) && key){
+      const m=String(key).match(/(20\d{2})[_-](.+)/);
+      if(m){year=year||Number(m[1]);period=period||normalizePeriod(m[2]);}
+    }
+    year=year||new Date().getFullYear();
+    let share=Number(e.share ?? e.billShare ?? e.quota ?? e.personalShare);
+    const net=Number(e.net ?? e.billNet ?? e.totalNet);
+    const total=Number(e.total ?? e.billTotal ?? e.amount);
+    if(!Number.isFinite(share) || share<=0){
+      if(Number.isFinite(net) && net>0) share=net/2;
+      else if(Number.isFinite(total) && total>0) share=(total-(period==='Novembre - Dicembre'?0:18))/2;
+    }
+    if(period && Number.isFinite(share) && share>0) out.push({period,year,share});
+  };
   for(const src of sources){
     if(!src) continue;
-    const arr = Array.isArray(src) ? src : Object.values(src);
-    for(const e of arr){
-      if(!e) continue;
-      const period = e.period || e.bimestre || e.billPeriod;
-      const year = Number(e.year || e.billYear || new Date().getFullYear());
-      const share = Number(e.share ?? e.billShare ?? e.quota ?? e.personalShare);
-      if(period && Number.isFinite(share) && share > 0){
-        out.push({period, year, share});
-      }
-    }
+    if(Array.isArray(src)) src.forEach((e,i)=>add(e,String(i)));
+    else Object.entries(src).forEach(([k,e])=>add(e,k));
   }
-  // Elimina duplicati per anno/bimestre, mantenendo l'ultimo valore
-  const unique = {};
-  out.forEach(e => unique[`${e.year}_${e.period}`] = e);
+  // Fallback: mostra anche la bolletta attualmente caricata
+  if(!out.length && settings.billPeriod && Number(settings.billShare)>0){
+    out.push({period:normalizePeriod(settings.billPeriod),year:Number(settings.billYear)||new Date().getFullYear(),share:Number(settings.billShare)});
+  }
+  const unique={}; out.forEach(e=>unique[`${e.year}_${e.period}`]=e);
   return Object.values(unique).sort((a,b)=>(a.year*100+(MONTH_ORDER[a.period]||0))-(b.year*100+(MONTH_ORDER[b.period]||0)));
 }
-
 function drawBillChart(){
   const el = $('billChart');
   if(!el || typeof Chart === 'undefined') return false;
@@ -338,7 +362,7 @@ $('generateChartBtn').onclick=()=>{
     $('generateChartBtn').textContent='✓ Grafico aggiornato';
     setTimeout(()=>$('generateChartBtn').textContent='📈 Genera grafico',1800);
   }else{
-    alert('Lo storico Firebase non contiene bollette leggibili. Verifica che maggio-giugno e luglio-agosto siano salvati nello storico.');
+    alert('Nessun dato valido trovato. Controlla che le bollette abbiano totale, quota personale e bimestre salvati.');
   }
 };
 
