@@ -153,7 +153,7 @@ body{margin:0;background:radial-gradient(circle at 0 0,#162749,#07101d 58%);colo
 <div class="section-title"><h2>📊 Andamento bollette nell'anno</h2><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span class="muted">La mia quota personale per bimestre (Diviso 2)</span><button id="generateChartBtn" class="btn primary" type="button" style="padding:8px 12px;font-size:12px">📈 Genera grafico</button></div></div>
 <!-- IL CONTENITORE ORA HA UN'ALTEZZA FISSA (300px) PER EVITARE CHE IL GRAFICO SPARISCA -->
 <div style="position: relative; height: 300px; width: 100%; background:#0a1220;border:1px solid var(--line);border-radius:18px;padding:25px 16px 16px 16px;">
-<canvas id="billChart" style="display:block;width:100%;height:100%;"></canvas>
+<svg id="billChartSvg" viewBox="0 0 1000 300" preserveAspectRatio="none" style="display:block;width:100%;height:100%;overflow:visible"></svg>
 </div>
 </section>
 <section class="card">
@@ -257,24 +257,49 @@ function historyEntries(){
   return Object.values(h).sort((a,b)=>(a.year*100+periodInfo(a.period).order)-(b.year*100+periodInfo(b.period).order));
 }
 function drawBillChart(){
-  const canvas=$('billChart');
-  if(!canvas || typeof Chart==='undefined') return false;
-  const entries=historyEntries();
-  if(billChartInstance){billChartInstance.destroy();billChartInstance=null;}
-  const parent=canvas.parentElement;
-  parent.querySelectorAll('.chart-empty-message').forEach(x=>x.remove());
-  if(!entries.length){
-    const msg=document.createElement('div'); msg.className='chart-empty-message';
-    msg.textContent='Salva almeno una bolletta per visualizzare lo storico';
-    msg.style.cssText='position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#93a4bc;font-size:13px;pointer-events:none';
-    parent.appendChild(msg); return false;
+  const svg=$('billChartSvg');
+  if(!svg) return false;
+  svg.innerHTML='';
+
+  let entries=historyEntries();
+  // Se esiste una bolletta corrente ma non è ancora nello storico, usala come punto aggiuntivo.
+  if(!entries.length && Number(settings.billTotal)>0 && Number(settings.billKwh)>0){
+    const pi=periodInfo(settings.billPeriod||bimestreLabelForMonth(new Date().getMonth()+1));
+    const year=Number(settings.billYear)||new Date().getFullYear();
+    const total=Number(settings.billTotal), rai=pi.rai, net=Number(settings.billNet)||Math.max(0,total-rai);
+    entries=[{year,period:pi.label,share:Number(settings.billShare)||net/2,kwh:Number(settings.billKwh),total,net}];
   }
-  const labels=entries.map(e=>`${e.period.replace(' - ','-')} ${e.year}`);
-  const values=entries.map(e=>Number(e.share.toFixed(2)));
-  const ctx=canvas.getContext('2d');
-  const line=ctx.createLinearGradient(0,0,canvas.clientWidth||800,0); line.addColorStop(0,'#38bdf8');line.addColorStop(1,'#a855f7');
-  const fill=ctx.createLinearGradient(0,0,0,300);fill.addColorStop(0,'rgba(56,189,248,.28)');fill.addColorStop(1,'rgba(56,189,248,0)');
-  billChartInstance=new Chart(ctx,{type:'line',data:{labels,datasets:[{label:'Quota personale',data:values,borderColor:line,backgroundColor:fill,fill:true,borderWidth:3,pointRadius:6,pointHoverRadius:8,pointBackgroundColor:'#fff',pointBorderColor:'#38bdf8',pointBorderWidth:3,tension:.35}]},options:{responsive:true,maintainAspectRatio:false,layout:{padding:{top:20,right:20,left:10,bottom:10}},plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>'Quota personale: '+money(c.parsed.y)}}},scales:{x:{grid:{display:false},ticks:{color:'#93a4bc'}},y:{beginAtZero:true,suggestedMax:Math.max(...values)+30,grid:{color:'rgba(255,255,255,.07)',borderDash:[4,4]},ticks:{color:'#93a4bc',callback:v=>'€'+v}}}}});
+  if(!entries.length){
+    svg.innerHTML='<text x="500" y="155" text-anchor="middle" fill="#93a4bc" font-size="16">Salva una o più bollette per visualizzare il grafico</text>';
+    return false;
+  }
+
+  const W=1000,H=300,pad={l:58,r:28,t:30,b:48};
+  const vals=entries.map(e=>Math.max(0,Number(e.share)||0));
+  const max=Math.max(...vals,10), top=Math.ceil(max/10)*10+10;
+  const x=i=>entries.length===1?(W/2):pad.l+i*(W-pad.l-pad.r)/(entries.length-1);
+  const y=v=>pad.t+(top-v)*(H-pad.t-pad.b)/top;
+  const esc=v=>String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  let out='';
+  // griglia orizzontale
+  for(let i=0;i<=4;i++){
+    const value=top*i/4, yy=y(value);
+    out+=`<line x1="${pad.l}" y1="${yy}" x2="${W-pad.r}" y2="${yy}" stroke="rgba(148,163,184,.16)" stroke-dasharray="5 6"/>`;
+    out+=`<text x="${pad.l-12}" y="${yy+4}" text-anchor="end" fill="#93a4bc" font-size="12">€${Math.round(value)}</text>`;
+  }
+  const points=entries.map((e,i)=>`${x(i)},${y(vals[i])}`).join(' ');
+  const area=`${pad.l},${H-pad.b} ${points} ${W-pad.r},${H-pad.b}`;
+  out+=`<defs><linearGradient id="billLineGrad" x1="0" x2="1"><stop offset="0%" stop-color="#38bdf8"/><stop offset="100%" stop-color="#a855f7"/></linearGradient><linearGradient id="billFillGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#38bdf8" stop-opacity=".28"/><stop offset="100%" stop-color="#38bdf8" stop-opacity="0"/></linearGradient></defs>`;
+  out+=`<polygon points="${area}" fill="url(#billFillGrad)"/>`;
+  out+=`<polyline points="${points}" fill="none" stroke="url(#billLineGrad)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>`;
+  entries.forEach((e,i)=>{
+    const xx=x(i),yy=y(vals[i]), label=`${periodInfo(e.period).label.replace(' - ','-')} ${e.year}`, val=money(vals[i]);
+    out+=`<circle cx="${xx}" cy="${yy}" r="7" fill="#fff" stroke="#38bdf8" stroke-width="3"/>`;
+    out+=`<rect x="${xx-38}" y="${yy-34}" width="76" height="22" rx="11" fill="#0f1a2c" stroke="#38bdf8"/>`;
+    out+=`<text x="${xx}" y="${yy-19}" text-anchor="middle" fill="#fff" font-size="12" font-weight="700">${esc(val)}</text>`;
+    out+=`<text x="${xx}" y="${H-18}" text-anchor="middle" fill="#93a4bc" font-size="12">${esc(label)}</text>`;
+  });
+  svg.innerHTML=out;
   return true;
 }
 function showSelectedBill(){
@@ -343,7 +368,7 @@ initBillDefaults();
 render();
 setTimeout(requestInfo,700);
 
-$('generateChartBtn').onclick=()=>{drawBillChart();};
+$('generateChartBtn').onclick=()=>{ const ok=drawBillChart(); $('generateChartBtn').textContent=ok?'✓ Grafico aggiornato':'📈 Genera grafico'; setTimeout(()=>{$('generateChartBtn').textContent='📈 Genera grafico'},1800); };
 $('billPeriod').addEventListener('change',showSelectedBill);
 $('billYear').addEventListener('input',showSelectedBill);
 </script>
