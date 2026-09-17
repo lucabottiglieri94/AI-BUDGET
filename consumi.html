@@ -123,7 +123,7 @@ body{margin:0;background:radial-gradient(circle at 0 0,#162749,#07101d 58%);colo
 <section class="card">
 <div class="section-title"><h2>🧾 Bolletta e tariffa reale</h2><span id="billStatus" class="pill">Nessuna bolletta caricata</span></div>
 <div class="upload">
-<b>Inserimento manuale bolletta</b><div class="muted" style="margin-top:5px">Inserisci solo totale bolletta e kWh del bimestre. Il calcolo viene salvato automaticamente nello storico Firebase.</div>
+<b>Inserimento manuale bolletta</b><div class="muted" style="margin-top:5px">Seleziona manualmente bimestre e anno, poi inserisci i dati o importa un PDF. Il PDF estrae solo totale e kWh; il bimestre scelto non viene modificato.</div>
 <div class="grid2">
 <label>Totale bolletta (€)<input id="billTotal" type="number" step="0.01" placeholder="150.00"></label>
 <label>kWh del bimestre<input id="billKwh" type="number" step="0.001" placeholder="300"></label>
@@ -139,6 +139,7 @@ body{margin:0;background:radial-gradient(circle at 0 0,#162749,#07101d 58%);colo
 </label>
 <label>Anno<input id="billYear" type="number" step="1" placeholder="2026"></label>
 </div>
+<div class="muted" style="margin-top:10px;color:#38bdf8">Il bimestre e l'anno li scegli tu. L'importazione PDF non li cambia.</div>
 <div class="muted" style="margin-top:10px">Logica applicata: (Totale bolletta − Canone RAI automatico) ÷ 2 = Quota da pagare. Il prezzo unitario è Netto ÷ kWh del bimestre. Canone RAI: 18€ a bimestre, 0€ nel bimestre Novembre - Dicembre.</div>
 <div class="actions" style="margin-top:12px;align-items:center">
 <input id="billPdf" type="file" accept="application/pdf,image/*" style="display:none">
@@ -207,7 +208,14 @@ const MONTH_ORDER={'Gennaio - Febbraio':1,'Marzo - Aprile':3,'Maggio - Giugno':5
 function bimestreLabelForMonth(m){const s=m%2?m:m-1;return `${MONTH_NAMES[s-1]} - ${MONTH_NAMES[s]}`}
 function raiForPeriod(p){return p==='Novembre - Dicembre'?0:18}
 function detectPeriodAndYear(text){const dm=[...text.matchAll(/(\d{1,2})[\/.](\d{1,2})[\/.](\d{2,4})/g)];if(dm.length){let m=Number(dm[0][2]),y=Number(dm[0][3]);if(y<100)y+=2000;if(m>=1&&m<=12)return{period:bimestreLabelForMonth(m),year:y}}const lower=text.toLowerCase();for(let i=0;i<12;i++){if(lower.includes(MONTH_NAMES[i].toLowerCase()))return{period:bimestreLabelForMonth(i+1),year:new Date().getFullYear()}}return null}
-function initBillDefaults(){if(!$('billPeriod').value)$('billPeriod').value=bimestreLabelForMonth(new Date().getMonth()+1);if(!$('billYear').value)$('billYear').value=new Date().getFullYear()}
+function initBillDefaults(){
+  // La pagina si apre sempre sul bimestre corrente.
+  // Il bimestre NON viene mai modificato automaticamente dal PDF:
+  // lo seleziona sempre manualmente l'utente prima dell'importazione/salvataggio.
+  const now=new Date();
+  $('billPeriod').value=bimestreLabelForMonth(now.getMonth()+1);
+  $('billYear').value=now.getFullYear();
+}
 
 let billChartInstance=null;
 
@@ -385,11 +393,14 @@ $('billPdf').onchange=async()=>{
     let text=await readPdfText(file);
     if(text.replace(/\s/g,'').length<80) text=await ocrPdf(file);
     const data=extractBillValues(text);
+    // Il PDF serve SOLO per estrarre totale e kWh.
+    // Bimestre e anno restano quelli scelti manualmente dall'utente.
     if(data.total>0) $('billTotal').value=data.total.toFixed(2);
     if(data.kwh>0) $('billKwh').value=data.kwh;
-    if(data.det){$('billPeriod').value=data.det.period;$('billYear').value=data.det.year;}
     const ok=data.total>0&&data.kwh>0;
-    $('billStatus').textContent=ok?'Dati estratti dal PDF: verifica e salva':'PDF letto, ma inserisci/verifica totale e kWh';
+    $('billStatus').textContent=ok
+      ? 'Totale e kWh estratti. Controlla il bimestre selezionato e salva.'
+      : 'PDF letto, ma inserisci/verifica totale e kWh';
     $('billStatus').style.color=ok?'#34d399':'#f59e0b';
   }catch(e){console.error(e);$('billStatus').textContent='Errore lettura PDF: inserimento manuale disponibile';$('billStatus').style.color='#f59e0b';}
   finally{btn.disabled=false;btn.innerHTML='<i class="fa-solid fa-file-pdf"></i> Importa bolletta PDF';}
