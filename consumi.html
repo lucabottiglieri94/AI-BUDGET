@@ -364,11 +364,26 @@ async function readPdfText(file){
   return text;
 }
 async function ocrPdf(file){
-  const data=await file.arrayBuffer(); const pdf=await pdfjsLib.getDocument({data}).promise; let text='';
-  for(let i=1;i<=Math.min(pdf.numPages,4);i++){
-    const page=await pdf.getPage(i),vp=page.getViewport({scale:1.6}),canvas=document.createElement('canvas'); canvas.width=vp.width; canvas.height=vp.height;
-    await page.render({canvasContext:canvas.getContext('2d'),viewport:vp}).promise;
-    const result=await Tesseract.recognize(canvas,'ita+eng'); text+=result.data.text+'\n';
+  if(!window.Tesseract || !window.pdfjsLib) throw new Error('Motore OCR non disponibile');
+  const data=await file.arrayBuffer();
+  const pdf=await pdfjsLib.getDocument({data, verbosity:0}).promise;
+  let text='';
+  // La prima pagina contiene normalmente totale e kWh. Leggiamo al massimo 2 pagine.
+  for(let i=1;i<=Math.min(pdf.numPages,2);i++){
+    const page=await pdf.getPage(i);
+    const vp=page.getViewport({scale:2.2});
+    const canvas=document.createElement('canvas');
+    canvas.width=Math.ceil(vp.width); canvas.height=Math.ceil(vp.height);
+    const ctx=canvas.getContext('2d',{willReadFrequently:true});
+    await page.render({canvasContext:ctx,viewport:vp}).promise;
+    const result=await Promise.race([
+      Tesseract.recognize(canvas,'ita',{
+        logger:m=>{ if(m && m.status && m.progress!=null) $('billStatus').textContent='Lettura bolletta: '+m.status+' '+Math.round(m.progress*100)+'%'; }
+      }),
+      new Promise((_,reject)=>setTimeout(()=>reject(new Error('Timeout OCR')),45000))
+    ]);
+    text += (result && result.data ? result.data.text : '')+'\n';
+    if(/totale|da pagare|kwh|consumo/i.test(text) && /\d+[,.]\d{2}/.test(text)) break;
   }
   return text;
 }
@@ -416,7 +431,11 @@ $('billPdf').onchange=async()=>{
   const btn=$('uploadPdfBtn'); btn.disabled=true; btn.textContent='⏳ Lettura bolletta...';
   try{
     let text=await readPdfText(file);
-    if(text.replace(/\s/g,'').length<80) text=await ocrPdf(file);
+    if(text.replace(/\s/g,'').length<80){
+      $('billStatus').textContent='PDF scansionato: avvio OCR...';
+      text=await ocrPdf(file);
+    }
+    console.debug('Testo PDF/OCR estratto:', text);
     const data=extractBillValues(text);
     // Il PDF serve SOLO per estrarre totale e kWh.
     // Bimestre e anno restano quelli scelti manualmente dall'utente.
