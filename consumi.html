@@ -155,7 +155,7 @@ body{margin:0;background:radial-gradient(circle at 0 0,#162749,#07101d 58%);colo
 <section class="card">
 <div class="section-title"><h2>📊 Andamento bollette nell'anno</h2><span class="muted">Totale e quota personale per bimestre</span></div>
 <div style="background:#0a1220;border:1px solid var(--line);border-radius:18px;padding:16px">
-<canvas id="billChart" height="95"></canvas>
+<canvas id="billChart" height="200"></canvas>
 </div>
 </section>
 <section class="card">
@@ -203,19 +203,41 @@ function bimestreLabelForMonth(m){const s=m%2?m:m-1;return `${MONTH_NAMES[s-1]} 
 function raiForPeriod(p){return p==='Novembre - Dicembre'?0:18}
 function detectPeriodAndYear(text){const dm=[...text.matchAll(/(\d{1,2})[\/.](\d{1,2})[\/.](\d{2,4})/g)];if(dm.length){let m=Number(dm[0][2]),y=Number(dm[0][3]);if(y<100)y+=2000;if(m>=1&&m<=12)return{period:bimestreLabelForMonth(m),year:y}}const lower=text.toLowerCase();for(let i=0;i<12;i++){if(lower.includes(MONTH_NAMES[i].toLowerCase()))return{period:bimestreLabelForMonth(i+1),year:new Date().getFullYear()}}return null}
 function initBillDefaults(){if(!$('billPeriod').value)$('billPeriod').value=bimestreLabelForMonth(new Date().getMonth()+1);if(!$('billYear').value)$('billYear').value=new Date().getFullYear()}
+
 let billChartInstance=null;
 function drawBillChart(){
   const el=$('billChart');
   if(!el||typeof Chart==='undefined')return;
   const entries=Object.values(settings.billHistory||{}).sort((a,b)=>(a.year*100+(MONTH_ORDER[a.period]||0))-(b.year*100+(MONTH_ORDER[b.period]||0)));
-  const labels=entries.map(e=>`${MONTH_SHORT[e.period]||e.period} ${e.year}`),totals=entries.map(e=>e.total),shares=entries.map(e=>e.share);
+  if(entries.length === 0) return;
+  const labels=entries.map(e=>`${MONTH_SHORT[e.period]||e.period} ${e.year}`);
+  const shares=entries.map(e=>e.share); // Prende SOLO la quota personale
+
   if(billChartInstance)billChartInstance.destroy();
+  
   billChartInstance=new Chart(el.getContext('2d'),{
     type:'bar',
-    data:{labels,datasets:[{label:'Totale bolletta (€)',data:totals,borderColor:'#38bdf8',backgroundColor:'#38bdf833',tension:.35,fill:true},{label:'Quota personale (€)',data:shares,borderColor:'#a855f7',backgroundColor:'#a855f733',tension:.35,fill:true}]},
-    options:{responsive:true,plugins:{legend:{labels:{color:'#f7fafc'}}},scales:{x:{ticks:{color:'#93a4bc'}},y:{ticks:{color:'#93a4bc'},beginAtZero:true}}}
+    data:{
+      labels: labels,
+      datasets:[{
+        label:'La mia quota (Diviso 2) in €',
+        data: shares,
+        backgroundColor: '#a855f7', // Colore viola per la quota
+        borderRadius: 4
+      }]
+    },
+    options:{
+      responsive:true,
+      maintainAspectRatio: false,
+      plugins:{legend:{labels:{color:'#f7fafc'}}},
+      scales:{
+        x:{ticks:{color:'#93a4bc'}, grid:{color:'#25344b'}},
+        y:{ticks:{color:'#93a4bc'}, grid:{color:'#25344b'}, beginAtZero:true}
+      }
+    }
   });
 }
+
 function normalize(){const p=getPeriod(),t=new Date().toISOString().slice(0,10);if(stats.period!==p.key)stats={period:p.key,months:{},bimestreKwh:0,todayKwh:0,todayDate:t,lastTime:null,lastMeter:null};if(!stats.months)stats.months={};if(stats.todayDate!==t){stats.todayDate=t;stats.todayKwh=0;stats.lastTime=null;stats.lastMeter=null}if(stats.months[p.month]==null)stats.months[p.month]=0;return p}
 const rate=()=>Number(settings.kwhRate)||0,icon=t=>t==='ac'?'fa-wind':t==='tv'?'fa-tv':t==='washer'?'fa-shirt':'fa-plug';
 function render(){const p=normalize(),today=Number(stats.todayKwh)||0,month=Number(stats.months[p.month])||0,bim=Number(stats.bimestreKwh)||0,w=Number(plug.power)||0,v=Number(plug.voltage)||0,c=w/1000*rate();$('rate').textContent=rate().toFixed(3)+' €/kWh';$('heroRate').textContent=rate().toFixed(3)+' €/kWh';$('costPerHour').textContent=money(c)+' / ora';$('costHour').textContent=money(c)+' / ora';$('watts').textContent=w.toFixed(1)+' W';$('heroWatts').textContent=w.toFixed(1)+' W';$('voltage').textContent=v.toFixed(1)+' V';$('today').textContent=today.toFixed(3)+' kWh';$('cost').textContent=money(today*rate());$('histToday').textContent=today.toFixed(3)+' kWh';$('histTodayCost').textContent=money(today*rate());$('histMonth').textContent=month.toFixed(3)+' kWh';$('histMonthCost').textContent=money(month*rate());$('histBim').textContent=bim.toFixed(3)+' kWh';$('histBimCost').textContent=money(bim*rate());$('period').textContent=p.label;$('heroName').textContent=plug.name;$('heroDeviceId').textContent=plug.deviceId||'Device ID non impostato';const on=!!plug.online;$('status').textContent=on?'CONNESSO':'PRONTO';$('status').style.color=on?'#34d399':'#f59e0b';$('state').innerHTML=`<span class="dot" style="background:${on?'var(--green)':'#64748b'}"></span><span>${on?'ACCESA':'SPENTA'}</span>`;const last=plug.lastUpdated?new Date(plug.lastUpdated).toLocaleString('it-IT'):'--';$('lastHero').textContent=last;$('footLast').textContent=last;$('billNet').textContent=money(settings.billNet);$('billShare').textContent=money(settings.billShare);$('billStatus').textContent=settings.billKwh?`Bolletta ${settings.billPeriod||''} ${settings.billYear||''}: ${settings.billKwh} kWh`:'Nessuna bolletta caricata';const vb=$('viewBillBtn');if(vb)vb.style.display=settings.billFileUrl?'inline-flex':'none';drawBillChart();const cards=[plug,null,null];$('plugs').innerHTML=cards.map(d=>{if(!d)return `<div class="plug placeholder"><div class="plughead"><div class="plugname"><div class="plugicon"><i class="fa-solid fa-plus"></i></div><div><h3>Slot libero</h3><div class="muted">Predisposto per futura presa</div></div></div><b>LIBERO</b></div><div class="stats"><div class="stat"><small>Potenza</small><b>--</b></div><div class="stat"><small>Tensione</small><b>--</b></div><div class="stat"><small>Oggi</small><b class="good">--</b></div></div></div>`;return `<div class="plug"><div class="plughead"><div class="plugname"><div class="plugicon"><i class="fa-solid ${icon(d.type)}"></i></div><div><div style="display:flex;align-items:center;gap:6px"><h3>${d.name}</h3><button class="iconbtn" id="cardEdit"><i class="fa-solid fa-pen"></i></button></div><div class="muted">${d.deviceId||'--'}</div></div></div><b class="${d.online?'good':''}">${d.online?'ACCESA':'SPENTA'}</b></div><div class="stats"><div class="stat"><small>Potenza</small><b>${Number(d.power||0).toFixed(1)} W</b></div><div class="stat"><small>Tensione</small><b>${Number(d.voltage||0).toFixed(1)} V</b></div><div class="stat"><small>Oggi</small><b class="good">${today.toFixed(3)} kWh</b></div></div></div>`}).join('');const ce=$('cardEdit');if(ce)ce.onclick=openRename}
@@ -270,31 +292,36 @@ initBillDefaults();
 render();
 setTimeout(requestInfo,700);
 
-// Funzione per mostrare i dati quando si cambia il bimestre
 function mostraDatiSalvati() {
   const periodo = $('billPeriod').value;
   const anno = $('billYear').value || new Date().getFullYear();
   const chiave = `${anno}_${periodo}`;
   
-  // Controlla se esiste uno storico salvato per questa chiave
   const storico = settings.billHistory && settings.billHistory[chiave];
   
   if (storico) {
-    // Se i dati ci sono, popola i campi
     $('billTotal').value = storico.total;
     $('billKwh').value = storico.kwh;
     $('billStatus').textContent = `Dati in memoria per ${periodo} ${anno}`;
-    $('billStatus').style.color = '#34d399'; // Colore verde per conferma
+    $('billStatus').style.color = '#34d399';
+    
+    // Aggiorna visivamente la parte sotto
+    $('billNet').textContent = money(storico.net);
+    $('rate').textContent = (storico.rate || 0).toFixed(3) + ' €/kWh';
+    $('billShare').textContent = money(storico.share);
   } else {
-    // Se non ci sono dati, svuota i campi per un nuovo inserimento
     $('billTotal').value = '';
     $('billKwh').value = '';
     $('billStatus').textContent = `Nessun dato salvato per ${periodo} ${anno}`;
-    $('billStatus').style.color = '#93a4bc'; // Colore neutro
+    $('billStatus').style.color = '#93a4bc';
+    
+    // Ripristina alla bolletta attuale
+    $('billNet').textContent = money(settings.billNet);
+    $('rate').textContent = (settings.kwhRate || 0).toFixed(3) + ' €/kWh';
+    $('billShare').textContent = money(settings.billShare);
   }
 }
 
-// Aggiungiamo i "sensori" che si accorgono del cambio
 $('billPeriod').addEventListener('change', mostraDatiSalvati);
 $('billYear').addEventListener('input', mostraDatiSalvati);
 </script>
