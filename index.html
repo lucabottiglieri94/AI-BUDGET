@@ -16,6 +16,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
   <style>
     :root {
@@ -550,6 +551,9 @@
     }
 
     .add { width: 100%; border-radius: 12px; margin-top: 6px; }
+    .excel-import-panel{margin-top:16px;padding:14px;border:1px dashed rgba(56,189,248,.30);border-radius:16px;background:rgba(56,189,248,.05);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}.excel-import-title{font-size:13px;font-weight:800;display:flex;align-items:center;gap:8px}.excel-import-status{font-size:11px;color:var(--muted);margin-top:4px;line-height:1.45}.excel-import-panel .btn{flex-shrink:0}
+    @media (max-width:860px){.excel-import-panel{align-items:stretch}.excel-import-panel .btn{width:100%}}
+
     .collapsed #incomeList, .collapsed #expenseList, .collapsed .add { display: none; }
 
     /* Box Spesa Settimanale Aggiornato */
@@ -1171,6 +1175,7 @@
           </div>
           <div id="expenseList"></div>
           <button class="btn primary add" onclick="addRow('expense')">+ Aggiungi Altra Spesa</button>
+          <div class="excel-import-panel"><div><div class="excel-import-title"><i class="fa-solid fa-file-excel" style="color:#10b981;"></i> Importa uscite da Excel</div><div id="excelImportStatus" class="excel-import-status">Legge Categoria, Importo e Data. Le categorie vengono aggregate nel mese selezionato.</div></div><input id="excelExpenseFile" type="file" accept=".xlsx,.xls,.csv" hidden><button id="openExcelExpenseBtn" class="btn" type="button"><i class="fa-solid fa-upload"></i> Importa Excel</button></div>
         </section>
       </div>
 
@@ -1326,6 +1331,139 @@
   const $ = id => document.getElementById(id);
   const money = n => new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(Number(n) || 0);
   function num(v) { return Number(String(v ?? '').replace(',', '.')) || 0; }
+  
+  function normalizeExcelHeader(value) {
+    return String(value ?? '').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, ' ').trim();
+  }
+
+  function findExcelColumn(headers, aliases) {
+    const normalized = headers.map(h => ({ raw: h, norm: normalizeExcelHeader(h) }));
+    const aliasNorms = aliases.map(normalizeExcelHeader);
+    for (const a of aliasNorms) {
+      const exact = normalized.find(h => h.norm === a);
+      if (exact) return exact.raw;
+    }
+    for (const a of aliasNorms) {
+      const partial = normalized.find(h => h.norm.includes(a) || a.includes(h.norm));
+      if (partial) return partial.raw;
+    }
+    return null;
+  }
+
+  function parseExcelAmount(value) {
+    if (typeof value === 'number' && Number.isFinite(value)) return value;
+    let s = String(value ?? '').trim();
+    if (!s) return 0;
+    let negative = false;
+    if (s.startsWith('(') && s.endsWith(')')) { negative = true; s = s.slice(1, -1); }
+    s = s.replace(/€|EUR|\s/gi, '');
+    if (s.includes(',') && s.includes('.')) {
+      if (s.lastIndexOf(',') > s.lastIndexOf('.')) s = s.replace(/\./g, '').replace(',', '.');
+      else s = s.replace(/,/g, '');
+    } else if (s.includes(',')) {
+      s = s.replace(',', '.');
+    }
+    s = s.replace(/[^0-9.-]/g, '');
+    const n = Number(s);
+    return Number.isFinite(n) ? (negative ? -n : n) : 0;
+  }
+
+  function excelDateToISO(value) {
+    if (value instanceof Date && !Number.isNaN(value.getTime())) {
+      return value.getFullYear() + '-' + String(value.getMonth() + 1).padStart(2, '0') + '-' + String(value.getDate()).padStart(2, '0');
+    }
+    if (typeof value === 'number' && Number.isFinite(value) && value > 1) {
+      const base = new Date(Date.UTC(1899, 11, 30));
+      const dt = new Date(base.getTime() + Math.round(value) * 86400000);
+      if (!Number.isNaN(dt.getTime())) return dt.toISOString().slice(0, 10);
+    }
+    const s = String(value ?? '').trim();
+    if (!s) return '';
+    const match = s.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{2,4})$/);
+    if (match) {
+      let year = Number(match[3]); if (year < 100) year += 2000;
+      return year + '-' + String(Number(match[2])).padStart(2, '0') + '-' + String(Number(match[1])).padStart(2, '0');
+    }
+    const dt = new Date(s);
+    return Number.isNaN(dt.getTime()) ? '' : dt.toISOString().slice(0, 10);
+  }
+
+  async function importExcelExpenses(file) {
+    if (!auth.currentUser || !ref) return alert('Accedi prima di importare il file Excel.');
+    if (!window.XLSX) return alert('Motore Excel non disponibile. Ricarica la pagina.');
+    const status = $('excelImportStatus'), button = $('openExcelExpenseBtn');
+    const originalText = button?.innerHTML || '';
+    if (status) status.textContent = 'Lettura del file Excel…';
+    if (button) { button.disabled = true; button.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Importazione…'; }
+    try {
+      const buffer = await file.arrayBuffer();
+      const workbook = XLSX.read(buffer, { type: 'array', cellDates: true });
+      const sheetName = workbook.SheetNames?.[0];
+      if (!sheetName) throw new Error('Il file non contiene fogli leggibili.');
+      const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { defval: '', raw: true });
+      if (!rows.length) throw new Error('Il foglio Excel è vuoto.');
+
+      const headers = Object.keys(rows[0]);
+      const categoryKey = findExcelColumn(headers, ['categoria','category','cat','voce','voce spesa','descrizione','descrizione spesa','nome']);
+      const amountKey = findExcelColumn(headers, ['importo','amount','uscita','spesa','totale','valore','costo','euro','eur']);
+      const dateKey = findExcelColumn(headers, ['data','date','giorno']);
+      if (!categoryKey || !amountKey) throw new Error('Colonne non riconosciute. Servono almeno: Categoria e Importo.');
+
+      const selectedMonthKey = getMonthKey(selectedDate);
+      const grouped = new Map();
+      let skippedInvalid = 0, skippedOtherMonth = 0, skippedAutomatic = 0;
+
+      rows.forEach(row => {
+        const category = String(row[categoryKey] ?? '').trim();
+        const amount = parseExcelAmount(row[amountKey]);
+        const parsedDate = dateKey ? excelDateToISO(row[dateKey]) : defaultDateForSelectedMonth();
+        if (!category || amount <= 0) { skippedInvalid++; return; }
+        if (parsedDate && parsedDate.slice(0, 7) !== selectedMonthKey) { skippedOtherMonth++; return; }
+        if (isAutoCategory(category)) { skippedAutomatic++; return; }
+
+        const existing = grouped.get(category) || { amount: 0, date: parsedDate || defaultDateForSelectedMonth(), rows: 0 };
+        existing.amount += amount; existing.rows += 1;
+        if (parsedDate) existing.date = parsedDate;
+        grouped.set(category, existing);
+      });
+
+      if (!grouped.size) throw new Error('Nessuna uscita valida trovata per il mese selezionato.');
+
+      // Sostituisce solo le righe precedentemente importate da Excel.
+      // Le spese manuali e le categorie automatiche restano intatte.
+      state.expense = state.expense.filter(x => x.isExcelImported !== true);
+
+      for (const [category, data] of grouped.entries()) {
+        state.expense.push({
+          name: category,
+          category,
+          amount: Number(data.amount.toFixed(2)),
+          date: data.date || defaultDateForSelectedMonth(),
+          isRecurring: false,
+          isAuto: false,
+          isExcelImported: true,
+          excelSource: file.name,
+          excelMonth: selectedMonthKey,
+          excelRows: data.rows
+        });
+      }
+
+      render('expense');
+      updateTotals();
+      await saveNow();
+
+      const importedTotal = [...grouped.values()].reduce((sum, x) => sum + x.amount, 0);
+      if (status) status.textContent = 'Importate ' + grouped.size + ' categorie • ' + (rows.length - skippedInvalid - skippedOtherMonth - skippedAutomatic) + ' righe valide • Totale ' + money(importedTotal) + '.' + (skippedOtherMonth ? ' Ignorate ' + skippedOtherMonth + ' righe di altri mesi.' : '');
+      showToast('Excel importato: ' + grouped.size + ' categorie');
+    } catch (error) {
+      console.error('Excel import error:', error);
+      if (status) status.textContent = 'Errore: ' + error.message;
+      alert('Importazione Excel non riuscita: ' + error.message);
+    } finally {
+      if (button) { button.disabled = false; button.innerHTML = originalText; }
+    }
+  }
+
 
   // GIORNO DELLA SETTIMANA IN ITALIANO
   const dayNames = ['Domenica', 'Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato'];
@@ -2188,6 +2326,23 @@ Determina se fa riferimento a "Spesa Luca e Lisa", "Spesa Animali" o ad un'altra
     recognition.onend = () => micBtn.classList.remove('listening');
   } else {
     micBtn.onclick = () => alert("Riconoscimento vocale non supportato dal browser in uso.");
+  }
+
+
+  // IMPORT EXCEL USCITE
+  const excelFileInput = $('excelExpenseFile');
+  const excelOpenButton = $('openExcelExpenseBtn');
+  if (excelOpenButton && excelFileInput) {
+    excelOpenButton.onclick = () => {
+      if (!auth.currentUser || !ref) return alert('Accedi prima di importare il file Excel.');
+      triggerHaptic(15);
+      excelFileInput.click();
+    };
+    excelFileInput.addEventListener('change', async e => {
+      const file = e.target.files?.[0];
+      e.target.value = '';
+      if (file) await importExcelExpenses(file);
+    });
   }
 
   // Calcolatrice Apple
