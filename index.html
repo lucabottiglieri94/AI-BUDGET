@@ -2162,114 +2162,92 @@ del.textContent = '✕';
 
   // AI COACH & DETTATURA VOCALE
   async function queryAiCoach(customQuestion = null, isVoiceExpense = false) {
-    if (!userGeminiApiKey) {
-      geminiModal.classList.add('open');
-      return alert("Inserisci prima la tua chiave gratuita di Gemini per attivare il Coach!");
-    }
-
     triggerHaptic(20);
     const out = $('aiCoachText');
     const mName = $('currentMonthDisplay').textContent;
-    
-    out.innerHTML = `<div style="display: flex; align-items: center; gap: 8px; color: #38bdf8;">
-      <i class="fa-solid fa-spinner fa-spin"></i> ${isVoiceExpense ? 'Elaborazione spesa vocale con AI...' : `Gemini sta analizzando i dati di ${mName}...`}
-    </div>`;
+
+    out.innerHTML = '<div style="display:flex;align-items:center;gap:8px;color:#38bdf8;">' +
+      '<i class="fa-solid fa-spinner fa-spin"></i> ' +
+      (isVoiceExpense ? 'Elaborazione spesa vocale con AI...' : 'Il Coach sta analizzando ' + mName + '...') +
+      '</div>';
 
     const incTot = state.income.reduce((s, x) => s + num(x.amount), 0);
     const expTot = state.expense.reduce((s, x) => s + num(x.amount), 0);
     const netBal = incTot - expTot;
     const savedVacanza = num(lastBudgetDoc?.vacanzaAccantonato || 0);
+    const budgetContext = {
+      income: state.income,
+      expense: state.expense,
+      totals: { income: incTot, expense: expTot, net: netBal },
+      vacationFund: savedVacanza,
+      weeklyExpenses: allWeeks
+    };
 
-    const baseContext = `Sei l'AI Financial Coach di "AI-BUDGET".
-Mese: ${mName}
-- Entrate: € ${incTot.toFixed(2)}
-- Uscite Totali: € ${expTot.toFixed(2)}
-- Risparmio Netto: € ${netBal.toFixed(2)}
-- Fondo Vacanze: € ${savedVacanza.toFixed(2)}`;
+    try {
+      const response = await fetch('/api/ai-chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          question: customQuestion || 'Analizza il mio budget del mese e dammi 3 indicazioni pratiche.',
+          budget: budgetContext,
+          month: mName,
+          mode: isVoiceExpense ? 'voice-expense' : 'chat'
+        })
+      });
 
-    let promptText = "";
+      const data = await response.json();
+      if (!response.ok || !data.answer) throw new Error(data?.error || 'Errore del backend AI');
+      const reply = String(data.answer).trim();
 
-    if (isVoiceExpense) {
-      promptText = `${baseContext}
-L'utente ha detto: "${customQuestion}"
-Determina se fa riferimento a "Spesa Luca e Lisa", "Spesa Animali" o ad un'altra voce e restituisci SOLO questo JSON:
-{"name": "Nome spesa", "amount": 0.00}`;
-    } else if (customQuestion) {
-      promptText = `${baseContext}\nDomanda: "${customQuestion}"\nRispondi in modo diretto, concreto e motivante.`;
-    } else {
-      promptText = `${baseContext}\nFornisci 3 raccomandazioni concise (Stato attuale, Spese alimentari/cura, Risparmi).`;
-    }
+      if (isVoiceExpense) {
+        try {
+          const cleanJson = reply.replace(/```json/g, '').replace(/```/g, '').trim();
+          const parsed = JSON.parse(cleanJson);
+          const amount = num(parsed.amount);
+          if (!amount || amount <= 0) throw new Error('Importo non valido');
 
-    const modelsToTry = ['gemini-2.5-flash', 'gemini-1.5-flash'];
-    let reply = null;
-
-    for (const model of modelsToTry) {
-      try {
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(userGeminiApiKey)}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ contents: [{ parts: [{ text: promptText }] }] })
-        });
-        const data = await response.json();
-        if (!data.error) {
-          reply = data.candidates?.[0]?.content?.parts?.[0]?.text;
-          if (reply) break;
-        }
-      } catch (err) {}
-    }
-
-    if (!reply) {
-      out.innerHTML = `<span style="color: var(--accent-red);"><i class="fa-solid fa-triangle-exclamation"></i> Errore elaborazione AI.</span>`;
-      return;
-    }
-
-    if (isVoiceExpense) {
-      try {
-        const cleanJson = reply.replace(/```json/g, '').replace(/```/g, '').trim();
-        const parsed = JSON.parse(cleanJson);
-        if (parsed.name && parsed.amount) {
-          const lower = parsed.name.toLowerCase();
-          
-          // Se la voce vocale appartiene a una delle due categorie principali, aggiorna direttamente la spesa del giorno
-          if (lower.includes('alimentar') || lower.includes('spesa') || lower.includes('cibo') || lower.includes('lisa') || lower.includes('luca')) {
-            $('inputDailyFood').value = num(parsed.amount);
+          if (parsed.category === 'food') {
+            $('inputDailyFood').value = amount;
             $('submitDailyExpenseBtn').click();
-            out.innerHTML = `<div style="color: var(--accent-green); font-weight: 700;">
-              <i class="fa-solid fa-circle-check"></i> Aggiunto a Spesa Luca e Lisa: ${money(parsed.amount)}
-            </div>`;
+            out.innerHTML = '<div style="color:var(--accent-green);font-weight:700;"><i class="fa-solid fa-circle-check"></i> Aggiunto a Spesa Luca e Lisa: ' + money(amount) + '</div>';
             return;
-          } else if (lower.includes('anim') || lower.includes('gatt') || lower.includes('can') || lower.includes('pet')) {
-            $('inputDailyPets').value = num(parsed.amount);
+          }
+
+          if (parsed.category === 'pets') {
+            $('inputDailyPets').value = amount;
             $('submitDailyExpenseBtn').click();
-            out.innerHTML = `<div style="color: var(--accent-green); font-weight: 700;">
-              <i class="fa-solid fa-circle-check"></i> Aggiunto a Spesa Animali: ${money(parsed.amount)}
-            </div>`;
+            out.innerHTML = '<div style="color:var(--accent-green);font-weight:700;"><i class="fa-solid fa-circle-check"></i> Aggiunto a Spesa Animali: ' + money(amount) + '</div>';
             return;
           }
 
           state.expense.push({
-            name: parsed.name,
-            amount: num(parsed.amount),
+            name: parsed.name || 'Spesa vocale',
+            amount,
             date: defaultDateForSelectedMonth(),
             isRecurring: false,
             isAuto: false
           });
           render('expense');
           await saveNow();
-          out.innerHTML = `<div style="color: var(--accent-green); font-weight: 700;">
-            <i class="fa-solid fa-circle-check"></i> Registrata: ${parsed.name} (${money(parsed.amount)})
-          </div>`;
+          out.innerHTML = '<div style="color:var(--accent-green);font-weight:700;"><i class="fa-solid fa-circle-check"></i> Registrata: ' +
+            (parsed.name || 'Spesa') + ' (' + money(amount) + ')</div>';
+          return;
+        } catch (e) {
+          out.innerHTML = '<span style="color:var(--accent-red);"><i class="fa-solid fa-triangle-exclamation"></i> Non sono riuscito a interpretare la spesa vocale.</span>';
           return;
         }
-      } catch (e) {}
+      }
+
+      const formatted = reply
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\n\n/g, '</p><p>')
+        .replace(/\n/g, '<br>');
+      out.innerHTML = '<p>' + formatted + '</p>';
+    } catch (e) {
+      console.error(e);
+      out.innerHTML = '<span style="color:var(--accent-red);"><i class="fa-solid fa-triangle-exclamation"></i> ' +
+        (e.message || 'Errore elaborazione AI.') + '</span>';
     }
-
-    const formatted = reply
-      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-      .replace(/\n\n/g, '</p><p>')
-      .replace(/\n/g, '<br>');
-
-    out.innerHTML = `<p>${formatted}</p>`;
   }
 
   $('askAiCoachBtn').onclick = () => queryAiCoach();
@@ -2300,7 +2278,7 @@ Determina se fa riferimento a "Spesa Luca e Lisa", "Spesa Animali" o ad un'altra
       try {
         recognition.start();
         micBtn.classList.add('listening');
-        $('aiCoachText').innerHTML = `<span style="color: #38bdf8;"><i class="fa-solid fa-microphone fa-beat"></i> Ti sto ascoltando...</span>`;
+        $('aiCoachText').innerHTML = '<span style="color:#38bdf8;"><i class="fa-solid fa-microphone fa-beat"></i> Ti sto ascoltando...</span>';
       } catch (e) {
         micBtn.classList.remove('listening');
       }
@@ -2315,14 +2293,13 @@ Determina se fa riferimento a "Spesa Luca e Lisa", "Spesa Animali" o ad un'altra
 
     recognition.onerror = () => {
       micBtn.classList.remove('listening');
-      $('aiCoachText').innerHTML = `<span style="color: var(--accent-red);">Riconoscimento non riuscito.</span>`;
+      $('aiCoachText').innerHTML = '<span style="color:var(--accent-red);">Riconoscimento non riuscito.</span>';
     };
 
     recognition.onend = () => micBtn.classList.remove('listening');
   } else {
-    micBtn.onclick = () => alert("Riconoscimento vocale non supportato dal browser in uso.");
+    micBtn.onclick = () => alert('Riconoscimento vocale non supportato dal browser in uso.');
   }
-
 
   // IMPORT EXCEL USCITE
   const excelFileInput = $('excelExpenseFile');
