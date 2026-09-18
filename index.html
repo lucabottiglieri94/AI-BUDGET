@@ -1627,14 +1627,14 @@
     return n === 'spesa luca e lisa' || n === 'spesa animali' || n === 'spese alimentari luca e lisa';
   }
 
-  function syncWeeklyExpenses() {
+function syncWeeklyExpenses() {
     const { totalFood, totalPets } = getMonthFoodAndPetsTotals();
     const manual = state.expense.filter(x => !isAutoCategory(x.name));
     
     state.expense = [
       ...manual,
-      { name: 'Spesa Luca e Lisa', amount: totalFood, date: defaultDateForSelectedMonth(), isAuto: true },
-      { name: 'Spesa Animali', amount: totalPets, date: defaultDateForSelectedMonth(), isAuto: true }
+      // { name: 'Spesa Luca e Lisa', amount: totalFood, date: defaultDateForSelectedMonth(), isAuto: true },
+      // { name: 'Spesa Animali', amount: totalPets, date: defaultDateForSelectedMonth(), isAuto: true }
     ];
   }
 
@@ -1795,13 +1795,8 @@
       }
       
       const del = document.createElement('button');
-      del.className = 'smallbtn';
-      del.textContent = '✕';
-      if (isAuto) {
-        del.style.opacity = '0.3';
-        del.disabled = true;
-        del.title = "Le categorie automatiche non possono essere rimosse da qui";
-      }
+del.className = 'smallbtn';
+del.textContent = '✕';
       
       if (!isAuto) {
         name.oninput = () => { state[type][i].name = name.value; updateTotals(); };
