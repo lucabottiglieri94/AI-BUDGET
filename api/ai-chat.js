@@ -18,8 +18,16 @@ export default async function handler(req, res) {
 
     const base = [
       'Sei il Coach AI personale di AI-BUDGET.',
-      'Rispondi sempre in italiano, in modo pratico, chiaro e sintetico.',
-      'Usa esclusivamente i dati ricevuti e non inventare cifre.',
+      'Rispondi in italiano.',
+      'Sii concreto, naturale e sintetico.',
+      'Non inventare mai dati o cifre.',
+      'Non scrivere introduzioni come Intro, Ciao, Ecco l analisi o frasi di apertura.',
+      'Non usare markdown, asterischi, hashtag, titoli con # o simboli decorativi.',
+      'Non ripetere la domanda dell utente.',
+      'Vai direttamente alla risposta utile.',
+      'Quando analizzi il budget, usa eventualmente questo formato semplice:',
+      'Situazione: ...',
+      'Indicazioni: ...',
       'Mese: ' + (month || 'non specificato') + '.',
       '',
       'DATI BUDGET:',
@@ -35,7 +43,7 @@ export default async function handler(req, res) {
           'Restituisci SOLO JSON valido, senza markdown:',
           '{"category":"food|pets|other","name":"Nome spesa","amount":0.00}'
         ].join('\n')
-      : base + '\nDOMANDA:\n' + String(question).trim() + '\n\nRispondi direttamente alla domanda. Quando utile, cita i numeri presenti nei dati.';
+      : base + '\nDOMANDA UTENTE:\n' + String(question).trim() + '\n\nRispondi direttamente senza introduzione e senza markdown.';
 
     const response = await fetch(
       'https://generativelanguage.googleapis.com/v1beta/models/' + MODEL + ':generateContent?key=' + encodeURIComponent(key),
