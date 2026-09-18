@@ -17,33 +17,28 @@ export default async function handler(req, res) {
     if (!question || !String(question).trim()) return res.status(400).json({ error: 'Domanda mancante' });
 
     const base = [
-      'Sei il Coach AI personale di AI-BUDGET.',
-      'Rispondi in italiano.',
-      'Sii concreto, naturale e sintetico.',
-      'Non inventare mai dati o cifre.',
-      'Non scrivere introduzioni come Intro, Ciao, Ecco l analisi o frasi di apertura.',
-      'Non usare markdown, asterischi, hashtag, titoli con # o simboli decorativi.',
-      'Non ripetere la domanda dell utente.',
-      'Vai direttamente alla risposta utile.',
-      'Quando analizzi il budget, usa eventualmente questo formato semplice:',
-      'Situazione: ...',
-      'Indicazioni: ...',
-      'Mese: ' + (month || 'non specificato') + '.',
+      'Sei AI Financial Coach di AI-BUDGET.',
+      'Rispondi esclusivamente in italiano.',
+      'Rispondi in modo completo ma leggibile, con massimo 5 brevi punti o paragrafi.',
+      'Non scrivere mai Intro, Ciao, Ecco, Situazione: o frasi introduttive generiche.',
+      'Non usare Markdown, doppi asterischi, hashtag o simboli decorativi.',
+      'Inizia direttamente dalla risposta utile e non interrompere il ragionamento.',
+      'Usa esclusivamente i dati ricevuti. Se un dato manca, dichiaralo senza inventare cifre.',
+      'Mese analizzato: ' + (month || 'non specificato') + '.',
       '',
-      'DATI BUDGET:',
+      'DATI REALI DEL BUDGET:',
       JSON.stringify(budget || {}, null, 2),
       ''
     ].join('\n');
 
     const prompt = mode === 'voice-expense'
       ? base + [
-          'L utente ha detto: "' + String(question).trim() + '".',
-          'Determina la categoria: "food" per Spesa Luca e Lisa, "pets" per Spesa Animali, oppure "other" per un altra uscita.',
-          'Estrai l importo numerico.',
-          'Restituisci SOLO JSON valido, senza markdown:',
+          'Interpreta questa spesa dettata vocalmente: "' + String(question).trim() + '".',
+          'Classifica in food, pets oppure other.',
+          'Restituisci SOLO JSON valido e nient altro:',
           '{"category":"food|pets|other","name":"Nome spesa","amount":0.00}'
         ].join('\n')
-      : base + '\nDOMANDA UTENTE:\n' + String(question).trim() + '\n\nRispondi direttamente senza introduzione e senza markdown.';
+      : base + '\nRICHIESTA DELL UTENTE:\n' + String(question).trim() + '\n\nFornisci una risposta completa, concreta e terminata, includendo i numeri disponibili e almeno un consiglio operativo quando la richiesta riguarda il budget.';
 
     const response = await fetch(
       'https://generativelanguage.googleapis.com/v1beta/models/' + MODEL + ':generateContent?key=' + encodeURIComponent(key),
@@ -52,7 +47,7 @@ export default async function handler(req, res) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { maxOutputTokens: 700 }
+          generationConfig: { maxOutputTokens: 1500 }
         })
       }
     );
